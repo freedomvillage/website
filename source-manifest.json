@@ -19,7 +19,7 @@
     "dist/village-winter-v1.png": "9ce4b4285c59e0429164681dbe0e8eca8a2046fe47ade5ef98f9bb4cf192be21",
     "dist/village-fall-night-v1.png": "31080c9d435d4326b00c6963697b190e7360a12f7023a604fabef402d2c93bf7",
     "dist/village-summer-dusk-v1.png": "6588a83c4b766bd02c4e72f0ebcf2959446cd01797904c3bd3a36c39de13d0f4",
-    "dist/style.css": "9272a3ddd69ab93ebbbb09b94bc19c961b0028c551f543308d4ecb5a6adb5da8",
+    "dist/style.css": "8336f16cef7c1a128778cd84fb2dccd0840cddb6019bfa072fef326b06886b7c",
     "dist/church-vertical-canva.png": "cf81131703d25be3041e5eb4f800992013ba4f04fb7bc0863367cd9bdbcacb2c",
     "dist/church-horizontal-canva.png": "811a9fa5aadced22499398a33a46a908634821509388089bb808b39003700c72"
   },
@@ -95,10 +95,10 @@
   ],
   "adaptedFiles": {
     "dist/app.js": "60b141f12391a68ca8b07c7e36b8a9f73e6f4ca980c78d013bfa1592a86f413b",
-    "dist/index.html": "c602516e9110c46248f51f97914b018ebf411128812858c0afe0fa2327a75701",
+    "dist/index.html": "70b721ac343a128663a55bd03ff4d4d52f6450f88b3dd6e7835aad2061d9ecd1",
     "dist/air-quality.js": "42b8d579f29bcc3d273c5753c7f3878b4c9144dcb46249e8eb372f2b79815861",
     "dist/scene-bootstrap.js": "988e71208ae9f5170c3baba601f4a95def1e0050f08d3bd8643a85cd494d4a6c",
-    "dist/scene-clock.js": "3c418037897520cbb12e1ff45a3775bfb860fde4d2436a890227e0281feb7ba5",
+    "dist/scene-clock.js": "d2898bf2e4b94e9f78c8b9d046da6c472f2f90895f02d19b25dc2bcc72e3b3d3",
     "dist/content-view.js": "d211389e9949dfcb19a721b887a62897c96f400052a94b8032878f090a0bbe9c",
     "dist/content-view.css": "ee01cd474bc817a5076f24b9594444732d639b46d868236305ffa5d3a2554e8b"
   },
@@ -142,6 +142,14 @@
       "files": [
         "dist/content-view.js",
         "dist/content-view.css"
+      ]
+    },
+    {
+      "description": "Owner-requested readable 24px Appearance icons, compact dialog, advanced Time/Season/Holy Week/PM order and simpler clock note; modest desktop gutter/navigation visibility refinement and persistent verified Webflow Connect/Give handoffs on desktop and mobile. Scene artwork/calendar/AQ behavior unchanged.",
+      "files": [
+        "dist/index.html",
+        "dist/scene-clock.js",
+        "dist/style.css"
       ]
     }
   ]
