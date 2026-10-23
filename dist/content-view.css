@@ -7,3 +7,6 @@
 .pilot-detail .back{margin-bottom:8px;min-height:44px;padding:10px 0}.pilot-detail-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(180px,.75fr);gap:clamp(24px,4vw,48px);align-items:center;margin:10px 0 28px}.pilot-detail-copy{min-width:0}.pilot-detail h1{margin:0 0 28px;overflow-wrap:anywhere}.pilot-detail h1:focus{outline:none}.pilot-detail-art{margin:0;display:flex;justify-content:center;min-width:0}.pilot-detail .pilot-art{width:100%;height:auto;max-height:440px;max-width:340px;margin:0;overflow:hidden}.pilot-detail .detail-body{max-width:620px}.pilot-art{overflow:hidden}
 @media(max-width:950px){.pilot-detail-hero{grid-template-columns:minmax(0,1fr) minmax(150px,.7fr);gap:24px}.pilot-detail h1{font-size:clamp(34px,5vw,54px)}}
 @media(max-width:520px){.pilot-detail-hero{grid-template-columns:minmax(0,1fr);gap:24px}.pilot-detail h1{font-size:40px}.pilot-detail-art{justify-content:flex-start}.pilot-detail .pilot-art{width:min(100%,280px);max-height:350px}.pilot-detail{padding:20px 24px 40px}}
+
+/* Meaningful initial/no-JavaScript layout; enhanced masonry takes over after boot. */
+.grid.server-content{grid-auto-rows:auto;align-items:start}.grid.server-content .pilot-card{grid-row-end:auto}
