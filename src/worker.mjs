@@ -1,4 +1,5 @@
 import {nightWindow} from './seoul-night.mjs';
+import {DIAGNOSTIC_KEY,diagnostic,xmlCode,boundedBody,payloadCategory} from './air-diagnostics.mjs';
 // Provider schema remains fixture-tested until an authorized real response is verified.
 const SOURCE='https://www.airkorea.or.kr/';
 const ENDPOINT='https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty';
@@ -61,17 +62,29 @@ export function createWorker({fetchUpstream=fetch,now=Date.now}={}){
     await env.AIR_CACHE.put(SLOT_KEY,String(slot));
    }catch{return;}
    let record=unknown('provider-unavailable',env.AIR_STATION);
+   let category='transport',httpStatus=null,providerCode=null;
+   const signal=AbortSignal.timeout(5000);
    try{
     const upstream=new URL(ENDPOINT);
     // Use the portal's Decoding/raw secret. URLSearchParams performs the only encoding.
     upstream.search=new URLSearchParams({serviceKey:env.AIRKOREA_SERVICE_KEY,returnType:'json',numOfRows:'1',pageNo:'1',stationName:env.AIR_STATION,dataTerm:'DAILY',ver:'1.3'});
-    const response=await fetchUpstream(upstream,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(5000),redirect:'error'});
-    if(!response.ok)throw Error('Unavailable');
-    const raw=await response.text();if(raw.length>65536)throw Error('Oversized');
-    record=publicReading(normalizeAir(JSON.parse(raw),env.AIR_STATION,instant),env.AIR_STATION,instant);
-   }catch{/* No upstream URL, key, raw payload or exception is logged. */}
+    const response=await fetchUpstream(upstream,{headers:{Accept:'application/json'},signal,redirect:'error'});
+    httpStatus=response.status;
+    category=response.ok?'non-json':'http-error';
+    const raw=await boundedBody(response);
+    if(raw===null){category='body-too-large';throw Error('Stopped')}
+    providerCode=xmlCode(raw);
+    let payload;try{payload=JSON.parse(raw)}catch{throw Error('Stopped')}
+    providerCode=payload?.response?.header?.resultCode;
+    if(!response.ok)throw Error('Stopped');
+    category=payloadCategory(payload,env.AIR_STATION);
+    record=publicReading(normalizeAir(payload,env.AIR_STATION,instant),env.AIR_STATION,instant);
+    category='ok-or-reading-unknown';
+   }catch{if(signal.aborted)category='fetch-timeout';/* Never inspect/log exception text. */}
    // Failed/flagged data replaces the value with Unknown; failed persistence never retries.
    try{await env.AIR_CACHE.put(CACHE_KEY,JSON.stringify(record));}catch{}
+   // Separate private key; no HTTP diagnostics route. Persistence failures never retry.
+   try{await env.AIR_CACHE.put(DIAGNOSTIC_KEY,JSON.stringify(diagnostic(category,httpStatus,providerCode)),{expirationTtl:86400});}catch{}
   }
  };
 }
