@@ -49,7 +49,7 @@ export async function handleRankingEvaluation(request,env,{fetchUpstream=fetch,n
   // No retry or lock stealing. Interrupted attempts remain reviewable and block more spend.
   const started=now(),result=await rankPublishedCards(fixture.query,cards,env,{fetchUpstream,model:MODEL});
   const fingerprint=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(cards.map(c=>({id:c.id,title:c.title,summary:c.summary,facts:c.facts||[c.date,c.time,c.venue].filter(Boolean)}))))))).map(n=>n.toString(16).padStart(2,'0')).join('');
-  const receipt={...result,query:fixture.query,isSyntheticQuery:true,elapsedMs:Math.max(0,now()-started),datasetSha256:fingerprint,candidateIds:cards.map(c=>c.id),estimatedCostUsd:result.usage?result.usage.inputTokens*PRICE_PER_MILLION/1000000:null,unitPriceSource:'https://docs.typesafe.ai/models (2026-10-23)',comparison:comparisons(fixture.query,cards,result,fixture.expectedUsefulIds)};
+  const receipt={...result,query:fixture.query,isSyntheticQuery:true,elapsedMs:Math.max(0,now()-started),datasetSha256:fingerprint,candidateIds:cards.map(c=>c.id),estimatedCostUsd:result.usage?Number((result.usage.inputTokens*PRICE_PER_MILLION/1000000).toFixed(12)):null,unitPriceSource:'https://docs.typesafe.ai/models (2026-10-23)',comparison:comparisons(fixture.query,cards,result,fixture.expectedUsefulIds)};
   await env.CONTENT_DB.prepare('UPDATE content_checks SET result_json=? WHERE id=?').bind(JSON.stringify(receipt),PREFIX+caseId).run();
   await env.CONTENT_DB.prepare('UPDATE content_checks SET result_json=? WHERE id=?').bind(JSON.stringify({caseId:null}),LOCK).run();
   return page(fixtures,await readRows(),cards,'One bounded case completed. No automatic retries or further calls.');
