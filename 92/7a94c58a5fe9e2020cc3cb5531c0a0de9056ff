@@ -1,0 +1,30 @@
+README.md
+  h_9a6e2a87fc4a0d 9
+dist/app.js
+  h_9a6e2a87fc4a0d 28-55,89,91,100-101,103,115,124
+dist/index.html
+  h_9a6e2a87fc4a0d 6
+package.json
+  h_9a6e2a87fc4a0d 7
+source-manifest.json
+  h_9a6e2a87fc4a0d 2,6,18,71-74
+tests/calendar.cjs
+  h_9a6e2a87fc4a0d 1-16
+tests/scene-recovery.cjs
+  h_9a6e2a87fc4a0d 11
+tests/scene.cjs
+  h_9a6e2a87fc4a0d 4
+tests/solar.cjs
+  h_9a6e2a87fc4a0d 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "927a94c58a5fe9e2020cc3cb5531c0a0de9056ff",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
