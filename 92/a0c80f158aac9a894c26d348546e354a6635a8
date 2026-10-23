@@ -1,0 +1,23 @@
+dist/content-view.css
+  s_098636fa0c962b::t_cb03fd856d3f86 72-75
+src/content/render.mjs
+  s_098636fa0c962b::t_b2892396705300 12,30
+tests/content-library.test.mjs
+  s_098636fa0c962b::t_d324b50ae94fc5 66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "92a0c80f158aac9a894c26d348546e354a6635a8",
+  "prompts": {},
+  "sessions": {
+    "s_098636fa0c962b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0702a-0e3f-78c3-af1f-c71d8900f7fb",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
