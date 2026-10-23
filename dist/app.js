@@ -25,6 +25,34 @@ filters.addEventListener('click',()=>{if(window.innerWidth<=700){closeMenu();doc
 // Scene keyframes: separate authored seasonal day/dusk/night paintings, no global tint.
 const sceneTime=document.getElementById('scene-time'),sceneSeason=document.getElementById('scene-season');
 const seasonNames=['Winter','Spring','Summer','Fall','Christmas'];
+// Editable season calendar: meteorological Mar/Jun/Sep/Dec 1 defaults, not foliage predictions.
+// Christmas overrides December winter: Friday after US Thanksgiving through Dec 31.
+// Adjust these explicit dates for local foliage without changing the selection logic.
+const seasonCalendar=[
+ {year:2026,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-27'},
+ {year:2027,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-26'},
+ {year:2028,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-24'},
+ {year:2029,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-23'},
+ {year:2030,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-29'},
+ {year:2031,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-28'},
+ {year:2032,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-26'},
+ {year:2033,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-25'},
+ {year:2034,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-24'},
+ {year:2035,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-23'}
+];
+function seoulDateAt(instant){const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(instant);return ['year','month','day'].map(key=>Number(parts.find(p=>p.type===key).value));}
+function seasonForDate([year,month,day]){
+ // Outside the editable decade, keep the same baseline rules rather than a stale year.
+ const friday=1+(4-new Date(Date.UTC(year,10,1)).getUTCDay()+7)%7+22;
+ const row=seasonCalendar.find(r=>r.year===year)||{spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:`11-${friday}`};
+ const md=`${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+ if(md>=row.christmas)return 4;if(md>=row.winter)return 0;if(md>=row.fall)return 3;if(md>=row.summer)return 2;if(md>=row.spring)return 1;return 0;
+}
+// Capture once. No timer, midnight refresh, visibility handler, or season cookie.
+const pageLoadDate=Object.freeze(seoulDateAt(new Date()));
+let manualSeasonSelected=false;
+sceneSeason.value=String(seasonForDate(pageLoadDate));
+// End season calendar.
 const seasonAssets=['village-winter-v1.png','village-spring-v1.png','village-panorama-v8.png','village-fall-v1.png','village-christmas-v1.png'];
 const sceneAssets=seasonNames.map((name,i)=>[seasonAssets[i],`village-${name.toLowerCase()}-dusk-v1.png`,`village-${name.toLowerCase()}-night-v1.png`]);
 const assetCache=new Map();
@@ -58,8 +86,9 @@ function seoulSolarTimes(year,month,day){
  return {dawn:noon-civilSpan,sunrise:noon-riseSpan,sunset:noon+riseSpan,dusk:noon+civilSpan};
 }
 const previewSolarTimes=previewDates.map(date=>seoulSolarTimes(...date));
+let appliedSolarDate=previewDates[2],appliedSolarTimes=previewSolarTimes[2],appliedDateIsManual=true;
 function solarClock(minutes){const n=Math.round(minutes);return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;}
-function lightingAt(minutes,solar=previewSolarTimes[appliedSeason]){const t=((Number(minutes)%1440)+1440)%1440;
+function lightingAt(minutes,solar=appliedSolarTimes){const t=((Number(minutes)%1440)+1440)%1440;
  // Authored dusk painting peaks at sunrise/sunset; blend to day over the next/previous hour.
  const keys=[[0,0],[solar.dawn,0],[solar.sunrise,1],[solar.sunrise+60,2],[solar.sunset-60,2],[solar.sunset,1],[solar.dusk,0],[1440,0]];
  let i=0;while(t>keys[i+1][0])i++;const a=keys[i],b=keys[i+1],v=a[1]+(b[1]-a[1])*smooth((t-a[0])/(b[0]-a[0]));
@@ -68,9 +97,10 @@ function lightingAt(minutes,solar=previewSolarTimes[appliedSeason]){const t=((Nu
 // End Seoul daylight calculations.
 const lightPaper={day:[250,249,245],dusk:[136,156,184],night:[18,31,51]};
 function sceneTheme(w){const paper=[0,1,2].map(i=>Math.round(w.day*lightPaper.day[i]+w.dusk*lightPaper.dusk[i]+w.night*lightPaper.night[i]));const lum=paper.map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4}).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0);const dark=lum>.179;return {paper,ink:w.day===1?[35,60,53]:dark?[0,0,0]:[255,255,255],muted:w.day===1?[82,103,91]:dark?[0,0,0]:[255,255,255]};}
-function updateSceneTime(){const mins=Number(sceneTime.value)%1440,h=Math.floor(mins/60),m=mins%60;const text=`${h%12||12}${m?':'+String(m).padStart(2,'0'):''} ${h<12?'am':'pm'}`;document.getElementById('time-readout').value=text;sceneTime.setAttribute('aria-valuetext',text);const w=lightingAt(typeof effectiveTimeMinutes==='function'?effectiveTimeMinutes(mins):mins),root=document.documentElement,theme=sceneTheme(w);for(const [key,c]of Object.entries(theme))root.style.setProperty('--'+key,`rgb(${c.join(' ')})`);root.style.setProperty('--night',String(w.night));root.style.setProperty('--dusk-alpha',String(w.day+w.dusk?w.dusk/(w.day+w.dusk):0));root.style.setProperty('--night-alpha',String(w.night));root.style.setProperty('--festive-light',String(w.night+w.dusk*.4));root.style.setProperty('--line',w.night>.5?'#526178':'#a0aab3');root.dataset.light=w.night>.5?'night':w.dusk>.1?'twilight':'day';root.style.colorScheme=w.night>.5?'dark':'light';const solar=previewSolarTimes[appliedSeason],date=previewDates[appliedSeason];document.getElementById('solar-note').textContent=`Seoul · ${date[0]}-${String(date[1]).padStart(2,'0')}-${String(date[2]).padStart(2,'0')} preview · sunrise ≈ ${solarClock(solar.sunrise)}, sunset ≈ ${solarClock(solar.sunset)} KST. Smooth civil-twilight transitions; not live time.`;}
-async function updateSceneSeason(){
+function updateSceneTime(){const mins=Number(sceneTime.value)%1440,h=Math.floor(mins/60),m=mins%60;const text=`${h%12||12}${m?':'+String(m).padStart(2,'0'):''} ${h<12?'am':'pm'}`;document.getElementById('time-readout').value=text;sceneTime.setAttribute('aria-valuetext',text);const w=lightingAt(typeof effectiveTimeMinutes==='function'?effectiveTimeMinutes(mins):mins),root=document.documentElement,theme=sceneTheme(w);for(const [key,c]of Object.entries(theme))root.style.setProperty('--'+key,`rgb(${c.join(' ')})`);root.style.setProperty('--night',String(w.night));root.style.setProperty('--dusk-alpha',String(w.day+w.dusk?w.dusk/(w.day+w.dusk):0));root.style.setProperty('--night-alpha',String(w.night));root.style.setProperty('--festive-light',String(w.night+w.dusk*.4));root.style.setProperty('--line',w.night>.5?'#526178':'#a0aab3');root.dataset.light=w.night>.5?'night':w.dusk>.1?'twilight':'day';root.style.colorScheme=w.night>.5?'dark':'light';const solar=appliedSolarTimes,date=appliedSolarDate;document.getElementById('solar-note').textContent=`Seoul · ${date[0]}-${String(date[1]).padStart(2,'0')}-${String(date[2]).padStart(2,'0')} ${appliedDateIsManual?'manual preview':'captured on page load'} · sunrise ≈ ${solarClock(solar.sunrise)}, sunset ≈ ${solarClock(solar.sunset)} KST. Smooth civil-twilight transitions; not live time.`;}
+async function updateSceneSeason(manual=true){
  const index=Number(sceneSeason.value);if(!Number.isInteger(index)||!sceneNamesValid(index))return;
+ if(manual)manualSeasonSelected=true;const dateIsManual=manualSeasonSelected,date=dateIsManual?previewDates[index]:pageLoadDate;
  const text=seasonNames[index],request=++seasonRequest,status=document.getElementById('scene-status'),retry=document.getElementById('scene-retry');
  document.getElementById('season-readout').value=text;sceneSeason.setAttribute('aria-valuetext',text);sceneSeason.setAttribute('aria-busy','true');retry.hidden=true;
  status.textContent=`Loading ${text.toLowerCase()}… Showing ${seasonNames[appliedSeason].toLowerCase()} until ready.`;
@@ -82,7 +112,7 @@ async function updateSceneSeason(){
   await Promise.all(imgs.map(im=>bounded(im.decode(),SCENE_DECODE_TIMEOUT,'Scene decode')));if(request!==seasonRequest)return;
   // Atomic commit only after all three light keyframes are ready for latest request.
   back.replaceWith(candidate);back=candidate;void back.offsetWidth;back.classList.add('visible');front.classList.remove('visible');[front,back]=[back,front];
-  appliedSeason=index;updateSceneTime();document.documentElement.dataset.season=text.toLowerCase();status.textContent=`${text} ready.`;
+  appliedSeason=index;appliedSolarDate=date;appliedSolarTimes=seoulSolarTimes(...date);appliedDateIsManual=dateIsManual;updateSceneTime();document.documentElement.dataset.season=text.toLowerCase();status.textContent=`${text} ready.`;
  }catch(error){
   if(request!==seasonRequest)return;
   // A decode failure must not poison retries, including already cached resources.
@@ -91,7 +121,7 @@ async function updateSceneSeason(){
  }finally{if(request===seasonRequest)sceneSeason.setAttribute('aria-busy','false')}
 }
 function sceneNamesValid(index){return index>=0&&index<seasonNames.length}
-sceneTime.addEventListener('input',updateSceneTime);sceneSeason.addEventListener('input',updateSceneSeason);document.getElementById('scene-retry').addEventListener('click',updateSceneSeason);updateSceneTime();updateSceneSeason();
+sceneTime.addEventListener('input',updateSceneTime);sceneSeason.addEventListener('input',updateSceneSeason);document.getElementById('scene-retry').addEventListener('click',()=>updateSceneSeason(manualSeasonSelected));updateSceneTime();updateSceneSeason(false);
 
 // Manual PM2.5 preview, not live AQI or a real tower operating schedule.
 function airBand(value){if(value===null)return {name:'Unknown',hue:0,color:'transparent',saturation:0};if(value<=15)return {name:'Good',hue:160,color:'#3b87e8'};if(value<=35)return {name:'Fair',hue:65,color:'#4cbd78'};if(value<=75)return {name:'Bad',hue:10,color:'#e5bd37'};return {name:'Very bad',hue:-45,color:'#e7685c'};}
