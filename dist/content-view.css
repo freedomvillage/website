@@ -51,3 +51,6 @@
 .library-detail>.motion-toggle{position:relative;bottom:auto;right:auto;margin:0 0 18px;min-height:40px;padding:8px 14px;font-size:12px}
 
 .practical-card .library-copy{padding-bottom:20px}.practical-card h2 a{height:auto!important;color:inherit}.practical-actions{padding:0 30px 24px;display:flex;flex-direction:column;gap:0}.card .practical-actions a{height:auto;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid currentColor;padding:11px 0;color:inherit;font-size:13px}.practical-actions a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+
+/* Reset legacy negative nav margins inside the mobile drawer's scroll clip. */
+@media(max-width:700px){#sidebar #filters a{margin-left:0;min-height:44px;padding:10px 12px}}
