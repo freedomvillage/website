@@ -1,0 +1,22 @@
+dist/content-view.css
+  h_9a6e2a87fc4a0d 52-53
+source-manifest.json
+  h_9a6e2a87fc4a0d 103,154-159
+src/content/catalog.mjs
+  h_9a6e2a87fc4a0d 12,21
+src/content/render.mjs
+  h_9a6e2a87fc4a0d 16
+tests/content-library.test.mjs
+  h_9a6e2a87fc4a0d 47-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "795c0c2bc2a8a24469aaf173189faa7cd0872a25",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
