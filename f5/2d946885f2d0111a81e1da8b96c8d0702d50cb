@@ -1,0 +1,14 @@
+dist/style.css
+  h_9a6e2a87fc4a0d 92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f52d946885f2d0111a81e1da8b96c8d0702d50cb",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
