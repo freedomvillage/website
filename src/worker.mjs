@@ -2,6 +2,7 @@ import {nightWindow} from './seoul-night.mjs';
 import {DIAGNOSTIC_KEY,diagnostic,xmlCode,boundedBody,payloadCategory} from './air-diagnostics.mjs';
 import {handleCatalogRequest,handleMediaRequest} from './content/catalog.mjs';
 import {handleJevCheck} from './content/check.mjs';
+import {handleRankingEvaluation} from './content/evaluation.mjs';
 import {handleContentPage} from './content/pages.mjs';
 // Provider schema remains fixture-tested until an authorized real response is verified.
 const SOURCE='https://www.airkorea.or.kr/';
@@ -44,6 +45,7 @@ export function createWorker({fetchUpstream=fetch,now=Date.now}={}){
    const url=new URL(request.url);
    if(url.pathname==='/api/content')return handleCatalogRequest(request,env,{now:now()});
    if(url.pathname==='/api/content/jev-check')return handleJevCheck(request,env);
+   if(url.pathname==='/api/content/evaluation')return handleRankingEvaluation(request,env);
    if(url.pathname.startsWith('/media/'))return handleMediaRequest(request,env,{now:now()});
    if(!url.pathname.startsWith('/api/')){
     if(/\.(?:css|mjs|js|png|jpe?g|svg|webp|avif|ico|woff2?|map|json)$/.test(url.pathname))return env.ASSETS.fetch(request);
