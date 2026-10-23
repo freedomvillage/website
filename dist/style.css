@@ -124,3 +124,17 @@ html[data-site-revealed="true"] #site-loading{display:none}
 /* Approved Canva horizontal lockup for mobile; desktop vertical artwork unchanged. */
 .mobile-horizontal-logo{display:block;width:100%;height:auto;overflow:hidden}
 @media(max-width:700px){.mobile-bar{gap:16px;padding:16px 18px}.mobile-brand{display:flex;align-items:center;width:min(230px,calc(100vw - 132px));min-width:0;min-height:44px;flex-shrink:1;color:var(--ink)}.mobile-bar button{flex-shrink:0;min-height:44px}}
+
+/* Two-level settings: everyday appearance and an undimmed scene-preview panel. */
+#scene-settings-dialog::backdrop{background:#101b2c80;backdrop-filter:none}
+.mode-picker button{flex:1;min-height:48px;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+.mode-picker button[aria-pressed="true"]{background:color-mix(in srgb,var(--ink) 12%,var(--paper));border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);font-weight:700}
+.actual-air{margin:24px 0;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.actual-air h3{font-size:11px;font-weight:500;margin:0 0 10px}.actual-air-value{font:32px Georgia,serif;margin:0 0 8px}.air-credit{font-size:10px;color:var(--muted);margin:12px 0 0}.air-credit a{color:inherit}
+.advanced-settings-link{display:flex;justify-content:space-between;gap:16px;align-items:center;min-height:44px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
+#advanced-settings-dialog{position:fixed;inset:12px 12px auto auto;margin:0;box-sizing:border-box;width:min(328px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--paper);color:var(--ink);box-shadow:0 8px 30px #0003}
+#advanced-settings-dialog::backdrop{background:transparent;backdrop-filter:none}
+#advanced-settings-dialog .settings-heading{gap:12px;margin-bottom:12px}#advanced-settings-dialog .settings-heading h2{font-size:22px}#advanced-settings-dialog .settings-heading button{min-width:44px;min-height:44px}
+#advanced-settings-dialog .scene-controls{max-width:none;margin-top:12px;font-size:11px}#advanced-settings-dialog .control-note{font-size:10px;line-height:1.5}#advanced-settings-dialog .season-ends{font-size:9px}#advanced-settings-dialog #resume-clock{min-height:36px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink)}
+
+#scene-settings-dialog .settings-heading button{min-width:44px;min-height:44px}#advanced-settings-dialog fieldset{min-inline-size:0}

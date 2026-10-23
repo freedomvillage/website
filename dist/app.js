@@ -160,6 +160,7 @@ sceneTime.addEventListener('input',updateSceneTime);sceneSeason.addEventListener
 function airBand(value){if(value===null)return {name:'Unknown',hue:0,color:'transparent',saturation:0};if(value<=15)return {name:'Good',hue:160,color:'#3b87e8'};if(value<=35)return {name:'Fair',hue:65,color:'#4cbd78'};if(value<=75)return {name:'Bad',hue:10,color:'#e5bd37'};return {name:'Very bad',hue:-45,color:'#e7685c'};}
 let liveAirReading=null;
 function updateAirQuality(){
+ globalThis.updateActualAirSummary?.();
  const input=document.getElementById('scene-air'),unknown=document.getElementById('scene-air-unknown'),manual=document.getElementById('scene-air-manual')?.checked===true;
  const cached=typeof globalThis.validateCachedAirReading==='function'?globalThis.validateCachedAirReading(liveAirReading,Date.now()):null;
  const value=manual?(unknown.checked?null:Number(input.value)):cached?cached.pm25:null,band=airBand(value);
