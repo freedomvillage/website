@@ -30,6 +30,14 @@
 .library-motif{width:150px;height:150px;fill:currentColor;opacity:.22;align-self:flex-end;margin:0 16px 18px}.layout-graphic .library-motif{width:58%;height:auto;margin-top:-30px;opacity:.6}.size-feature .library-motif{position:absolute;right:-25px;bottom:-24px;width:220px;height:220px;margin:0;z-index:0}
 .library-brand-art{display:flex;align-items:center;justify-content:center;min-height:220px;background:linear-gradient(125deg,#216b77,#7c3a78,#bd3c36,#d27c45);background-size:250% 250%;padding:34px;overflow:hidden}
 .library-brand-art img{display:block;width:100%;max-height:210px;object-fit:contain}
+.library-image{margin:0;min-width:0;background:#202b27;color:#f0ecdf}
+.library-image-frame{width:100%;overflow:hidden}.library-image img{display:block;width:100%;height:100%}
+.library-image figcaption{padding:10px 16px;font:11px/1.5 Arial,sans-serif;overflow-wrap:anywhere}
+.layout-image .library-card-link{flex-direction:column-reverse}.layout-image .library-copy{padding:26px 30px!important;max-width:none!important}
+.card.layout-image h2{font-size:clamp(30px,3vw,44px)!important}.layout-image .library-excerpt{max-width:46ch}
+.library-detail.has-image .library-detail-heading{display:flex;flex-direction:column-reverse;align-items:stretch}
+.library-detail.has-image .library-image{border-radius:8px;overflow:hidden;max-width:100%}
+.library-detail.has-image .library-image-frame{max-height:660px}.library-detail.has-image .library-detail-heading>div{max-width:720px}
 .card.library-card.layout-brand .library-card-link{flex-direction:column-reverse}.card.layout-brand .library-copy{padding-bottom:54px}
 .has-motion .library-brand-art{animation:brand-drift 18s ease-in-out infinite alternate;animation-play-state:paused}
 .has-motion.is-visible:not(.motion-paused) .library-brand-art{animation-play-state:running}

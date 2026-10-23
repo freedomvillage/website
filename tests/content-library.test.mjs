@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
-import {publicCard,readCatalog,handleCatalogRequest,validCursor} from '../src/content/catalog.mjs';
+import {publicCard,readCatalog,handleCatalogRequest,handleMediaRequest,MAX_MEDIA_BYTES,validCursor} from '../src/content/catalog.mjs';
 import {handleContentPage} from '../src/content/pages.mjs';
 const sample=(extra={})=>({schemaVersion:2,template:'story',title:'Sample story',summary:'A concise source summary.',detail:['A complete readable paragraph.'],facts:[],categories:['community'],actions:[],related:[],media:null,design:{theme:'paper',layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false,...extra});
 function database(){
@@ -57,4 +57,20 @@ test('local actions and single-recipient mail handoffs are allowed; header injec
  const valid=publicCard(row(sample({actions:[{label:'Related',targetId:'sample-other'},{label:'Email',href:'mailto:hello@example.org?subject=My%20question'}]})));assert(valid);assert.equal(valid.actions[0].targetId,'sample-other');
  for(const href of ['mailto:hello@example.org?bcc=other@example.org','mailto:hello@example.org?subject=Hi%0ABcc:other@example.org','mailto:one@example.org,two@example.org','file:///tmp/private','javascript:alert(1)'])assert.equal(publicCard(row(sample({actions:[{label:'Bad',href}]}))),null);
  assert.equal(publicCard(row(sample({actions:[{label:'Bad',targetId:'../private'}]}))),null);assert.equal(publicCard(row(sample({actions:[{label:'Bad',targetId:'sample',href:'https://example.org'}]}))),null);
+});
+
+test('private raster images are record-bound, explicitly disclosed and source fields remain private',async()=>{
+ const media={kind:'image',src:'/media/sample-image.jpg',alt:'Source image description.',caption:'Source image, 2025.',width:1024,height:769,disclosure:'historical',fit:'contain',ratio:'4:3',focalPoint:{x:48,y:62}};
+ const row=extra=>({id:'sample-image',content_json:JSON.stringify(sample({media:{...media,...extra},design:{theme:'paper',layout:'image',motif:'none',motion:'none',size:'feature'}}))});
+ assert(publicCard(row({sourceUrl:'PRIVATE_SOURCE',rightsNote:'PRIVATE_NOTE'})));assert(!JSON.stringify(publicCard(row({sourceUrl:'PRIVATE_SOURCE'}))).includes('PRIVATE_SOURCE'));
+ for(const extra of [{src:'/media/other-image.jpg'},{src:'https://example.org/image.jpg'},{src:'/media/sample-image.svg'},{caption:''},{disclosure:'cleared'},{focalPoint:{x:101,y:50}},{width:13000},{ratio:'1; color:red'}])assert.equal(publicCard(row(extra)),null);
+ const {db,add,adapter}=database();try{
+  add('sample-image',JSON.parse(row({disclosure:'synthetic'}).content_json));let reads=0;
+  const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)},CONTENT_MEDIA:{get:async key=>{reads++;assert.equal(key,'sample-image.jpg');return {size:4,body:'DATA'};},head:async()=>({size:4})}};
+  const html=await(await handleContentPage(req('/cards/sample-image'),env)).text();assert(html.includes('Concept artwork · synthetic portraits'));assert(html.includes('Source image, 2025.'));assert(html.includes('object-fit:contain'));assert(html.includes('width="1024"'));assert(!html.includes('PRIVATE_SOURCE'));
+  const image=await handleMediaRequest(req('/media/sample-image.jpg'),env);assert.equal(image.status,200);assert.equal(image.headers.get('Cache-Control'),'private, no-store');assert.equal(image.headers.get('Cross-Origin-Resource-Policy'),'same-origin');assert.equal(await image.text(),'DATA');
+  assert.equal((await handleMediaRequest(req('/media/other-image.jpg'),env)).status,404);assert.equal((await handleMediaRequest(new Request('https://next.freedomvillage.church/media/sample-image.jpg'),env)).status,404);assert.equal(reads,1);
+  const head=await handleMediaRequest(new Request('https://next.freedomvillage.church/media/sample-image.jpg',{method:'HEAD',headers:{'Cf-Access-Jwt-Assertion':'TEST_FIXTURE'}}),env);assert.equal(head.headers.get('Content-Length'),'4');assert.equal(await head.text(),'');
+  let canceled=false;env.CONTENT_MEDIA.get=async()=>({size:MAX_MEDIA_BYTES+1,body:new ReadableStream({cancel(){canceled=true;}})});assert.equal((await handleMediaRequest(req('/media/sample-image.jpg'),env)).status,413);assert(canceled);
+ }finally{db.close();}
 });
