@@ -9,7 +9,8 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "run_worker_first": [
-      "/api/*"
+      "/api/*",
+      "/media/*"
     ]
   },
   "env": {
@@ -32,7 +33,9 @@
         "AIR_ENABLED": "true",
         "AIR_STATION": "용산구",
         "AIR_PRODUCER_ENABLED": "true",
-        "AIR_DEPLOYMENT_KIND": "production"
+        "AIR_DEPLOYMENT_KIND": "production",
+        "CONTENT_PILOT_ENABLED": "true",
+        "JEV_ENABLED": "true"
       },
       "kv_namespaces": [
         {
@@ -64,6 +67,20 @@
         {
           "pattern": "next.freedomvillage.church",
           "custom_domain": true
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "CONTENT_DB",
+          "database_name": "freedom-village-content-next",
+          "database_id": "4c6e185b-e798-4ffa-9146-a40a36f0075b",
+          "migrations_dir": "migrations/content"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "CONTENT_MEDIA",
+          "bucket_name": "freedom-village-media"
         }
       ]
     }
