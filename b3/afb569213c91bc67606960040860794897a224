@@ -1,0 +1,32 @@
+.github/workflows/content-validation.yml
+  h_9a6e2a87fc4a0d 1-31
+dist/content-view.css
+  h_9a6e2a87fc4a0d 10-12
+dist/content-view.js
+  h_9a6e2a87fc4a0d 4-5,21,28,31,38,45-46
+dist/index.html
+  h_9a6e2a87fc4a0d 4-5
+docs/SEO-AND-SEARCH-PLAN.md
+  h_9a6e2a87fc4a0d 1-37
+source-manifest.json
+  h_9a6e2a87fc4a0d 98,102-103,131-138
+src/content/pages.mjs
+  h_9a6e2a87fc4a0d 1-52
+src/worker.mjs
+  h_9a6e2a87fc4a0d 5,48-51
+tests/content-pages.test.mjs
+  h_9a6e2a87fc4a0d 1-37
+wrangler.jsonc
+  h_9a6e2a87fc4a0d 12-14,16-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b3afb569213c91bc67606960040860794897a224",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
