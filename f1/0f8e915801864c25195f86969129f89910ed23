@@ -1,0 +1,34 @@
+dist/content-view.css
+  h_9a6e2a87fc4a0d 66-71
+docs/PRIVATE-DESIGN-STUDIES.md
+  h_9a6e2a87fc4a0d 1-7
+package.json
+  h_9a6e2a87fc4a0d 7
+scripts/validate.mjs
+  h_9a6e2a87fc4a0d 5
+source-manifest.json
+  h_9a6e2a87fc4a0d 103,178-189
+src/content/pages.mjs
+  h_9a6e2a87fc4a0d 17,26,54,56
+src/content/render.mjs
+  h_9a6e2a87fc4a0d 21-24,26
+src/content/studies.mjs
+  h_9a6e2a87fc4a0d 1-35
+src/worker.mjs
+  h_9a6e2a87fc4a0d 7,51
+tests/content-studies.test.mjs
+  h_9a6e2a87fc4a0d 1-17
+wrangler.jsonc
+  h_9a6e2a87fc4a0d 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f10f8e915801864c25195f86969129f89910ed23",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
