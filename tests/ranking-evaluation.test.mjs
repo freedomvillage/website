@@ -1,6 +1,6 @@
 // Entirely intercepted provider/SQLite fixtures: no real API, keys or remote storage.
 import test from 'node:test';import assert from 'node:assert/strict';import {DatabaseSync} from 'node:sqlite';
-import {handleRankingEvaluation,validFixtures} from '../src/content/evaluation.mjs';import {lexicalRank} from '../src/content/lexical.mjs';import {rankingRequest} from '../src/content/jev.mjs';
+import {handleRankingEvaluation,validFixtures} from '../src/content/evaluation.mjs';import {lexicalRank} from '../src/content/lexical.mjs';import {rankingRequest,rankingResult,rankPublishedCards} from '../src/content/jev.mjs';
 const instant=Date.parse('2026-10-24T00:00:00Z'),secret='LOCAL_TEST_VALUE_NOT_A_CREDENTIAL';
 const fixtures={version:1,isSyntheticQuery:true,executionApproved:true,remainingCreditsUsd:1,creditVerifiedAt:new Date(instant).toISOString(),cases:[{id:'sample-one',query:'baptisim',expectedUsefulIds:['sample-baptism']},{id:'sample-two',query:'a different question',expectedUsefulIds:[]}]};
 const content=(title,summary)=>({schemaVersion:2,template:'story',title,summary,detail:['Fixture paragraph.'],facts:[],categories:['faith'],actions:[],related:[],media:null,design:{theme:'paper',layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false});
@@ -55,4 +55,19 @@ test('a delayed body uses current budget and current fixture approval under the 
   delayed.release();const response=await pending;assert.equal(response.status,409);assert.equal((await response.json()).status,mode==='budget'?'experiment-budget-exhausted':'credit-verification-required');assert.equal(calls,0);
   assert.equal(JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get('ranking-eval-v1:lock').result_json).caseId,null);
  }finally{db.close();}}
+});
+
+test('probability rounding boundary is stable without clamping or renormalizing provider values',()=>{
+ const cards=[{id:'sample-one',title:'Sample',summary:'Fixture'}],r=rankingRequest('query',cards);
+ for(const probabilities of [{0:.33,1:.33,2:.33},{0:.34,1:.33,2:.34}]){
+  const score=probabilities[1]+2*probabilities[2],payload={model:'jev-1.14.0',usage:{input_tokens:1,output_tokens:1},answers:{card_0:{type:'score',score,confidence:0,probabilities}}};
+  const result=rankingResult(payload,r);assert.deepEqual(result.ranked[0].probabilities,probabilities);assert.equal(result.ranked[0].score,score);
+ }
+ const bad={model:'jev-1.14.0',usage:{input_tokens:1,output_tokens:1},answers:{card_0:{type:'score',score:.99,confidence:0,probabilities:{0:.32,1:.33,2:.33}}}};
+ assert.throws(()=>rankingResult(bad,r),e=>e.validationCode==='probability-sum');
+});
+test('invalid provider data retains only fixed validation categories and bounded numeric context',async()=>{
+ const cards=[{id:'sample-one',title:'Sample',summary:'Fixture'}];
+ const result=await rankPublishedCards('query',cards,{JEV_ENABLED:'true',TYPESAFE_API_KEY:secret},{fetchUpstream:async()=>Response.json({model:'jev-1.14.0',usage:{input_tokens:18,output_tokens:4},answers:{card_0:{type:'score',confidence:.5,score:'PRIVATE_VALUE',probabilities:{0:0,1:1,2:0}}},message:'PRIVATE_PROVIDER_TEXT'})});
+ assert.equal(result.status,'unavailable');assert.deepEqual(result.validation,{code:'score',questionIndex:0,answerCount:1,model:'jev-1.14.0'});assert(!JSON.stringify(result).includes('PRIVATE'));assert.equal(result.usage.inputTokens,18);assert.deepEqual(result.ranked,[]);
 });

@@ -9,6 +9,9 @@ const LEVELS = [
 ];
 const unit = x => typeof x === 'number' && Number.isFinite(x) && x >= 0 && x <= 1;
 const integer = x => Number.isSafeInteger(x) && x >= 0;
+const MODEL=/^jev-[a-zA-Z0-9._-]{1,80}$/;
+const VALIDATION_CODES=new Set(['model','answer-count','usage','answer-type','confidence','score','probability-shape','probability-range','probability-sum','score-consistency']);
+function invalid(code,index=null){const error=new TypeError('Invalid ranking result');error.validationCode=code;error.questionIndex=index;throw error;}
 
 export function rankingRequest(query, publishedCards, model='jev-latest') {
   if (typeof query !== 'string' || !query.trim() || query.length > 500 ||
@@ -54,18 +57,20 @@ async function boundedJson(response) {
 
 export function rankingResult(payload, request) {
   const keys = Object.keys(request.questions);
-  if (!/^jev-[a-zA-Z0-9._-]{1,80}$/.test(payload?.model) ||
-      !payload.answers || Object.keys(payload.answers).length !== keys.length ||
-      !integer(payload.usage?.input_tokens) || !integer(payload.usage?.output_tokens))
-    throw new TypeError('Invalid ranking result');
+  if(typeof payload?.model!=='string'||!MODEL.test(payload.model))invalid('model');
+  if(!payload.answers||Array.isArray(payload.answers)||typeof payload.answers!=='object'||Object.keys(payload.answers).length!==keys.length)invalid('answer-count');
+  if(!integer(payload.usage?.input_tokens)||!integer(payload.usage?.output_tokens))invalid('usage');
   const ranked = keys.map((key,i) => {
     const a = payload.answers[key], probabilities = a?.probabilities;
-    if (a?.type !== 'score' || !unit(a.confidence) || !Number.isFinite(a.score) || a.score < 0 || a.score > 2 ||
-        !probabilities || Object.keys(probabilities).length !== 3 ||
-        !['0','1','2'].every(k => unit(probabilities[k])) ||
-        Math.abs(probabilities[0] + probabilities[1] + probabilities[2] - 1) > 0.01 ||
-        Math.abs(a.score - (probabilities[1] + 2 * probabilities[2])) > 0.025)
-      throw new TypeError('Invalid ranking result');
+    if(a?.type!=='score')invalid('answer-type',i);
+    if(!unit(a.confidence))invalid('confidence',i);
+    if(!Number.isFinite(a.score)||a.score<0||a.score>2)invalid('score',i);
+    if(!probabilities||Array.isArray(probabilities)||Object.keys(probabilities).length!==3)invalid('probability-shape',i);
+    if(!['0','1','2'].every(k=>unit(probabilities[k])))invalid('probability-range',i);
+    // Preserve the intended rounding tolerance at its binary floating-point boundary.
+    // Do not clamp or renormalize the provider's raw probabilities or scores.
+    if(Math.abs(probabilities[0]+probabilities[1]+probabilities[2]-1)>.01+1e-12)invalid('probability-sum',i);
+    if(Math.abs(a.score-(probabilities[1]+2*probabilities[2]))>.025+1e-12)invalid('score-consistency',i);
     return {id:request.state.candidates[i].id, score:a.score, confidence:a.confidence,
       probabilities:{0:probabilities[0], 1:probabilities[1], 2:probabilities[2]}};
   });
@@ -90,7 +95,8 @@ export async function rankPublishedCards(query, publishedCards, env, {fetchUpstr
     if (!response.ok) return {status:'unavailable', category:'http', httpStatus:response.status, ranked:[]};
     const payload=await boundedJson(response);
     try { return rankingResult(payload, request); }
-    catch { return {status:'unavailable',category:'invalid-response',httpStatus:response.status,ranked:[],
+    catch(error) { return {status:'unavailable',category:'invalid-response',httpStatus:response.status,ranked:[],
+      validation:{code:VALIDATION_CODES.has(error?.validationCode)?error.validationCode:'unknown',questionIndex:Number.isSafeInteger(error?.questionIndex)&&error.questionIndex>=0&&error.questionIndex<publishedCards.length?error.questionIndex:null,answerCount:payload?.answers&&typeof payload.answers==='object'&&Object.keys(payload.answers).length<=1000?Object.keys(payload.answers).length:null,model:typeof payload?.model==='string'&&MODEL.test(payload.model)?payload.model:null},
       ...(integer(payload?.usage?.input_tokens)&&integer(payload?.usage?.output_tokens)?
         {usage:{inputTokens:payload.usage.input_tokens,outputTokens:payload.usage.output_tokens}}:{})}; }
   } catch { return {status:'unavailable', category:'transport-or-body', ranked:[]}; }
