@@ -1,0 +1,18 @@
+AIR-CACHE.md
+  h_9a6e2a87fc4a0d 63-66
+README.md
+  h_9a6e2a87fc4a0d 9,28,34
+wrangler.jsonc
+  h_9a6e2a87fc4a0d 8-14,20-24,30-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "277c9d0906b8b109ea0a8dca05153cfbc8682560",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
