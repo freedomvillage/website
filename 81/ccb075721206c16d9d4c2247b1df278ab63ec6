@@ -1,0 +1,38 @@
+README.md
+  h_9a6e2a87fc4a0d 7,9
+dist/app.js
+  h_9a6e2a87fc4a0d 46-68,71,85,97-99
+dist/index.html
+  h_9a6e2a87fc4a0d 6
+dist/style.css
+  h_9a6e2a87fc4a0d 86,102-104
+package.json
+  h_9a6e2a87fc4a0d 7
+source-manifest.json
+  h_9a6e2a87fc4a0d 2,6,18,24,26-72
+tests/composer.cjs
+  h_9a6e2a87fc4a0d 1-8
+tests/focus.cjs
+  h_9a6e2a87fc4a0d 1-10
+tests/manual-air.cjs
+  h_9a6e2a87fc4a0d 1-4
+tests/scene-edges.cjs
+  h_9a6e2a87fc4a0d 1-8
+tests/scene-recovery.cjs
+  h_9a6e2a87fc4a0d 1-22
+tests/scene.cjs
+  h_9a6e2a87fc4a0d 1-10
+tests/solar.cjs
+  h_9a6e2a87fc4a0d 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "81ccb075721206c16d9d4c2247b1df278ab63ec6",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
