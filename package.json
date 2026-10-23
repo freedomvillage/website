@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/worker.test.mjs tests/air-client.test.mjs && node tests/manual-air.cjs && node tests/composer.cjs && node tests/focus.cjs && node tests/scene-edges.cjs && node tests/scene-recovery.cjs && node tests/scene.cjs && node tests/solar.cjs && node tests/calendar.cjs && node tests/holyweek.cjs && node scripts/validate.mjs"
+    "test": "node --test tests/worker.test.mjs tests/air-client.test.mjs && node tests/manual-air.cjs && node tests/composer.cjs && node tests/focus.cjs && node tests/scene-edges.cjs && node tests/scene-recovery.cjs && node tests/scene.cjs && node tests/solar.cjs && node tests/calendar.cjs && node tests/holyweek.cjs && node scripts/validate.mjs && node tests/ui-refinements.cjs && node tests/clock-startup.cjs"
   },
   "engines": {
     "node": ">=22"

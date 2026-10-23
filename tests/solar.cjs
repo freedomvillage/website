@@ -1,5 +1,5 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const source=fs.readFileSync('dist/app.js','utf8');const c={};vm.createContext(c);vm.runInContext('const smooth=t=>t*t*(3-2*t);let appliedSeason=2;'+source.slice(source.indexOf('// Seoul daylight preview:'),source.indexOf('// End Seoul daylight calculations.')),c);const run=s=>vm.runInContext(s,c);
+const source=fs.readFileSync('dist/app.js','utf8');const c={};c.pageLoadDate=[2026,7,15];c.sceneTime={};vm.createContext(c);vm.runInContext('const smooth=t=>t*t*(3-2*t);let appliedSeason=2;'+source.slice(source.indexOf('// Seoul daylight preview:'),source.indexOf('// End Seoul daylight calculations.')),c);const run=s=>vm.runInContext(s,c);
 // Timeanddate Seoul 2026: June 21 05:11 / 19:56, civil 04:39 / 20:27;
 // Dec 15 07:39 / 17:14, civil 07:10 / 17:43. Allow 5 min for NOAA approximation.
 // https://www.timeanddate.com/sun/south-korea/seoul?month=6

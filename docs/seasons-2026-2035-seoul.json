@@ -1,0 +1,443 @@
+{
+  "sourceTitle": "U.S. Naval Observatory Earth's Seasons API",
+  "sourceDocumentation": "https://aa.usno.navy.mil/data/api.html",
+  "sourceDescription": "https://aa.usno.navy.mil/data/Earth_Seasons",
+  "retrievedUtc": "2026-10-23",
+  "timezone": "Asia/Seoul",
+  "verification": "All 40 UTC instants independently converted with Python zoneinfo Asia/Seoul and exactly matched USNO tz=9,dst=false response dates/times.",
+  "datePolicy": "These are Seoul civil dates containing astronomical instants, suitable for page-load date-only season selection. Midnight selection on that date may precede actual instant; use seoul timestamp for exact-instant season changes.",
+  "rows": [
+    {
+      "year": 2026,
+      "spring": "03-20",
+      "summer": "06-21",
+      "fall": "09-23",
+      "winter": "12-22"
+    },
+    {
+      "year": 2027,
+      "spring": "03-21",
+      "summer": "06-21",
+      "fall": "09-23",
+      "winter": "12-22"
+    },
+    {
+      "year": 2028,
+      "spring": "03-20",
+      "summer": "06-21",
+      "fall": "09-22",
+      "winter": "12-21"
+    },
+    {
+      "year": 2029,
+      "spring": "03-20",
+      "summer": "06-21",
+      "fall": "09-23",
+      "winter": "12-21"
+    },
+    {
+      "year": 2030,
+      "spring": "03-20",
+      "summer": "06-21",
+      "fall": "09-23",
+      "winter": "12-22"
+    },
+    {
+      "year": 2031,
+      "spring": "03-21",
+      "summer": "06-21",
+      "fall": "09-23",
+      "winter": "12-22"
+    },
+    {
+      "year": 2032,
+      "spring": "03-20",
+      "summer": "06-21",
+      "fall": "09-22",
+      "winter": "12-21"
+    },
+    {
+      "year": 2033,
+      "spring": "03-20",
+      "summer": "06-21",
+      "fall": "09-23",
+      "winter": "12-21"
+    },
+    {
+      "year": 2034,
+      "spring": "03-20",
+      "summer": "06-21",
+      "fall": "09-23",
+      "winter": "12-22"
+    },
+    {
+      "year": 2035,
+      "spring": "03-21",
+      "summer": "06-21",
+      "fall": "09-23",
+      "winter": "12-22"
+    }
+  ],
+  "events": [
+    {
+      "year": 2026,
+      "season": "spring",
+      "utc": "2026-03-20T14:46:00+00:00",
+      "seoul": "2026-03-20T23:46:00+09:00",
+      "date": "2026-03-20",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2026&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2026&tz=9&dst=false"
+    },
+    {
+      "year": 2026,
+      "season": "summer",
+      "utc": "2026-06-21T08:24:00+00:00",
+      "seoul": "2026-06-21T17:24:00+09:00",
+      "date": "2026-06-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2026&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2026&tz=9&dst=false"
+    },
+    {
+      "year": 2026,
+      "season": "fall",
+      "utc": "2026-09-23T00:05:00+00:00",
+      "seoul": "2026-09-23T09:05:00+09:00",
+      "date": "2026-09-23",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2026&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2026&tz=9&dst=false"
+    },
+    {
+      "year": 2026,
+      "season": "winter",
+      "utc": "2026-12-21T20:50:00+00:00",
+      "seoul": "2026-12-22T05:50:00+09:00",
+      "date": "2026-12-22",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2026&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2026&tz=9&dst=false"
+    },
+    {
+      "year": 2027,
+      "season": "spring",
+      "utc": "2027-03-20T20:25:00+00:00",
+      "seoul": "2027-03-21T05:25:00+09:00",
+      "date": "2027-03-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2027&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2027&tz=9&dst=false"
+    },
+    {
+      "year": 2027,
+      "season": "summer",
+      "utc": "2027-06-21T14:11:00+00:00",
+      "seoul": "2027-06-21T23:11:00+09:00",
+      "date": "2027-06-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2027&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2027&tz=9&dst=false"
+    },
+    {
+      "year": 2027,
+      "season": "fall",
+      "utc": "2027-09-23T06:02:00+00:00",
+      "seoul": "2027-09-23T15:02:00+09:00",
+      "date": "2027-09-23",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2027&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2027&tz=9&dst=false"
+    },
+    {
+      "year": 2027,
+      "season": "winter",
+      "utc": "2027-12-22T02:42:00+00:00",
+      "seoul": "2027-12-22T11:42:00+09:00",
+      "date": "2027-12-22",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2027&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2027&tz=9&dst=false"
+    },
+    {
+      "year": 2028,
+      "season": "spring",
+      "utc": "2028-03-20T02:17:00+00:00",
+      "seoul": "2028-03-20T11:17:00+09:00",
+      "date": "2028-03-20",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2028&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2028&tz=9&dst=false"
+    },
+    {
+      "year": 2028,
+      "season": "summer",
+      "utc": "2028-06-20T20:02:00+00:00",
+      "seoul": "2028-06-21T05:02:00+09:00",
+      "date": "2028-06-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2028&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2028&tz=9&dst=false"
+    },
+    {
+      "year": 2028,
+      "season": "fall",
+      "utc": "2028-09-22T11:45:00+00:00",
+      "seoul": "2028-09-22T20:45:00+09:00",
+      "date": "2028-09-22",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2028&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2028&tz=9&dst=false"
+    },
+    {
+      "year": 2028,
+      "season": "winter",
+      "utc": "2028-12-21T08:19:00+00:00",
+      "seoul": "2028-12-21T17:19:00+09:00",
+      "date": "2028-12-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2028&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2028&tz=9&dst=false"
+    },
+    {
+      "year": 2029,
+      "season": "spring",
+      "utc": "2029-03-20T08:02:00+00:00",
+      "seoul": "2029-03-20T17:02:00+09:00",
+      "date": "2029-03-20",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2029&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2029&tz=9&dst=false"
+    },
+    {
+      "year": 2029,
+      "season": "summer",
+      "utc": "2029-06-21T01:48:00+00:00",
+      "seoul": "2029-06-21T10:48:00+09:00",
+      "date": "2029-06-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2029&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2029&tz=9&dst=false"
+    },
+    {
+      "year": 2029,
+      "season": "fall",
+      "utc": "2029-09-22T17:38:00+00:00",
+      "seoul": "2029-09-23T02:38:00+09:00",
+      "date": "2029-09-23",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2029&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2029&tz=9&dst=false"
+    },
+    {
+      "year": 2029,
+      "season": "winter",
+      "utc": "2029-12-21T14:14:00+00:00",
+      "seoul": "2029-12-21T23:14:00+09:00",
+      "date": "2029-12-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2029&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2029&tz=9&dst=false"
+    },
+    {
+      "year": 2030,
+      "season": "spring",
+      "utc": "2030-03-20T13:52:00+00:00",
+      "seoul": "2030-03-20T22:52:00+09:00",
+      "date": "2030-03-20",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2030&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2030&tz=9&dst=false"
+    },
+    {
+      "year": 2030,
+      "season": "summer",
+      "utc": "2030-06-21T07:31:00+00:00",
+      "seoul": "2030-06-21T16:31:00+09:00",
+      "date": "2030-06-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2030&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2030&tz=9&dst=false"
+    },
+    {
+      "year": 2030,
+      "season": "fall",
+      "utc": "2030-09-22T23:27:00+00:00",
+      "seoul": "2030-09-23T08:27:00+09:00",
+      "date": "2030-09-23",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2030&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2030&tz=9&dst=false"
+    },
+    {
+      "year": 2030,
+      "season": "winter",
+      "utc": "2030-12-21T20:09:00+00:00",
+      "seoul": "2030-12-22T05:09:00+09:00",
+      "date": "2030-12-22",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2030&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2030&tz=9&dst=false"
+    },
+    {
+      "year": 2031,
+      "season": "spring",
+      "utc": "2031-03-20T19:41:00+00:00",
+      "seoul": "2031-03-21T04:41:00+09:00",
+      "date": "2031-03-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2031&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2031&tz=9&dst=false"
+    },
+    {
+      "year": 2031,
+      "season": "summer",
+      "utc": "2031-06-21T13:17:00+00:00",
+      "seoul": "2031-06-21T22:17:00+09:00",
+      "date": "2031-06-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2031&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2031&tz=9&dst=false"
+    },
+    {
+      "year": 2031,
+      "season": "fall",
+      "utc": "2031-09-23T05:15:00+00:00",
+      "seoul": "2031-09-23T14:15:00+09:00",
+      "date": "2031-09-23",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2031&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2031&tz=9&dst=false"
+    },
+    {
+      "year": 2031,
+      "season": "winter",
+      "utc": "2031-12-22T01:55:00+00:00",
+      "seoul": "2031-12-22T10:55:00+09:00",
+      "date": "2031-12-22",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2031&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2031&tz=9&dst=false"
+    },
+    {
+      "year": 2032,
+      "season": "spring",
+      "utc": "2032-03-20T01:22:00+00:00",
+      "seoul": "2032-03-20T10:22:00+09:00",
+      "date": "2032-03-20",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2032&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2032&tz=9&dst=false"
+    },
+    {
+      "year": 2032,
+      "season": "summer",
+      "utc": "2032-06-20T19:09:00+00:00",
+      "seoul": "2032-06-21T04:09:00+09:00",
+      "date": "2032-06-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2032&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2032&tz=9&dst=false"
+    },
+    {
+      "year": 2032,
+      "season": "fall",
+      "utc": "2032-09-22T11:11:00+00:00",
+      "seoul": "2032-09-22T20:11:00+09:00",
+      "date": "2032-09-22",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2032&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2032&tz=9&dst=false"
+    },
+    {
+      "year": 2032,
+      "season": "winter",
+      "utc": "2032-12-21T07:56:00+00:00",
+      "seoul": "2032-12-21T16:56:00+09:00",
+      "date": "2032-12-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2032&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2032&tz=9&dst=false"
+    },
+    {
+      "year": 2033,
+      "season": "spring",
+      "utc": "2033-03-20T07:22:00+00:00",
+      "seoul": "2033-03-20T16:22:00+09:00",
+      "date": "2033-03-20",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2033&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2033&tz=9&dst=false"
+    },
+    {
+      "year": 2033,
+      "season": "summer",
+      "utc": "2033-06-21T01:01:00+00:00",
+      "seoul": "2033-06-21T10:01:00+09:00",
+      "date": "2033-06-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2033&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2033&tz=9&dst=false"
+    },
+    {
+      "year": 2033,
+      "season": "fall",
+      "utc": "2033-09-22T16:51:00+00:00",
+      "seoul": "2033-09-23T01:51:00+09:00",
+      "date": "2033-09-23",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2033&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2033&tz=9&dst=false"
+    },
+    {
+      "year": 2033,
+      "season": "winter",
+      "utc": "2033-12-21T13:46:00+00:00",
+      "seoul": "2033-12-21T22:46:00+09:00",
+      "date": "2033-12-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2033&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2033&tz=9&dst=false"
+    },
+    {
+      "year": 2034,
+      "season": "spring",
+      "utc": "2034-03-20T13:17:00+00:00",
+      "seoul": "2034-03-20T22:17:00+09:00",
+      "date": "2034-03-20",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2034&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2034&tz=9&dst=false"
+    },
+    {
+      "year": 2034,
+      "season": "summer",
+      "utc": "2034-06-21T06:44:00+00:00",
+      "seoul": "2034-06-21T15:44:00+09:00",
+      "date": "2034-06-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2034&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2034&tz=9&dst=false"
+    },
+    {
+      "year": 2034,
+      "season": "fall",
+      "utc": "2034-09-22T22:39:00+00:00",
+      "seoul": "2034-09-23T07:39:00+09:00",
+      "date": "2034-09-23",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2034&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2034&tz=9&dst=false"
+    },
+    {
+      "year": 2034,
+      "season": "winter",
+      "utc": "2034-12-21T19:34:00+00:00",
+      "seoul": "2034-12-22T04:34:00+09:00",
+      "date": "2034-12-22",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2034&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2034&tz=9&dst=false"
+    },
+    {
+      "year": 2035,
+      "season": "spring",
+      "utc": "2035-03-20T19:02:00+00:00",
+      "seoul": "2035-03-21T04:02:00+09:00",
+      "date": "2035-03-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2035&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2035&tz=9&dst=false"
+    },
+    {
+      "year": 2035,
+      "season": "summer",
+      "utc": "2035-06-21T12:33:00+00:00",
+      "seoul": "2035-06-21T21:33:00+09:00",
+      "date": "2035-06-21",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2035&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2035&tz=9&dst=false"
+    },
+    {
+      "year": 2035,
+      "season": "fall",
+      "utc": "2035-09-23T04:39:00+00:00",
+      "seoul": "2035-09-23T13:39:00+09:00",
+      "date": "2035-09-23",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2035&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2035&tz=9&dst=false"
+    },
+    {
+      "year": 2035,
+      "season": "winter",
+      "utc": "2035-12-22T01:31:00+00:00",
+      "seoul": "2035-12-22T10:31:00+09:00",
+      "date": "2035-12-22",
+      "source": "https://aa.usno.navy.mil/api/seasons?year=2035&tz=0&dst=false",
+      "crosscheckSource": "https://aa.usno.navy.mil/api/seasons?year=2035&tz=9&dst=false"
+    }
+  ]
+}

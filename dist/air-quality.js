@@ -4,8 +4,12 @@
  const POLL_MS = 15 * 60 * 1000, MAX_AGE_MS = 60 * 60 * 1000;
  function usableReading(value, now) {
   if (!value || value.status !== 'ok' || typeof value.pm25 !== 'number' || !Number.isFinite(value.pm25) || value.pm25 < 0 || value.pm25 > 1000) return null;
-  const observed = Date.parse(value.observedAt), until = Date.parse(value.validUntil);
-  if (!Number.isFinite(observed) || !Number.isFinite(until) || observed > now + 5 * 60 * 1000 || now - observed >= MAX_AGE_MS || until <= now || until > observed + MAX_AGE_MS) return null;
+  // Require unambiguous instants, not device-local date strings. Invalid/flagged data fails closed.
+  if (value.flagged === true || value.pm25Flag || typeof value.observedAt !== 'string' || typeof value.validUntil !== 'string' || !/T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value.observedAt) || !/T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value.validUntil)) return null;
+  const observed = Date.parse(value.observedAt), suppliedUntil = Date.parse(value.validUntil);
+  // Clamp an older server's longer TTL rather than rejecting a genuinely fresh observation.
+  const until = Math.min(suppliedUntil, observed + MAX_AGE_MS);
+  if (!Number.isFinite(observed) || !Number.isFinite(until) || observed > now || now - observed >= MAX_AGE_MS || until <= now) return null;
   return {status:'ok', pm25:value.pm25, observedAt:new Date(observed).toISOString(), validUntil:new Date(until).toISOString(), station:typeof value.station === 'string' ? value.station : '', source:typeof value.source === 'string' ? value.source : ''};
  }
  function createAirQualityClient(options) {
@@ -13,16 +17,24 @@
   const fetchCached = options.fetch || root.fetch.bind(root);
   const interval = options.setInterval || root.setInterval.bind(root), clearInterval = options.clearInterval || root.clearInterval.bind(root);
   const scheduleTimeout = options.setTimeout || root.setTimeout.bind(root), cancelTimeout = options.clearTimeout || root.clearTimeout.bind(root);
-  let reading = null, lastAttempt = -Infinity, pending = null, serial = 0, timer = null, stopped = false;
+  let reading = null, lastAttempt = -Infinity, pending = null, serial = 0, timer = null, expiryTimer = null, stopped = false;
   function stateAt(time) {
    const state = options.getState();
    return {manual:!!state.manual, hidden:!!state.hidden, visualNight:Number(state.visualNight) > 0, realNight:!!options.isRealNight(time)};
   }
   function allowed(state) { return !state.manual && !state.hidden && state.visualNight && state.realNight; }
   function cancelPending() { serial++; if (pending) { pending.controller?.abort(); cancelTimeout(pending.timeout); pending = null; } }
+  function clearExpiry() { if (expiryTimer !== null) cancelTimeout(expiryTimer); expiryTimer = null; }
   function display(state, time, reason) {
-   if (state.manual || stopped) return;
-   const valid = state.realNight && state.visualNight ? usableReading(reading,time) : null;
+   clearExpiry();
+   if (stopped) return;
+   const fresh = usableReading(reading,time);
+   if (!fresh) reading = null;
+   // Expire at the observation's deadline even if the minute polling tick has not fired.
+   // Every callback rechecks wall time, so sleep/throttling or clock changes cannot revive stale data.
+   if (fresh) expiryTimer = scheduleTimeout(() => { expiryTimer = null; const time = now(); display(stateAt(time),time); }, Math.max(1,Date.parse(fresh.validUntil)-time));
+   if (state.manual) return;
+   const valid = state.realNight && state.visualNight ? fresh : null;
    options.render(valid || {status:'unknown',pm25:null,observedAt:null,validUntil:null,reason:reason || (!state.realNight ? 'daytime' : !state.visualNight ? 'scene-daytime' : 'missing-or-stale')});
   }
   async function tick() {
@@ -51,7 +63,7 @@
    }
   }
   function start() { if (timer !== null) return; stopped = false; void tick(); timer = interval(() => { void tick(); },60000); }
-  function stop() { stopped = true; cancelPending(); if (timer !== null) clearInterval(timer); timer = null; }
+  function stop() { stopped = true; cancelPending(); clearExpiry(); if (timer !== null) clearInterval(timer); timer = null; }
   return {tick,start,stop};
  }
  root.createAirQualityClient = createAirQualityClient;
