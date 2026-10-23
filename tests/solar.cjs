@@ -1,0 +1,12 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('dist/app.js','utf8');const c={};vm.createContext(c);vm.runInContext('const smooth=t=>t*t*(3-2*t);let appliedSeason=2;'+source.slice(source.indexOf('// Seoul daylight preview:'),source.indexOf('// End Seoul daylight calculations.')),c);const run=s=>vm.runInContext(s,c);
+// Timeanddate Seoul 2026: June 21 05:11 / 19:56, civil 04:39 / 20:27;
+// Dec 15 07:39 / 17:14, civil 07:10 / 17:43. Allow 5 min for NOAA approximation.
+// https://www.timeanddate.com/sun/south-korea/seoul?month=6
+// https://www.timeanddate.com/sun/south-korea/seoul?month=12
+for(const [month,day,expected]of [[6,21,[279,311,1196,1227]],[12,15,[430,459,1034,1063]]]){const result=run(`seoulSolarTimes(2026,${month},${day})`);for(const [i,key]of ['dawn','sunrise','sunset','dusk'].entries())assert(Math.abs(result[key]-expected[i])<=5,`${month}/${day} ${key}: ${result[key]}`);}
+for(const year of [2024,2026,2028])for(let month=1;month<=12;month++){const s=run(`seoulSolarTimes(${year},${month},15)`);assert(s.dawn<s.sunrise&&s.sunrise<s.sunset&&s.sunset<s.dusk);}
+const dates=run('previewDates');assert.equal(JSON.stringify(dates),JSON.stringify([[2026,1,15],[2026,4,15],[2026,7,15],[2026,10,15],[2026,12,25]]));
+for(let season=0;season<5;season++){run(`appliedSeason=${season}`);const s=run('previewSolarTimes[appliedSeason]');for(let minute=0;minute<=1440;minute++){const w=run(`lightingAt(${minute})`);assert(Object.values(w).every(v=>v>=0&&v<=1));assert(Math.abs(w.day+w.dusk+w.night-1)<1e-12);}for(const boundary of [s.dawn,s.sunrise,s.sunrise+60,s.sunset-60,s.sunset,s.dusk]){const a=run(`lightingAt(${boundary}-.001)`),b=run(`lightingAt(${boundary}+.001)`);assert(Object.keys(a).every(k=>Math.abs(a[k]-b[k])<1e-6));}assert.equal(run('lightingAt(720).day'),1);assert.equal(run('lightingAt(0).night'),1);assert.equal(JSON.stringify(run('lightingAt(0)')),JSON.stringify(run('lightingAt(1440)')));console.log(['Winter','Spring','Summer','Fall','Christmas'][season],run(`solarClock(${s.sunrise})`),run(`solarClock(${s.sunset})`));}
+assert(!source.includes('getTimezoneOffset'));assert(!source.includes('getFullYear('));
+console.log('PASS: NOAA/Seoul almanac samples within 5min, leap years, seasonal dates, all-minute convex weights, continuous boundaries, noon/midnight overrides');

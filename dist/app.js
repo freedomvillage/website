@@ -43,10 +43,32 @@ function preloadAsset(src){
 let seasonRequest=0,front=document.getElementById('scene-front'),back=document.getElementById('scene-back'),appliedSeason=2;
 document.documentElement.dataset.season='summer';
 const smooth=t=>t*t*(3-2*t);
-function lightingAt(minutes){const t=((Number(minutes)%1440)+1440)%1440/60;const keys=[[0,0],[4.5,0],[6,1],[8,2],[16.5,2],[18.5,1],[20.5,0],[24,0]];let i=0;while(t>keys[i+1][0])i++;const a=keys[i],b=keys[i+1],v=a[1]+(b[1]-a[1])*smooth((t-a[0])/(b[0]-a[0]));return {day:Math.max(0,v-1),dusk:1-Math.abs(v-1),night:Math.max(0,1-v)};}
+// Seoul daylight preview: NOAA fractional-year approximation, fixed KST (UTC+9).
+// https://gml.noaa.gov/grad/solcalc/solareqns.PDF ; no device-local dates or API.
+const previewDates=[[2026,1,15],[2026,4,15],[2026,7,15],[2026,10,15],[2026,12,25]];
+function seoulSolarTimes(year,month,day){
+ const rad=Math.PI/180,lat=37.5665*rad,lon=126.978,offset=540;
+ const start=Date.UTC(year,0,1),date=Date.UTC(year,month-1,day),days=(Date.UTC(year+1,0,1)-start)/86400000;
+ const g=2*Math.PI/days*((date-start)/86400000);
+ const eq=229.18*(.000075+.001868*Math.cos(g)-.032077*Math.sin(g)-.014615*Math.cos(2*g)-.040849*Math.sin(2*g));
+ const dec=.006918-.399912*Math.cos(g)+.070257*Math.sin(g)-.006758*Math.cos(2*g)+.000907*Math.sin(2*g)-.002697*Math.cos(3*g)+.00148*Math.sin(3*g);
+ const noon=720-4*lon-eq+offset;
+ const span=alt=>4/rad*Math.acos((Math.sin(alt*rad)-Math.sin(lat)*Math.sin(dec))/(Math.cos(lat)*Math.cos(dec)));
+ const riseSpan=span(-.833),civilSpan=span(-6);
+ return {dawn:noon-civilSpan,sunrise:noon-riseSpan,sunset:noon+riseSpan,dusk:noon+civilSpan};
+}
+const previewSolarTimes=previewDates.map(date=>seoulSolarTimes(...date));
+function solarClock(minutes){const n=Math.round(minutes);return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;}
+function lightingAt(minutes,solar=previewSolarTimes[appliedSeason]){const t=((Number(minutes)%1440)+1440)%1440;
+ // Authored dusk painting peaks at sunrise/sunset; blend to day over the next/previous hour.
+ const keys=[[0,0],[solar.dawn,0],[solar.sunrise,1],[solar.sunrise+60,2],[solar.sunset-60,2],[solar.sunset,1],[solar.dusk,0],[1440,0]];
+ let i=0;while(t>keys[i+1][0])i++;const a=keys[i],b=keys[i+1],v=a[1]+(b[1]-a[1])*smooth((t-a[0])/(b[0]-a[0]));
+ return {day:Math.max(0,v-1),dusk:1-Math.abs(v-1),night:Math.max(0,1-v)};
+}
+// End Seoul daylight calculations.
 const lightPaper={day:[250,249,245],dusk:[136,156,184],night:[18,31,51]};
 function sceneTheme(w){const paper=[0,1,2].map(i=>Math.round(w.day*lightPaper.day[i]+w.dusk*lightPaper.dusk[i]+w.night*lightPaper.night[i]));const lum=paper.map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4}).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0);const dark=lum>.179;return {paper,ink:w.day===1?[35,60,53]:dark?[0,0,0]:[255,255,255],muted:w.day===1?[82,103,91]:dark?[0,0,0]:[255,255,255]};}
-function updateSceneTime(){const mins=Number(sceneTime.value)%1440,h=Math.floor(mins/60),m=mins%60;const text=`${h%12||12}${m?':'+String(m).padStart(2,'0'):''} ${h<12?'am':'pm'}`;document.getElementById('time-readout').value=text;sceneTime.setAttribute('aria-valuetext',text);const w=lightingAt(typeof effectiveTimeMinutes==='function'?effectiveTimeMinutes(mins):mins),root=document.documentElement,theme=sceneTheme(w);for(const [key,c]of Object.entries(theme))root.style.setProperty('--'+key,`rgb(${c.join(' ')})`);root.style.setProperty('--night',String(w.night));root.style.setProperty('--dusk-alpha',String(w.day+w.dusk?w.dusk/(w.day+w.dusk):0));root.style.setProperty('--night-alpha',String(w.night));root.style.setProperty('--festive-light',String(w.night+w.dusk*.4));root.style.setProperty('--line',w.night>.5?'#526178':'#a0aab3');root.dataset.light=w.night>.5?'night':w.dusk>.1?'twilight':'day';root.style.colorScheme=w.night>.5?'dark':'light';}
+function updateSceneTime(){const mins=Number(sceneTime.value)%1440,h=Math.floor(mins/60),m=mins%60;const text=`${h%12||12}${m?':'+String(m).padStart(2,'0'):''} ${h<12?'am':'pm'}`;document.getElementById('time-readout').value=text;sceneTime.setAttribute('aria-valuetext',text);const w=lightingAt(typeof effectiveTimeMinutes==='function'?effectiveTimeMinutes(mins):mins),root=document.documentElement,theme=sceneTheme(w);for(const [key,c]of Object.entries(theme))root.style.setProperty('--'+key,`rgb(${c.join(' ')})`);root.style.setProperty('--night',String(w.night));root.style.setProperty('--dusk-alpha',String(w.day+w.dusk?w.dusk/(w.day+w.dusk):0));root.style.setProperty('--night-alpha',String(w.night));root.style.setProperty('--festive-light',String(w.night+w.dusk*.4));root.style.setProperty('--line',w.night>.5?'#526178':'#a0aab3');root.dataset.light=w.night>.5?'night':w.dusk>.1?'twilight':'day';root.style.colorScheme=w.night>.5?'dark':'light';const solar=previewSolarTimes[appliedSeason],date=previewDates[appliedSeason];document.getElementById('solar-note').textContent=`Seoul · ${date[0]}-${String(date[1]).padStart(2,'0')}-${String(date[2]).padStart(2,'0')} preview · sunrise ≈ ${solarClock(solar.sunrise)}, sunset ≈ ${solarClock(solar.sunset)} KST. Smooth civil-twilight transitions; not live time.`;}
 async function updateSceneSeason(){
  const index=Number(sceneSeason.value);if(!Number.isInteger(index)||!sceneNamesValid(index))return;
  const text=seasonNames[index],request=++seasonRequest,status=document.getElementById('scene-status'),retry=document.getElementById('scene-retry');
@@ -60,7 +82,7 @@ async function updateSceneSeason(){
   await Promise.all(imgs.map(im=>bounded(im.decode(),SCENE_DECODE_TIMEOUT,'Scene decode')));if(request!==seasonRequest)return;
   // Atomic commit only after all three light keyframes are ready for latest request.
   back.replaceWith(candidate);back=candidate;void back.offsetWidth;back.classList.add('visible');front.classList.remove('visible');[front,back]=[back,front];
-  appliedSeason=index;document.documentElement.dataset.season=text.toLowerCase();status.textContent=`${text} ready.`;
+  appliedSeason=index;updateSceneTime();document.documentElement.dataset.season=text.toLowerCase();status.textContent=`${text} ready.`;
  }catch(error){
   if(request!==seasonRequest)return;
   // A decode failure must not poison retries, including already cached resources.
@@ -72,6 +94,6 @@ function sceneNamesValid(index){return index>=0&&index<seasonNames.length}
 sceneTime.addEventListener('input',updateSceneTime);sceneSeason.addEventListener('input',updateSceneSeason);document.getElementById('scene-retry').addEventListener('click',updateSceneSeason);updateSceneTime();updateSceneSeason();
 
 // Manual PM2.5 preview, not live AQI or a real tower operating schedule.
-function airBand(value){if(value<=15)return {name:'Good',hue:160,color:'#3b87e8'};if(value<=35)return {name:'Fair',hue:65,color:'#4cbd78'};if(value<=75)return {name:'Bad',hue:10,color:'#e5bd37'};return {name:'Very bad',hue:-45,color:'#e7685c'};}
-function updateAirQuality(){const input=document.getElementById('scene-air'),value=Number(input.value),band=airBand(value);document.getElementById('air-readout').value=`${value} µg/m³ · ${band.name}`;input.setAttribute('aria-valuetext',`${value} micrograms per cubic metre, ${band.name.toLowerCase()}`);document.documentElement.style.setProperty('--tower-hue',band.hue+'deg');document.documentElement.style.setProperty('--air-color',band.color);}
-document.getElementById('scene-air').addEventListener('input',updateAirQuality);updateAirQuality();
+function airBand(value){if(value===null)return {name:'Unknown',hue:0,color:'transparent',saturation:0};if(value<=15)return {name:'Good',hue:160,color:'#3b87e8'};if(value<=35)return {name:'Fair',hue:65,color:'#4cbd78'};if(value<=75)return {name:'Bad',hue:10,color:'#e5bd37'};return {name:'Very bad',hue:-45,color:'#e7685c'};}
+function updateAirQuality(){const input=document.getElementById('scene-air'),unknown=document.getElementById('scene-air-unknown').checked,value=unknown?null:Number(input.value),band=airBand(value);input.disabled=unknown;document.getElementById('air-readout').value=unknown?'Unknown · color off':`${value} µg/m³ · ${band.name}`;input.setAttribute('aria-valuetext',unknown?'Unknown; air-quality color off':`${value} micrograms per cubic metre, ${band.name.toLowerCase()}`);document.documentElement.style.setProperty('--tower-hue',band.hue+'deg');document.documentElement.style.setProperty('--tower-saturation',String(band.saturation??1.3));document.documentElement.style.setProperty('--air-color',band.color);}
+document.getElementById('scene-air').addEventListener('input',updateAirQuality);document.getElementById('scene-air-unknown').addEventListener('change',updateAirQuality);updateAirQuality();

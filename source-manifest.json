@@ -1,9 +1,9 @@
 {
-  "sourceCommit": "b7ff6f976e58feb70796ef58c2a277722e6497d8",
+  "sourceCommit": "baa530272e934cf1537692e5406f0f748e4d9789",
   "preservedFiles": {
     "dist/village-fall-v1.png": "6c10555e34c271c7809e3c518606113c0d1d740c45321d2f5ad4a1177f6cbac2",
     "dist/village-winter-dusk-v1.png": "95d5ad31f8cb5a19dceb8b4438bec1ff6922190846651b734638731d001fca65",
-    "dist/index.html": "d9ffb64bcec01c24b5380c54a03049d2ce163d05525f4dea5fa68ab129a8caf9",
+    "dist/index.html": "9b45d12f443b2e951549bb4cb79717c29893ce5e4ebf342c75d1eb47c5f034e1",
     "dist/village-spring-v1.png": "7106bd0d13edee8dc852af1913430d13aab3bb515d0448f4b6087ae418551d7d",
     "dist/village-winter-night-v1.png": "3911156b99d792212306155de3452dac5a7dac690e90bf574ccf948ffe4b04b3",
     "dist/appearance.js": "8ea2c2060887a97c894dab95e74aec24db84023279a2dbc42cb277dee0b40cd1",
@@ -15,13 +15,59 @@
     "dist/village-christmas-v1.png": "a5f6255a1b0a2c34f3a84c1301760f4a7853b05661500c8363dca7fc2579e86c",
     "dist/composer.js": "8daaa0635d82ea078391a25381666a3c6acd5c0c5be8ff100fccaf11e42b8cc0",
     "dist/village-panorama-v8.png": "87224cd0b92ca53427904bf6ca21870244ddf1ace62c2b6374da3f1d69d87791",
-    "dist/app.js": "2fbd1d88eb5d5a610b56a0690348e51fdf6ccc27eb722b3c5e14fdc70ea0e277",
+    "dist/app.js": "1897dd2d8c7829e5a7f171b10af17865ee922bf238f8150a7193f4ddbb9065a8",
     "dist/village-spring-night-v1.png": "46ae13d67574f5548412b98fdc1574c920073b78d3aea31a768a54f904650c7c",
     "dist/scene-edge-mask.svg": "e174a0c619e2c46a1cff377f902eda2b56fb9494fada53e23ffab5357ecf1bd8",
     "dist/village-winter-v1.png": "9ce4b4285c59e0429164681dbe0e8eca8a2046fe47ade5ef98f9bb4cf192be21",
     "dist/village-fall-night-v1.png": "31080c9d435d4326b00c6963697b190e7360a12f7023a604fabef402d2c93bf7",
     "dist/village-summer-dusk-v1.png": "6588a83c4b766bd02c4e72f0ebcf2959446cd01797904c3bd3a36c39de13d0f4",
-    "dist/style.css": "39c83a07d3dee0d2c5b72105028cb3761a1e140fff8eb6aa32113b9891f94f17",
+    "dist/style.css": "5fdbfb17349855828c57ac548c0a37af443889f55852cfd0613880014989f611",
     "dist/church-vertical-canva.png": "cf81131703d25be3041e5eb4f800992013ba4f04fb7bc0863367cd9bdbcacb2c"
-  }
+  },
+  "originalImport": {
+    "sourceCommit": "b7ff6f976e58feb70796ef58c2a277722e6497d8",
+    "archive": {
+      "fileName": "freedomvillage-website-initial-b7ff6f9.zip",
+      "sizeBytes": 35042959,
+      "sha256": "5049b7721c3554397b811e7399abbb1d5f5e07e3c5a3ca6567fe3d984cb1237d"
+    },
+    "preservedFiles": {
+      "dist/village-fall-v1.png": "6c10555e34c271c7809e3c518606113c0d1d740c45321d2f5ad4a1177f6cbac2",
+      "dist/village-winter-dusk-v1.png": "95d5ad31f8cb5a19dceb8b4438bec1ff6922190846651b734638731d001fca65",
+      "dist/index.html": "d9ffb64bcec01c24b5380c54a03049d2ce163d05525f4dea5fa68ab129a8caf9",
+      "dist/village-spring-v1.png": "7106bd0d13edee8dc852af1913430d13aab3bb515d0448f4b6087ae418551d7d",
+      "dist/village-winter-night-v1.png": "3911156b99d792212306155de3452dac5a7dac690e90bf574ccf948ffe4b04b3",
+      "dist/appearance.js": "8ea2c2060887a97c894dab95e74aec24db84023279a2dbc42cb277dee0b40cd1",
+      "dist/village-spring-dusk-v1.png": "379422e1a35bc655b55f0863dbb5ecf9a9bd06c4bffc54e8e0ac7daab6c1b4f8",
+      "dist/village-christmas-dusk-v1.png": "959234ed14b42e7f7cee5e37b885674be0bc220e61102e26b2b2a62382f8ba4a",
+      "dist/village-summer-night-v1.png": "ba4b47421972469ee39763ad2052075223dc4342cab9f1c5dd223b2243866083",
+      "dist/village-fall-dusk-v1.png": "841be9f61490d192efd3cfffe656ca6f6fb4c934b9c23391d8e5b4a7989b4fd8",
+      "dist/village-christmas-night-v1.png": "76f6c65b1a0c110cfa628ca4b55fd9db531b2a9a6749c6fc7d9e3670b73dedd4",
+      "dist/village-christmas-v1.png": "a5f6255a1b0a2c34f3a84c1301760f4a7853b05661500c8363dca7fc2579e86c",
+      "dist/composer.js": "8daaa0635d82ea078391a25381666a3c6acd5c0c5be8ff100fccaf11e42b8cc0",
+      "dist/village-panorama-v8.png": "87224cd0b92ca53427904bf6ca21870244ddf1ace62c2b6374da3f1d69d87791",
+      "dist/app.js": "2fbd1d88eb5d5a610b56a0690348e51fdf6ccc27eb722b3c5e14fdc70ea0e277",
+      "dist/village-spring-night-v1.png": "46ae13d67574f5548412b98fdc1574c920073b78d3aea31a768a54f904650c7c",
+      "dist/scene-edge-mask.svg": "e174a0c619e2c46a1cff377f902eda2b56fb9494fada53e23ffab5357ecf1bd8",
+      "dist/village-winter-v1.png": "9ce4b4285c59e0429164681dbe0e8eca8a2046fe47ade5ef98f9bb4cf192be21",
+      "dist/village-fall-night-v1.png": "31080c9d435d4326b00c6963697b190e7360a12f7023a604fabef402d2c93bf7",
+      "dist/village-summer-dusk-v1.png": "6588a83c4b766bd02c4e72f0ebcf2959446cd01797904c3bd3a36c39de13d0f4",
+      "dist/style.css": "39c83a07d3dee0d2c5b72105028cb3761a1e140fff8eb6aa32113b9891f94f17",
+      "dist/church-vertical-canva.png": "cf81131703d25be3041e5eb4f800992013ba4f04fb7bc0863367cd9bdbcacb2c"
+    }
+  },
+  "approvedUiRevisions": [
+    {
+      "sourceCommit": "ab66b9940d8aedbdcae07542ba184b232643ae0b",
+      "description": "Remove permanent orange button highlights and move textarea focus to the composer container."
+    },
+    {
+      "sourceCommit": "efb76500045928dff56530127b2f50028563e535",
+      "description": "Add PM2.5 Unknown / color off, preserving the selected numeric reading and neutral nighttime tower lighting."
+    },
+    {
+      "sourceCommit": "baa530272e934cf1537692e5406f0f748e4d9789",
+      "description": "Use representative seasonal Seoul dates and KST solar/civil-twilight estimates for the manual scene preview."
+    }
+  ]
 }

@@ -83,7 +83,7 @@ html[data-light=night] .card .art-window,html[data-light=night] .card .art-lands
 
 .scene-load-status{font-size:10px;line-height:1.5;color:var(--muted);margin:8px 0;min-height:1.5em}#scene-retry{font:inherit;font-size:11px;color:var(--ink);background:var(--paper);border:1px solid var(--line);padding:6px 9px;border-radius:5px}#scene-retry[hidden]{display:none}
 
-.tower-color-source{filter:hue-rotate(var(--tower-hue,160deg)) saturate(1.3)}
+.tower-color-source{filter:hue-rotate(var(--tower-hue,160deg)) saturate(var(--tower-saturation,1.3))}
 #air-swatch{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--air-color,#3b87e8);margin-right:4px}.control-note a{text-underline-offset:2px}
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .prompt-composer{position:fixed;left:calc(var(--left-gutter) + 38px);right:38px;bottom:calc(22px + env(safe-area-inset-bottom,0px) + var(--keyboard-offset,0px));z-index:8;max-width:800px;margin:0 auto;padding:14px 16px 10px;border:1px solid var(--line);border-radius:22px;background:var(--paper);color:var(--ink);box-shadow:0 8px 38px #0002}
@@ -99,3 +99,6 @@ main{padding-bottom:250px!important}body.settings-open{overflow:hidden}
 
 /* Focus belongs to the whole composer, not an inner textarea box. */
 .prompt-composer:focus-within{border-color:var(--muted);outline:2px solid var(--muted);outline-offset:2px}
+
+/* Neutral tower illumination when no air-quality reading is available. */
+.scene-controls label.air-unknown{justify-content:flex-start;align-items:center;gap:7px;margin:8px 0}.scene-controls .air-unknown input{width:auto;margin:0}.scene-controls input:disabled{cursor:default;opacity:.45}

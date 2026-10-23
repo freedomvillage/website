@@ -1,0 +1,10 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const css=fs.readFileSync('dist/style.css','utf8');
+assert(css.includes('button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--ink);outline-offset:5px}'));
+assert(!css.includes('#c17632'));
+assert(css.includes('.card a:focus-visible{outline-color:currentColor;outline-offset:-6px}'));
+const textarea=css.match(/\.prompt-composer textarea\{([^}]+)\}/)[1];
+for(const declaration of ['border:0','outline:none','box-shadow:none'])assert(textarea.includes(declaration));
+assert(css.includes('.prompt-composer:focus-within{border-color:var(--muted);outline:2px solid var(--muted);outline-offset:2px}'));
+assert(css.includes('.mode-picker label:has(input:checked)'));
+console.log('PASS: keyboard-only theme-aware button focus, card contrast, no orange rings, borderless textarea, outer composer focus, selected-mode styling preserved');
