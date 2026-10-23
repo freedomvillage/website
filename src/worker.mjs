@@ -46,7 +46,7 @@ export function createWorker({fetchUpstream=fetch,now=Date.now}={}){
    if(url.pathname==='/api/content/jev-check')return handleJevCheck(request,env);
    if(url.pathname.startsWith('/media/'))return handleMediaRequest(request,env,{now:now()});
    if(!url.pathname.startsWith('/api/')){
-    if(/\.(?:css|js|png|jpe?g|svg|webp|avif|ico|woff2?|map|json)$/.test(url.pathname))return env.ASSETS.fetch(request);
+    if(/\.(?:css|mjs|js|png|jpe?g|svg|webp|avif|ico|woff2?|map|json)$/.test(url.pathname))return env.ASSETS.fetch(request);
     return handleContentPage(request,env,{now:now()});
    }
    if(url.pathname!=='/api/air-quality')return json({error:'Not found'},404);

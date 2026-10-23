@@ -4,8 +4,34 @@ const ID=/^[a-z][a-z0-9-]{0,79}$/;
 const text=(v,n)=>typeof v==='string'&&v.trim().length>0&&v.length<=n;
 const imagePath=/^\/media\/([a-z][a-z0-9-]{0,79})\.(png|jpg|jpeg|webp|avif)$/;
 function safeLink(v){if(!text(v,2048)||/[\u0000-\u0020\u007f]/.test(v))return false;try{const u=new URL(v);return u.protocol==='https:'&&!u.username&&!u.password;}catch{return false;}}
+const categories=new Set(['events','families','community','faith','prayer','watch-listen','next-steps']);
+const designs=new Set(['paper','ink','forest','clay','youth','outline','sermon']);
+const sourceAsset=v=>{try{const u=new URL(v);return u.origin==='https://cdn.prod.website-files.com'&&u.pathname.startsWith('/60e0035471e8115799a8640b/')&&/\.(png|jpe?g|webp|svg)$/i.test(u.pathname)&&!u.search&&!u.hash;}catch{return false;}};
+function versionTwo(row,c){
+ if(!ID.test(row.id)||c.hold===true||c.isSynthetic!==false||c.sourceStatus!=='draft'||
+ !['event','story','ministry','resource','sermon','next-step','faq','group','gathering','opportunity','identity','beliefs'].includes(c.template)||
+ !text(c.title,160)||!text(c.summary,600)||!Array.isArray(c.detail)||c.detail.length<1||c.detail.length>12||!c.detail.every(p=>text(p,2000))||
+ !Array.isArray(c.facts)||c.facts.length>6||!c.facts.every(p=>text(p,160))||
+ !Array.isArray(c.categories)||c.categories.length<1||c.categories.length>7||!c.categories.every(x=>categories.has(x))||new Set(c.categories).size!==c.categories.length||
+ !Array.isArray(c.actions)||c.actions.length>5||!c.actions.every(a=>text(a?.label,80)&&safeLink(a.href))||
+ !Array.isArray(c.related)||c.related.length>6||!c.related.every(x=>ID.test(x))||
+ !designs.has(c.design?.theme)||!['text','date','brand','graphic'].includes(c.design?.layout)||!['none','star','hills','rings'].includes(c.design?.motif)||
+ !['none','gradient'].includes(c.design?.motion)||!['regular','feature'].includes(c.design?.size)||
+ !Number.isSafeInteger(c.homePriority)||c.homePriority<0||c.homePriority>100)return null;
+ let media=null;
+ if(c.media!==null){
+  if(c.media?.kind==='brand'&&sourceAsset(c.media.src)&&text(c.media.alt,300))media={kind:'brand',src:c.media.src,alt:c.media.alt};
+  else if(c.media?.kind==='youtube'&&/^[A-Za-z0-9_-]{11}$/.test(c.media.videoId)&&text(c.media.title,160))media={kind:'youtube',videoId:c.media.videoId,title:c.media.title};
+  else return null;
+ }
+ return {id:row.id,schemaVersion:2,template:c.template,title:c.title,summary:c.summary,detail:[...c.detail],facts:[...c.facts],
+ categories:[...c.categories],actions:c.actions.map(a=>({label:a.label,href:a.href})),related:[...c.related],media,
+ design:{theme:c.design.theme,layout:c.design.layout,motif:c.design.motif,motion:c.design.motion,size:c.design.size},homePriority:c.homePriority,isSynthetic:false};
+}
 export function publicCard(row){
  let c;try{c=JSON.parse(row.content_json);}catch{return null;}
+ if(c?.hold===true||c?.isSynthetic===true)return null;
+ if(c?.schemaVersion===2)return versionTwo(row,c);
  if(!ID.test(row.id)||c?.schemaVersion!==1||c.template!=='event'||!text(c.title,160)||!text(c.summary,600)||
  !text(c.date,80)||!text(c.time,80)||!text(c.venue,160)||(c.address!==null&&!text(c.address,200))||
  !['breakfast','city'].includes(c.theme)||!Array.isArray(c.detail)||c.detail.length>8||!c.detail.every(p=>text(p,2000))||
@@ -24,19 +50,29 @@ export function privateNextRequest(request,env){
  // is not a replacement for Access JWT verification. Alternate Worker URLs stay disabled.
  return env.CONTENT_PILOT_ENABLED==='true'&&new URL(request.url).hostname==='next.freedomvillage.church'&&Boolean(request.headers.get('Cf-Access-Jwt-Assertion'));
 }
-export async function readCatalog(db,{after='',now=Date.now()}={}){
- if(after!==''&&!ID.test(after))throw new TypeError('Invalid cursor');
- const result=await db.prepare(`SELECT id,content_json FROM content_cards WHERE status='draft'
- AND (expires_at IS NULL OR expires_at>?) AND id>? ORDER BY id LIMIT ?`).bind(new Date(now).toISOString(),after,PAGE_SIZE+1).all();
+export const TOPICS=Object.freeze({events:'Coming up',families:'Families',community:'Life together',faith:'Faith & belief',prayer:'Prayer','watch-listen':'Watch & listen','next-steps':'Next steps'});
+export function validCursor(value){if(value==='')return true;const m=/^(\d{1,3}):([a-z][a-z0-9-]{0,79})$/.exec(value);return Boolean(m&&Number(m[1])<=100);}
+export async function readCatalog(db,{after='',topic='',now=Date.now()}={}){
+ if(!validCursor(after)||(topic!==''&&!Object.hasOwn(TOPICS,topic)))throw new TypeError('Invalid query');
+ const [rank,id]=after?after.split(':'):['101',''];
+ const order="CAST(COALESCE(json_extract(content_json,'$.homePriority'),50) AS INTEGER)";
+ const result=await db.prepare(`SELECT id,content_json,${order} AS sort_rank FROM content_cards WHERE status='draft'
+ AND (expires_at IS NULL OR expires_at>?) AND COALESCE(json_extract(content_json,'$.hold'),0)=0
+ AND COALESCE(json_extract(content_json,'$.isSynthetic'),0)=0
+ AND (?='' OR EXISTS(SELECT 1 FROM json_each(content_json,'$.categories') WHERE value=?) OR (?='events' AND json_extract(content_json,'$.schemaVersion')=1))
+ AND (${order}<? OR (${order}=? AND id>?)) ORDER BY sort_rank DESC,id LIMIT ?`)
+ .bind(new Date(now).toISOString(),topic,topic,topic,Number(rank),Number(rank),id,PAGE_SIZE+1).all();
  if(!Array.isArray(result.results))throw new Error('Content unavailable');
- const page=result.results.slice(0,PAGE_SIZE);return {status:'ok',schemaVersion:1,items:page.map(publicCard).filter(Boolean),nextCursor:result.results.length>PAGE_SIZE?page.at(-1).id:null};
+ const page=result.results.slice(0,PAGE_SIZE),last=page.at(-1);
+ return {status:'ok',schemaVersion:1,items:page.map(publicCard).filter(Boolean),topic,
+ nextCursor:result.results.length>PAGE_SIZE?`${last.sort_rank??50}:${last.id}`:null};
 }
 export async function handleCatalogRequest(request,env,{now=Date.now()}={}){
  if(!privateNextRequest(request,env))return json({error:'Not found'},404);
  if(request.method!=='GET')return json({error:'Method not allowed'},405,{Allow:'GET'});
- const u=new URL(request.url),after=u.searchParams.get('after')||'';
- if((after!==''&&!ID.test(after))||[...u.searchParams.keys()].some(k=>k!=='after')||u.searchParams.getAll('after').length>1)return json({error:'Invalid request'},400);
- try{return json(await readCatalog(env.CONTENT_DB,{after,now}));}catch{return json({status:'unavailable',items:[]},503);}
+ const u=new URL(request.url),after=u.searchParams.get('after')||'',topic=u.searchParams.get('topic')||'';
+ if(!validCursor(after)||(topic!==''&&!Object.hasOwn(TOPICS,topic))||[...u.searchParams.keys()].some(k=>!['after','topic'].includes(k))||u.searchParams.getAll('after').length>1||u.searchParams.getAll('topic').length>1)return json({error:'Invalid request'},400);
+ try{return json(await readCatalog(env.CONTENT_DB,{after,topic,now}));}catch{return json({status:'unavailable',items:[]},503);}
 }
 export async function handleMediaRequest(request,env,{now=Date.now()}={}){
  if(!privateNextRequest(request,env))return json({error:'Not found'},404);
@@ -44,7 +80,7 @@ export async function handleMediaRequest(request,env,{now=Date.now()}={}){
  const u=new URL(request.url),match=imagePath.exec(u.pathname);if(!match||u.search)return json({error:'Not found'},404);
  try{
  const row=await env.CONTENT_DB.prepare(`SELECT id,content_json FROM content_cards WHERE id=? AND status='draft' AND (expires_at IS NULL OR expires_at>?)`).bind(match[1],new Date(now).toISOString()).first();
- const card=row&&publicCard(row);if(!card||card.image.src!==u.pathname)return json({error:'Not found'},404);
+ const card=row&&publicCard(row);if(!card||card.image?.src!==u.pathname)return json({error:'Not found'},404);
  const object=await env.CONTENT_MEDIA[request.method==='HEAD'?'head':'get'](u.pathname.slice('/media/'.length));if(!object)return json({error:'Not found'},404);
  const types={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',avif:'image/avif'};
  return new Response(request.method==='HEAD'?null:object.body,{headers:{'Content-Type':types[match[2]],'Content-Length':String(object.size),
