@@ -12,6 +12,8 @@
       "/",
       "/index.html",
       "/events/*",
+      "/cards/*",
+      "/topics/*",
       "/api/*",
       "/media/*",
       "/robots.txt",

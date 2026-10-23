@@ -1,47 +1,36 @@
-// The private pilot reads canonical records from D1; it contains no source records or images.
+// Progressive enhancement: canonical cards, details and navigation arrive in server HTML.
 (function(root){
- let cards=[],state='loading',started=false,lastId=null,artSerial=0;
- let initial=null;try{initial=JSON.parse(document.getElementById('content-bootstrap')?.textContent||'null');}catch{}
- function legacyLink(){const p=new URLSearchParams(location.hash.slice(1)),id=p.get('story');if(id&&/^[a-z][a-z0-9-]{0,79}$/.test(id)){location.replace('/events/'+id);return true;}if(location.hash==='#all'){if(location.pathname!=='/'){location.replace('/');return true;}history.replaceState(null,'','/');}return false;}
- const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
- function artwork(card,context='card'){
-  const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),image=document.createElementNS(ns,'image');
-  // Recompose source imagery only; facts are live text, rather than duplicated poster text.
-  const crop=card.theme==='breakfast'?[1188,0,732,1080]:context==='detail'?[40,420,350,930]:[80,420,300,930];
-  svg.setAttribute('viewBox',crop.join(' '));svg.setAttribute('width',crop[2]);svg.setAttribute('height',crop[3]);
-  // A viewBox alone does not clip artwork in letterboxed parts of the viewport.
-  const defs=document.createElementNS(ns,'defs'),clip=document.createElementNS(ns,'clipPath'),rect=document.createElementNS(ns,'rect'),clipId='pilot-crop-'+(++artSerial);
-  clip.id=clipId;clip.setAttribute('clipPathUnits','userSpaceOnUse');['x','y','width','height'].forEach((key,i)=>rect.setAttribute(key,crop[i]));clip.append(rect);defs.append(clip);svg.append(defs);image.setAttribute('clip-path','url(#'+clipId+')');
-  svg.setAttribute('role','img');svg.setAttribute('aria-label',card.theme==='breakfast'?'Coffee and breakfast illustration from the original announcement.':'Seoul tower photograph from the original announcement.');
-  svg.classList.add('pilot-art');image.setAttribute('href',card.image.src);image.setAttribute('width',card.image.width);image.setAttribute('height',card.image.height);svg.append(image);return svg;
- }
- function facts(card){const box=node('div','pilot-facts');box.append(node('p','pilot-date',card.date),node('p','pilot-time',card.time),node('p','pilot-venue',card.venue));return box;}
- function cardElement(card){
-  const article=node('article','card pilot-card pilot-'+card.theme),link=node('a','pilot-card-link'),copy=node('div','pilot-copy');
-  article.id='card-'+card.id;link.href='/events/'+encodeURIComponent(card.id);link.setAttribute('aria-label',card.title+' — event details');
-  copy.append(node('h2','',card.title),facts(card),node('p','pilot-excerpt',card.summary),node('span','pilot-detail-link','Event details ↗'));
-  link.append(copy,artwork(card));article.append(link);return article;
- }
- function render(){
-  const grid=document.getElementById('grid'),collection=document.getElementById('collection'),detail=document.getElementById('detail'),filters=document.getElementById('filters');
-  filters.replaceChildren();filters.hidden=true;
-  const id=location.pathname.startsWith('/events/')?location.pathname.slice(8):null,card=cards.find(c=>c.id===id);
-  document.getElementById('count').textContent='';document.getElementById('collection-label').textContent='';
-  if(card){
-   collection.hidden=true;detail.hidden=false;detail.replaceChildren();const article=node('article','detail-shell pilot-detail pilot-'+card.theme),back=node('a','back','← Back');back.href='/';
-   const title=node('h1','',card.title);title.tabIndex=-1;const hero=node('div','pilot-detail-hero'),copy=node('div','pilot-detail-copy'),visual=node('figure','pilot-detail-art');copy.append(title,facts(card));visual.append(artwork(card,'detail'));hero.append(copy,visual);article.append(back,hero);const body=node('div','detail-body');
-   if(card.address)body.append(node('p','pilot-address',card.address));for(const p of card.detail)body.append(node('p','',p));
-   for(const action of card.actions){const a=node('a','pilot-action',action.label+' ↗');a.href=action.href;a.target='_blank';a.rel='noopener noreferrer';body.append(a);}
-   article.append(body);detail.append(article);document.title=card.title+' — the church at Freedom Village';
-   if(lastId!==id){window.scrollTo(0,0);title.focus({preventScroll:true});}lastId=id;return;
+ let started=false,loading=false;
+ const motionItems=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ function legacyLink(){const p=new URLSearchParams(location.hash.slice(1)),id=p.get('story');if(id&&/^[a-z][a-z0-9-]{0,79}$/.test(id)){location.replace('/events/'+id);return true;}if(location.hash==='#all'){location.replace('/');return true;}return false;}
+ function motionState(){for(const el of motionItems)el.classList.toggle('is-visible',el.dataset.inView==='true'&&!document.hidden&&!reduced.matches);}
+ const observer=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{for(const e of entries)e.target.dataset.inView=String(e.isIntersecting);motionState();},{threshold:.05}):null;
+ function enhance(scope=document){
+  for(const el of scope.querySelectorAll('.has-motion'))if(!motionItems.has(el)){
+   motionItems.add(el);observer?.observe(el);const button=el.querySelector('.motion-toggle');
+   if(button){button.hidden=reduced.matches;button.addEventListener('click',()=>{const paused=el.classList.toggle('motion-paused');button.setAttribute('aria-pressed',String(paused));button.textContent=paused?'Resume animation':'Pause animation';button.setAttribute('aria-label',button.textContent);});}
   }
-  collection.hidden=false;detail.hidden=true;grid.classList.remove('server-content');grid.replaceChildren();
-  document.title='the church at Freedom Village';
-  if(state==='ready'){for(const card of cards)grid.append(cardElement(card));if(!cards.length)grid.append(node('p','','No current draft cards.'));}
-  else{const status=node('p','pilot-state',state==='loading'?'Loading…':'The cards could not load.');status.setAttribute('role','status');grid.append(status);if(state==='error'){const retry=node('button','pilot-retry','Try again');retry.type='button';retry.addEventListener('click',load);grid.append(retry);}}
-  requestAnimationFrame(()=>{if(typeof sizeCards==='function')sizeCards();});
-  if(lastId){document.querySelector('#card-'+lastId+' a')?.focus({preventScroll:true});lastId=null;}
+  for(const button of scope.querySelectorAll('.video-load'))if(!button.dataset.ready){button.dataset.ready='true';button.addEventListener('click',()=>{
+   const box=button.closest('[data-video]'),id=box?.dataset.video;if(!/^[A-Za-z0-9_-]{11}$/.test(id||''))return;
+   const frame=document.createElement('iframe');frame.src='https://www.youtube-nocookie.com/embed/'+id;frame.title=button.dataset.videoTitle||'Sermon video';frame.allow='encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='no-referrer';frame.loading='lazy';button.replaceWith(frame);
+  });}
+  document.querySelector('#grid')?.classList.remove('server-content');requestAnimationFrame(()=>{if(typeof sizeCards==='function')sizeCards();});
  }
- async function load(){state='loading';if(!initial)render();try{let data=initial;if(!data){const response=await fetch('/api/content',{credentials:'same-origin',cache:'no-store',redirect:'error',signal:AbortSignal.timeout(10000)});if(!response.ok||!response.headers.get('Content-Type')?.includes('application/json'))throw Error();data=await response.json();}if(data.status!=='ok'||!Array.isArray(data.items))throw Error();cards=data.items;state='ready';initial=null;}catch{state='error';}render();}
- root.contentView={render(){if(legacyLink())return;if(initial?.page?.status>=400)return;if(!started){started=true;load();}else render();}};
+ function pagination(){
+  const more=document.querySelector('.load-more');if(!more||more.dataset.ready)return;more.dataset.ready='true';
+  more.addEventListener('click',async event=>{if(event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();if(loading)return;loading=true;more.textContent='Loading…';more.setAttribute('aria-busy','true');
+   try{
+    const url=new URL(more.href);if(url.origin!==location.origin)throw Error();
+    const response=await fetch(url,{credentials:'same-origin',cache:'no-store',redirect:'error',signal:AbortSignal.timeout(10000)});
+    if(!response.ok||!response.headers.get('Content-Type')?.includes('text/html'))throw Error();
+    const page=new DOMParser().parseFromString(await response.text(),'text/html'),grid=document.getElementById('grid'),incoming=page.querySelector('#grid');if(!incoming)throw Error();
+    let first=null;for(const article of incoming.children)if(article.matches('article.card')&&!document.getElementById(article.id)){const copy=document.importNode(article,true);grid.append(copy);first??=copy.querySelector('a');}
+    enhance(grid);const next=page.querySelector('.load-more');if(next){const href=new URL(next.getAttribute('href'),url);if(href.origin!==location.origin)throw Error();more.href=href.href;more.textContent='More cards ↓';}else more.remove();
+    first?.focus({preventScroll:true});
+   }catch{more.textContent='Could not load. Try again ↓';}finally{loading=false;more.removeAttribute('aria-busy');}
+  });
+ }
+ reduced.addEventListener('change',()=>{motionState();for(const el of motionItems){const button=el.querySelector('.motion-toggle');if(button)button.hidden=reduced.matches;}});
+ document.addEventListener('visibilitychange',motionState);
+ root.contentView={render(){if(legacyLink())return;if(!started){started=true;enhance();pagination();}}};
 })(globalThis);

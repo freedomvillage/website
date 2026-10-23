@@ -28,4 +28,4 @@ jobs:
       - name: Verify server content and preserved air behavior
         run: |
           node --version
-          node --test tests/content-pages.test.mjs tests/worker.test.mjs tests/air-diagnostics.test.mjs tests/air-client.test.mjs
+          node --test tests/content-pages.test.mjs tests/content-library.test.mjs tests/worker.test.mjs tests/air-diagnostics.test.mjs tests/air-client.test.mjs

@@ -99,8 +99,8 @@
     "dist/air-quality.js": "42b8d579f29bcc3d273c5753c7f3878b4c9144dcb46249e8eb372f2b79815861",
     "dist/scene-bootstrap.js": "988e71208ae9f5170c3baba601f4a95def1e0050f08d3bd8643a85cd494d4a6c",
     "dist/scene-clock.js": "3c418037897520cbb12e1ff45a3775bfb860fde4d2436a890227e0281feb7ba5",
-    "dist/content-view.js": "98db40661c636e11adbcf25e8755c1275438c07fae38810bc4bd9a77ae4f7837",
-    "dist/content-view.css": "141634141cd70ddbc2aeef2cb7c26b929857c9420bbe6023738f4f0cec477f48"
+    "dist/content-view.js": "d211389e9949dfcb19a721b887a62897c96f400052a94b8032878f090a0bbe9c",
+    "dist/content-view.css": "59a812bb12e8d8f64a8902c648e5cd467986573e9824303de229ae0f11aeff7b"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
   "adaptation": "Shared night-only air-quality cache and one-hour observation limit, reconciled with approved UI runtime and artwork overlays; original paintings unchanged.",
@@ -133,6 +133,13 @@
       "description": "Clean event paths and private server-returned HTML/metadata with safe bootstrap data and no-JavaScript content fallback; public index/canonical activation deferred.",
       "files": [
         "dist/index.html",
+        "dist/content-view.js",
+        "dist/content-view.css"
+      ]
+    },
+    {
+      "description": "Structured private multi-type content projection, server-rendered topic/related views and incremental pagination; source-limited media, click-to-load video and reduced-motion-aware brand animation. No source records or media bytes are in the public repository.",
+      "files": [
         "dist/content-view.js",
         "dist/content-view.css"
       ]
