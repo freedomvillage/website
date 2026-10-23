@@ -1,5 +1,7 @@
 import {nightWindow} from './seoul-night.mjs';
 import {DIAGNOSTIC_KEY,diagnostic,xmlCode,boundedBody,payloadCategory} from './air-diagnostics.mjs';
+import {handleCatalogRequest,handleMediaRequest} from './content/catalog.mjs';
+import {handleJevCheck} from './content/check.mjs';
 // Provider schema remains fixture-tested until an authorized real response is verified.
 const SOURCE='https://www.airkorea.or.kr/';
 const ENDPOINT='https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty';
@@ -39,6 +41,9 @@ export function createWorker({fetchUpstream=fetch,now=Date.now}={}){
  return {
   async fetch(request,env){
    const url=new URL(request.url);
+   if(url.pathname==='/api/content')return handleCatalogRequest(request,env,{now:now()});
+   if(url.pathname==='/api/content/jev-check')return handleJevCheck(request,env);
+   if(url.pathname.startsWith('/media/'))return handleMediaRequest(request,env,{now:now()});
    if(!url.pathname.startsWith('/api/'))return env.ASSETS.fetch(request);
    if(url.pathname!=='/api/air-quality')return json({error:'Not found'},404);
    if(request.method!=='GET')return json({error:'Method not allowed'},405);
