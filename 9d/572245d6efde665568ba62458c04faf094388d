@@ -1,0 +1,16 @@
+src/content/evaluation.mjs
+  h_9a6e2a87fc4a0d 23-25,33-50,58,65-68
+tests/ranking-evaluation.test.mjs
+  h_9a6e2a87fc4a0d 33-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9d572245d6efde665568ba62458c04faf094388d",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
