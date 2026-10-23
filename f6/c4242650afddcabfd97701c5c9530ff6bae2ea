@@ -1,0 +1,14 @@
+tests/content-library.test.mjs
+  h_9a6e2a87fc4a0d 51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f6c4242650afddcabfd97701c5c9530ff6bae2ea",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
