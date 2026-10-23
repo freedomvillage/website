@@ -138,3 +138,23 @@ html[data-site-revealed="true"] #site-loading{display:none}
 #advanced-settings-dialog .scene-controls{max-width:none;margin-top:12px;font-size:11px}#advanced-settings-dialog .control-note{font-size:10px;line-height:1.5}#advanced-settings-dialog .season-ends{font-size:9px}#advanced-settings-dialog #resume-clock{min-height:36px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink)}
 
 #scene-settings-dialog .settings-heading button{min-width:44px;min-height:44px}#advanced-settings-dialog fieldset{min-inline-size:0}
+
+
+/* Consistent, readable vector icons for Appearance mode buttons. */
+.mode-picker .appearance-mode-icon{display:block;width:24px;height:24px;flex:0 0 24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* Keep desktop navigation above the panorama throughout its full scroll area. */
+@media(min-width:701px){
+ :root{--left-gutter:calc(var(--art-width)*.25)}
+ aside{bottom:0;padding-left:28px;padding-right:28px;padding-bottom:24px;isolation:isolate}
+ .sidebar-inner{position:relative;z-index:1;max-height:100%;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;scroll-padding:12px 0 24px}
+ .sidebar-inner nav{position:relative;padding:6px;border-radius:12px;background:color-mix(in srgb,var(--paper) 94%,transparent)}
+ .sidebar-inner nav a{margin-left:0;min-height:44px;padding:10px 12px}
+}
+/* Compact everyday appearance settings; advanced Seoul/solar details remain intact. */
+#scene-settings-dialog{width:min(412px,calc(100vw - 32px));padding:22px}
+#scene-settings-dialog .actual-air{margin:20px 0;padding:16px 0}
+
+/* Practical actions remain separate from the draft category navigation. */
+.persistent-actions{display:flex;gap:8px;align-items:center;margin:22px 0 18px;flex-wrap:wrap}.persistent-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 15px;border:1px solid var(--line);border-radius:24px;color:var(--ink);font:12px Arial,sans-serif;text-decoration:none}.persistent-actions .connect-action{background:var(--ink);color:var(--paper);border-color:var(--ink)}.persistent-actions .give-action{background:transparent}.mobile-actions{display:none}
+@media(max-width:700px){.mobile-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 16px}.mobile-actions{display:flex;grid-column:1/-1;margin:0}.mobile-actions a{min-height:40px;padding:8px 16px}.sidebar-inner>.persistent-actions{display:none}}
