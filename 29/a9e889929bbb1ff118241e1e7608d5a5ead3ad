@@ -1,0 +1,14 @@
+wrangler.jsonc
+  h_9a6e2a87fc4a0d 62-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "29a9e889929bbb1ff118241e1e7608d5a5ead3ad",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
