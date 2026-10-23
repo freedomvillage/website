@@ -9,7 +9,7 @@ const designs=new Set(['paper','ink','forest','clay','youth','outline','sermon']
 const sourceAsset=v=>{try{const u=new URL(v);return u.origin==='https://cdn.prod.website-files.com'&&u.pathname.startsWith('/60e0035471e8115799a8640b/')&&/\.(png|jpe?g|webp|svg)$/i.test(u.pathname)&&!u.search&&!u.hash;}catch{return false;}};
 function versionTwo(row,c){
  if(!ID.test(row.id)||c.hold===true||c.isSynthetic!==false||c.sourceStatus!=='draft'||
- !['event','story','ministry','resource','sermon','next-step','faq','group','gathering','opportunity','identity','beliefs'].includes(c.template)||
+ !['actions','event','story','ministry','resource','sermon','next-step','faq','group','gathering','opportunity','identity','beliefs'].includes(c.template)||
  !text(c.title,160)||!text(c.summary,600)||!Array.isArray(c.detail)||c.detail.length<1||c.detail.length>12||!c.detail.every(p=>text(p,2000))||
  !Array.isArray(c.facts)||c.facts.length>6||!c.facts.every(p=>text(p,160))||
  !Array.isArray(c.categories)||c.categories.length<1||c.categories.length>7||!c.categories.every(x=>categories.has(x))||new Set(c.categories).size!==c.categories.length||
@@ -18,6 +18,7 @@ function versionTwo(row,c){
  !designs.has(c.design?.theme)||!['text','date','brand','graphic'].includes(c.design?.layout)||!['none','star','hills','rings'].includes(c.design?.motif)||
  !['none','gradient'].includes(c.design?.motion)||!['regular','feature'].includes(c.design?.size)||
  !Number.isSafeInteger(c.homePriority)||c.homePriority<0||c.homePriority>100)return null;
+ if(c.template==='actions'&&c.actions.length===0)return null;
  let media=null;
  if(c.media!==null){
   if(c.media?.kind==='brand'&&sourceAsset(c.media.src)&&text(c.media.alt,300))media={kind:'brand',src:c.media.src,alt:c.media.alt};

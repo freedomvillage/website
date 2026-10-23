@@ -13,6 +13,7 @@ function genericArt(c,detail=false){
 const genericFacts=c=>c.facts.length?`<div class="library-facts">${c.facts.map(v=>`<p>${escape(v)}</p>`).join('')}</div>`:'';
 const motionControl=c=>c.design.motion==='gradient'?'<button class="motion-toggle" type="button" aria-pressed="false" aria-label="Pause background animation" hidden>Pause animation</button>':'';
 export function renderLibraryCard(c){
+ if(c.template==='actions')return `<article class="card library-card practical-card theme-${c.design.theme}" id="card-${c.id}"><div class="library-copy"><h2><a href="${cardPath(c)}">${escape(c.title)}</a></h2><p class="library-excerpt">${escape(c.summary)}</p></div><div class="practical-actions">${c.actions.map(a=>`<a href="${escape(a.href)}" target="_blank" rel="noopener noreferrer">${escape(a.label)} <span aria-hidden="true">↗</span></a>`).join('')}</div></article>`;
  const motion=c.design.motion==='gradient',art=genericArt(c);
  return `<article class="card library-card theme-${c.design.theme} layout-${c.design.layout} size-${c.design.size}${motion?' has-motion':''}" id="card-${c.id}"><a class="library-card-link" href="${cardPath(c)}"><div class="library-copy"><h2>${escape(c.title)}</h2>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div>${art}</a>${motionControl(c)}</article>`;
 }
