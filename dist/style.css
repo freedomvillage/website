@@ -90,7 +90,7 @@ html[data-light=night] .card .art-window,html[data-light=night] .card .art-lands
 .prompt-composer textarea{display:block;width:100%;min-height:48px;max-height:150px;resize:none;border:0;background:transparent;color:inherit;font:inherit;line-height:1.5;padding:3px;outline:none;box-shadow:none}.prompt-composer textarea::placeholder{color:var(--muted)}
 .composer-bottom{display:flex;align-items:center;gap:12px;justify-content:space-between}.composer-bottom p{font-size:9px;line-height:1.4;color:var(--muted);margin:5px 0}.composer-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}.composer-actions button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;padding:0;line-height:1;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:22px}#prompt-submit{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 main{padding-bottom:250px!important}body.settings-open{overflow:hidden}
-#scene-settings-dialog{box-sizing:border-box;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 48px);overflow:auto;padding:25px;border:1px solid var(--line);border-radius:20px;background:var(--paper);color:var(--ink);box-shadow:0 20px 90px #0004}#scene-settings-dialog::backdrop{background:#101b2c80;backdrop-filter:blur(3px)}
+#scene-settings-dialog{box-sizing:border-box;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 48px);overflow:auto;padding:25px;border:1px solid var(--line);border-radius:20px;background:var(--paper);color:var(--ink);box-shadow:0 20px 90px #0004}#scene-settings-dialog::backdrop{background:transparent;backdrop-filter:none}
 .settings-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:20px}.settings-heading h2{font:normal 28px Georgia,serif;margin:0}.settings-heading button{border:0;background:transparent;color:var(--ink);padding:8px;font-size:18px}
 .mode-picker{border:0;padding:0;margin:0;display:flex;gap:8px;flex-wrap:wrap}.mode-picker legend{font-size:11px;margin-bottom:9px}.mode-picker label{display:flex;align-items:center;gap:6px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;font-size:12px}.mode-picker label:has(input:checked){background:color-mix(in srgb,var(--ink) 10%,var(--paper))}.mode-picker input{accent-color:var(--ink)}
 #scene-settings-dialog .scene-controls{max-width:none;margin-top:18px;font-size:12px}#scene-settings-dialog .control-note{font-size:10px;line-height:1.5}#scene-settings-dialog .season-ends{font-size:9px}
@@ -120,3 +120,7 @@ html:not([data-site-revealed="true"]) body>:not(#site-loading){visibility:hidden
 html[data-site-revealed="true"] #site-loading{display:none}
 @keyframes loading-intro{from{opacity:.25;transform:translateY(3px)}to{opacity:.8;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){#site-loading .loading-logo{animation:none}}
+
+/* Approved Canva horizontal lockup for mobile; desktop vertical artwork unchanged. */
+.mobile-horizontal-logo{display:block;width:100%;height:auto;overflow:hidden}
+@media(max-width:700px){.mobile-bar{gap:16px;padding:16px 18px}.mobile-brand{display:flex;align-items:center;width:min(230px,calc(100vw - 132px));min-width:0;min-height:44px;flex-shrink:1;color:var(--ink)}.mobile-bar button{flex-shrink:0;min-height:44px}}

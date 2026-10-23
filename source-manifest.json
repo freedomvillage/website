@@ -1,5 +1,5 @@
 {
-  "sourceCommit": "fea3b80682ece387a9670ea8681ebc3031e1832a",
+  "sourceCommit": "a0a4edbbe106bdc256626dd4d482806cf10de8f8",
   "preservedFiles": {
     "dist/village-fall-v1.png": "6c10555e34c271c7809e3c518606113c0d1d740c45321d2f5ad4a1177f6cbac2",
     "dist/village-winter-dusk-v1.png": "95d5ad31f8cb5a19dceb8b4438bec1ff6922190846651b734638731d001fca65",
@@ -19,8 +19,9 @@
     "dist/village-winter-v1.png": "9ce4b4285c59e0429164681dbe0e8eca8a2046fe47ade5ef98f9bb4cf192be21",
     "dist/village-fall-night-v1.png": "31080c9d435d4326b00c6963697b190e7360a12f7023a604fabef402d2c93bf7",
     "dist/village-summer-dusk-v1.png": "6588a83c4b766bd02c4e72f0ebcf2959446cd01797904c3bd3a36c39de13d0f4",
-    "dist/style.css": "1a2a1f596ddb6ad581e307fef66333e8e840fe607212962046a4d79ff909f06e",
-    "dist/church-vertical-canva.png": "cf81131703d25be3041e5eb4f800992013ba4f04fb7bc0863367cd9bdbcacb2c"
+    "dist/style.css": "ff743417db7f240f75ccf6e25ddac1e78e1a5a42e1f58a2acf07612f6b8b7a23",
+    "dist/church-vertical-canva.png": "cf81131703d25be3041e5eb4f800992013ba4f04fb7bc0863367cd9bdbcacb2c",
+    "dist/church-horizontal-canva.png": "811a9fa5aadced22499398a33a46a908634821509388089bb808b39003700c72"
   },
   "originalImport": {
     "sourceCommit": "b7ff6f976e58feb70796ef58c2a277722e6497d8",
@@ -82,15 +83,26 @@
     {
       "sourceCommit": "fea3b80682ece387a9670ea8681ebc3031e1832a",
       "description": "Initialize the correct scene before reveal, add Seoul live clock controls and verified astronomical season dates, and enforce exact one-hour cached observation expiry."
+    },
+    {
+      "sourceCommit": "a0a4edbbe106bdc256626dd4d482806cf10de8f8",
+      "description": "Use the original horizontal Canva page 1 logo on mobile, hide the loading caption visually while retaining accessible status, and make the temporary scene settings backdrop transparent and unblurred. Desktop vertical artwork and runtime remain unchanged."
     }
   ],
   "adaptedFiles": {
     "dist/app.js": "17e8387458187b173a5f50e209296f81255dfd19a24c24b1e1359bca6cae564e",
-    "dist/index.html": "447b4e9aaa7e22622490a1a058a670c9110ce1e7d69ac9693ea92afb9e992bb0",
+    "dist/index.html": "6b78e8e008d4fa1ac14beabe4175f56600b0bf552af2cb69db1488af0cf76d88",
     "dist/air-quality.js": "42b8d579f29bcc3d273c5753c7f3878b4c9144dcb46249e8eb372f2b79815861",
     "dist/scene-bootstrap.js": "988e71208ae9f5170c3baba601f4a95def1e0050f08d3bd8643a85cd494d4a6c",
     "dist/scene-clock.js": "757584064a11425a6a0179a0c2eb349ac3f18c0d17f06a82b2d646c03b26d7ee"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
-  "adaptation": "Shared night-only air-quality cache and one-hour observation limit, reconciled with approved UI runtime and artwork overlays; original paintings unchanged."
+  "adaptation": "Shared night-only air-quality cache and one-hour observation limit, reconciled with approved UI runtime and artwork overlays; original paintings unchanged.",
+  "artworkProvenance": {
+    "dist/church-horizontal-canva.png": {
+      "source": "Approved original Canva DAHWLR-KSV8 page 1 PBkzhN3QHfSXYFSM",
+      "sha256": "811a9fa5aadced22499398a33a46a908634821509388089bb808b39003700c72",
+      "integration": "Original PNG used as a cropped SVG luminance mask for the mobile lockup; desktop vertical logo unchanged."
+    }
+  }
 }
