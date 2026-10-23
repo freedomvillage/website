@@ -29,16 +29,16 @@ const seasonNames=['Winter','Spring','Summer','Fall','Christmas'];
 // Christmas overrides December winter: Friday after US Thanksgiving through Dec 31.
 // Adjust these explicit dates for local foliage without changing the selection logic.
 const seasonCalendar=[
- {year:2026,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-27'},
- {year:2027,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-26'},
- {year:2028,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-24'},
- {year:2029,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-23'},
- {year:2030,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-29'},
- {year:2031,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-28'},
- {year:2032,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-26'},
- {year:2033,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-25'},
- {year:2034,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-24'},
- {year:2035,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-23'}
+ {year:2026,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-27',palmSunday:'03-29',easterSunday:'04-05'},
+ {year:2027,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-26',palmSunday:'03-21',easterSunday:'03-28'},
+ {year:2028,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-24',palmSunday:'04-09',easterSunday:'04-16'},
+ {year:2029,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-23',palmSunday:'03-25',easterSunday:'04-01'},
+ {year:2030,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-29',palmSunday:'04-14',easterSunday:'04-21'},
+ {year:2031,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-28',palmSunday:'04-06',easterSunday:'04-13'},
+ {year:2032,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-26',palmSunday:'03-21',easterSunday:'03-28'},
+ {year:2033,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-25',palmSunday:'04-10',easterSunday:'04-17'},
+ {year:2034,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-24',palmSunday:'04-02',easterSunday:'04-09'},
+ {year:2035,spring:'03-01',summer:'06-01',fall:'09-01',winter:'12-01',christmas:'11-23',palmSunday:'03-18',easterSunday:'03-25'}
 ];
 function seoulDateAt(instant){const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(instant);return ['year','month','day'].map(key=>Number(parts.find(p=>p.type===key).value));}
 function seasonForDate([year,month,day]){
@@ -52,6 +52,8 @@ function seasonForDate([year,month,day]){
 const pageLoadDate=Object.freeze(seoulDateAt(new Date()));
 let manualSeasonSelected=false;
 sceneSeason.value=String(seasonForDate(pageLoadDate));
+// Western Easter dates: https://www.census.gov/data/software/x13as/genhol/easter-dates.html
+function holyWeekDayForDate([year,month,day]){const row=seasonCalendar.find(r=>r.year===year);if(!row)return null;const [pm,pd]=row.palmSunday.split('-').map(Number),elapsed=(Date.UTC(year,month-1,day)-Date.UTC(year,pm-1,pd))/86400000;return elapsed>=0&&elapsed<=7?elapsed:null;}
 // End season calendar.
 const seasonAssets=['village-winter-v1.png','village-spring-v1.png','village-panorama-v8.png','village-fall-v1.png','village-christmas-v1.png'];
 const sceneAssets=seasonNames.map((name,i)=>[seasonAssets[i],`village-${name.toLowerCase()}-dusk-v1.png`,`village-${name.toLowerCase()}-night-v1.png`]);
@@ -95,9 +97,28 @@ function lightingAt(minutes,solar=appliedSolarTimes){const t=((Number(minutes)%1
  return {day:Math.max(0,v-1),dusk:1-Math.abs(v-1),night:Math.max(0,1-v)};
 }
 // End Seoul daylight calculations.
+// Static, tree-localized Holy Week decoration; never changes the captured date.
+const holyWeekNames=['Palm Sunday','Holy Monday','Holy Tuesday','Holy Wednesday','Maundy Thursday','Good Friday','Holy Saturday','Easter Sunday'];
+function updateHolyWeek(w){
+ const overlay=document.getElementById('holyweek-overlay');if(!overlay)return;
+ const preview=document.getElementById('holyweek-preview'),slider=document.getElementById('holyweek-day'),output=document.getElementById('holyweek-readout'),note=document.getElementById('holyweek-note');
+ const spring=appliedSeason===1;preview.disabled=!spring;slider.disabled=!spring||!preview.checked;
+ const day=spring?(preview.checked?Number(slider.value):!appliedDateIsManual?holyWeekDayForDate(pageLoadDate):null):null;
+ overlay.style.setProperty('--blossom-visible',day===null?'0':'1');
+ for(let i=0;i<8;i++)overlay.style.setProperty('--blossom-step-'+i,day!==null&&i<=day?'1':'0');
+ overlay.style.setProperty('--easter-banner',day===7?'1':'0');
+ const color=(day,dusk,night)=>`rgb(${day.map((v,i)=>Math.round(v*w.day+dusk[i]*w.dusk+night[i]*w.night)).join(' ')})`;
+ overlay.style.setProperty('--blossom-petal',color([255,253,240],[207,203,219],[133,153,179]));
+ overlay.style.setProperty('--blossom-edge',color([184,180,164],[142,143,166],[83,104,137]));
+ overlay.style.setProperty('--banner-purple',color([101,67,116],[74,54,95],[40,35,63]));
+ overlay.style.setProperty('--banner-gold',color([228,199,126],[187,165,117],[122,119,106]));
+ overlay.style.setProperty('--banner-edge',color([69,51,79],[53,42,67],[27,29,47]));
+ output.value=holyWeekNames[Number(slider.value)];slider.setAttribute('aria-valuetext',output.value);
+ note.textContent=!spring?'Select Spring to preview Holy Week. The five seasons are unchanged.':preview.checked?`Preview override: ${holyWeekNames[day]}. ${day===7?'Easter banner shown.':'Banner appears on Easter Sunday only.'}`:day===null?'Automatic: no Holy Week decoration for this captured date or manual season preview.':`Automatic: ${holyWeekNames[day]} from the Seoul date captured on page load.`;
+}
 const lightPaper={day:[250,249,245],dusk:[136,156,184],night:[18,31,51]};
 function sceneTheme(w){const paper=[0,1,2].map(i=>Math.round(w.day*lightPaper.day[i]+w.dusk*lightPaper.dusk[i]+w.night*lightPaper.night[i]));const lum=paper.map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4}).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0);const dark=lum>.179;return {paper,ink:w.day===1?[35,60,53]:dark?[0,0,0]:[255,255,255],muted:w.day===1?[82,103,91]:dark?[0,0,0]:[255,255,255]};}
-function updateSceneTime(){const mins=Number(sceneTime.value)%1440,h=Math.floor(mins/60),m=mins%60;const text=`${h%12||12}${m?':'+String(m).padStart(2,'0'):''} ${h<12?'am':'pm'}`;document.getElementById('time-readout').value=text;sceneTime.setAttribute('aria-valuetext',text);const w=lightingAt(typeof effectiveTimeMinutes==='function'?effectiveTimeMinutes(mins):mins),root=document.documentElement,theme=sceneTheme(w);for(const [key,c]of Object.entries(theme))root.style.setProperty('--'+key,`rgb(${c.join(' ')})`);root.style.setProperty('--night',String(w.night));root.style.setProperty('--dusk-alpha',String(w.day+w.dusk?w.dusk/(w.day+w.dusk):0));root.style.setProperty('--night-alpha',String(w.night));root.style.setProperty('--festive-light',String(w.night+w.dusk*.4));root.style.setProperty('--line',w.night>.5?'#526178':'#a0aab3');root.dataset.light=w.night>.5?'night':w.dusk>.1?'twilight':'day';root.style.colorScheme=w.night>.5?'dark':'light';const solar=appliedSolarTimes,date=appliedSolarDate;document.getElementById('solar-note').textContent=`Seoul · ${date[0]}-${String(date[1]).padStart(2,'0')}-${String(date[2]).padStart(2,'0')} ${appliedDateIsManual?'manual preview':'captured on page load'} · sunrise ≈ ${solarClock(solar.sunrise)}, sunset ≈ ${solarClock(solar.sunset)} KST. Smooth civil-twilight transitions; not live time.`;}
+function updateSceneTime(){const mins=Number(sceneTime.value)%1440,h=Math.floor(mins/60),m=mins%60;const text=`${h%12||12}${m?':'+String(m).padStart(2,'0'):''} ${h<12?'am':'pm'}`;document.getElementById('time-readout').value=text;sceneTime.setAttribute('aria-valuetext',text);const w=lightingAt(typeof effectiveTimeMinutes==='function'?effectiveTimeMinutes(mins):mins),root=document.documentElement,theme=sceneTheme(w);for(const [key,c]of Object.entries(theme))root.style.setProperty('--'+key,`rgb(${c.join(' ')})`);root.style.setProperty('--night',String(w.night));root.style.setProperty('--dusk-alpha',String(w.day+w.dusk?w.dusk/(w.day+w.dusk):0));root.style.setProperty('--night-alpha',String(w.night));root.style.setProperty('--festive-light',String(w.night+w.dusk*.4));root.style.setProperty('--line',w.night>.5?'#526178':'#a0aab3');root.dataset.light=w.night>.5?'night':w.dusk>.1?'twilight':'day';root.style.colorScheme=w.night>.5?'dark':'light';const solar=appliedSolarTimes,date=appliedSolarDate;document.getElementById('solar-note').textContent=`Seoul · ${date[0]}-${String(date[1]).padStart(2,'0')}-${String(date[2]).padStart(2,'0')} ${appliedDateIsManual?'manual preview':'captured on page load'} · sunrise ≈ ${solarClock(solar.sunrise)}, sunset ≈ ${solarClock(solar.sunset)} KST. Smooth civil-twilight transitions; not live time.`;updateHolyWeek(w);}
 async function updateSceneSeason(manual=true){
  const index=Number(sceneSeason.value);if(!Number.isInteger(index)||!sceneNamesValid(index))return;
  if(manual)manualSeasonSelected=true;const dateIsManual=manualSeasonSelected,date=dateIsManual?previewDates[index]:pageLoadDate;
@@ -121,6 +142,7 @@ async function updateSceneSeason(manual=true){
  }finally{if(request===seasonRequest)sceneSeason.setAttribute('aria-busy','false')}
 }
 function sceneNamesValid(index){return index>=0&&index<seasonNames.length}
+document.getElementById('holyweek-preview')?.addEventListener('change',updateSceneTime);document.getElementById('holyweek-day')?.addEventListener('input',updateSceneTime);
 sceneTime.addEventListener('input',updateSceneTime);sceneSeason.addEventListener('input',updateSceneSeason);document.getElementById('scene-retry').addEventListener('click',()=>updateSceneSeason(manualSeasonSelected));updateSceneTime();updateSceneSeason(false);
 
 // Manual PM2.5 preview, not live AQI or a real tower operating schedule.

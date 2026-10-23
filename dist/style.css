@@ -102,3 +102,7 @@ main{padding-bottom:250px!important}body.settings-open{overflow:hidden}
 
 /* Neutral tower illumination when no air-quality reading is available. */
 .scene-controls label.air-unknown{justify-content:flex-start;align-items:center;gap:7px;margin:8px 0}.scene-controls .air-unknown input{width:auto;margin:0}.scene-controls input:disabled{cursor:default;opacity:.45}
+
+/* Holy Week: fixed artwork, only existing spring crowns and the outside cage banner. */
+.holyweek-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:var(--blossom-visible,0)}
+.holyweek-controls{border:0;border-top:1px solid var(--line);padding:12px 0 0;margin:20px 0 0}.holyweek-controls legend{font-size:11px;padding-right:8px}.scene-controls .holyweek-preview-label{justify-content:flex-start;align-items:center;gap:7px}.scene-controls .holyweek-preview-label input{width:auto;margin:0}
