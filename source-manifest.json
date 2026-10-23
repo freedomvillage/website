@@ -95,12 +95,12 @@
   ],
   "adaptedFiles": {
     "dist/app.js": "60b141f12391a68ca8b07c7e36b8a9f73e6f4ca980c78d013bfa1592a86f413b",
-    "dist/index.html": "fa5c4d7eec1cc416c0b8a1d0a04950d4c6d45c4f7b13edb48152240cacab6ddc",
+    "dist/index.html": "c4cd4894040e028c4948156cdb296fa1072640412629cb1b3ab109cf65472484",
     "dist/air-quality.js": "42b8d579f29bcc3d273c5753c7f3878b4c9144dcb46249e8eb372f2b79815861",
     "dist/scene-bootstrap.js": "988e71208ae9f5170c3baba601f4a95def1e0050f08d3bd8643a85cd494d4a6c",
     "dist/scene-clock.js": "3c418037897520cbb12e1ff45a3775bfb860fde4d2436a890227e0281feb7ba5",
-    "dist/content-view.js": "b2b555553d5bc1edfd32bc5a9dc3c36a010e11b739c0d0a550e538d08e23e37f",
-    "dist/content-view.css": "bbb93e5ffbaf37cfe2adbe8d4da6b0f02d670d97d991a16d2c0328398d99d0ef"
+    "dist/content-view.js": "a13041fb3c584d7f4e88eb8ca016ee5e839c41d91742f2b8f84600cae7541649",
+    "dist/content-view.css": "891e5e40fce0f60aa29b7cdab67807c51a9f80d17a0e572b6f0dd15441de50e4"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
   "adaptation": "Shared night-only air-quality cache and one-hour observation limit, reconciled with approved UI runtime and artwork overlays; original paintings unchanged.",
@@ -117,6 +117,14 @@
       "files": [
         "dist/index.html",
         "dist/app.js",
+        "dist/content-view.js",
+        "dist/content-view.css"
+      ]
+    },
+    {
+      "description": "Owner-requested removal of duplicated top branding and All control; explicit SVG clipping and responsive detail-art layout. Compact card sizes retained.",
+      "files": [
+        "dist/index.html",
         "dist/content-view.js",
         "dist/content-view.css"
       ]

@@ -2,7 +2,7 @@ import {readCatalog,privateNextRequest,json} from './catalog.mjs';
 import {rankPublishedCards} from './jev.mjs';
 const CHECK='two-card-jev-v1',QUERY='I would like to join the men for breakfast in November.';
 const escape=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-function page(result){return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Private ranking check</title><h1>Private ranking check</h1><p>One sample request using existing credits. Reopening this page does not call Jev.</p><form method="post"><button>Run the one-time sample</button></form><pre>${escape(JSON.stringify(result,null,2))}</pre></html>`,{headers:{
+function page(result){const attempted=!['not-run','unconfigured','invalid-catalog'].includes(result.status);return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Private ranking check</title><h1>Private ranking check</h1><h2>${attempted?'Submitted query':'Query to submit'}</h2><blockquote>${escape(QUERY)}</blockquote><p>One sample request using existing credits. Reopening this page does not call Jev.</p>${attempted?'':'<form method="post"><button>Run the one-time sample</button></form>'}<h2>Result</h2><pre>${escape(JSON.stringify(result,null,2))}</pre></html>`,{headers:{
  'Content-Type':'text/html; charset=utf-8','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',
  'Content-Security-Policy':"default-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",'X-Robots-Tag':'noindex'}});}
 export async function handleJevCheck(request,env){
