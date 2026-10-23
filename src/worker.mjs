@@ -68,7 +68,8 @@ export function createWorker({fetchUpstream=fetch,now=Date.now}={}){
     const upstream=new URL(ENDPOINT);
     // Use the portal's Decoding/raw secret. URLSearchParams performs the only encoding.
     upstream.search=new URLSearchParams({serviceKey:env.AIRKOREA_SERVICE_KEY,returnType:'json',numOfRows:'1',pageNo:'1',stationName:env.AIR_STATION,dataTerm:'DAILY',ver:'1.3'});
-    const response=await fetchUpstream(upstream,{headers:{Accept:'application/json'},signal,redirect:'error'});
+    // Workers rejects redirect:'error' before sending. Manual never forwards the key.
+    const response=await fetchUpstream(upstream,{headers:{Accept:'application/json'},signal,redirect:'manual'});
     httpStatus=response.status;
     category=response.ok?'non-json':'http-error';
     const raw=await boundedBody(response);
