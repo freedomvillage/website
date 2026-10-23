@@ -30,4 +30,29 @@ test('credit verification, fixed case membership and existing secret fail closed
  const {db,env}=setup();try{assert.equal((await handleRankingEvaluation(request('not-a-case'),env,{now:()=>instant})).status,400);delete env.TYPESAFE_API_KEY;assert.equal((await handleRankingEvaluation(request('sample-one'),env,{now:()=>instant})).status,409);}finally{db.close();}});
 test('one fixed case stores actual model/usage/latency/inputs and replay cannot call twice',async()=>{const {db,env}=setup();try{const count={calls:0},options={fetchUpstream:provider(count),now:()=>instant};const response=await handleRankingEvaluation(request('sample-one'),env,options);assert.equal(response.status,200);const html=await response.text();assert(!html.includes(secret));const saved=JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get('ranking-eval-v1:sample-one').result_json);assert.equal(saved.status,'ok');assert.equal(saved.query,'baptisim');assert.equal(saved.model,'jev-1.14.0');assert.equal(saved.usage.inputTokens,100);assert.equal(saved.estimatedCostUsd,.0000042);assert.equal(saved.datasetSha256.length,64);assert.equal(saved.isSyntheticQuery,true);assert(saved.comparison.expectedHits.jev.includes('sample-baptism'));await handleRankingEvaluation(request('sample-one'),env,options);await handleRankingEvaluation(request(),env,options);assert.equal(count.calls,1);}finally{db.close();}});
 test('pending attempt coalesces other cases; no lock stealing or automatic retry',async()=>{const {db,env}=setup();try{let resolve,count=0;const wait=new Promise(r=>resolve=r),options={now:()=>instant,fetchUpstream:async(...args)=>{count++;await wait;return provider({calls:0})(...args);}};const first=handleRankingEvaluation(request('sample-one'),env,options);while(count===0)await new Promise(r=>setImmediate(r));const second=await handleRankingEvaluation(request('sample-two'),env,options);assert.equal(second.status,409);assert.equal(count,1);resolve();assert.equal((await first).status,200);}finally{db.close();}});
-test('provider failure consumes its claim and blocks further spending for review',async()=>{const {db,env}=setup();try{let calls=0;const options={now:()=>instant,fetchUpstream:async()=>{calls++;return new Response('PRIVATE_PROVIDER_FIXTURE',{status:429});}};const html=await(await handleRankingEvaluation(request('sample-one'),env,options)).text();assert(!html.includes('PRIVATE_PROVIDER_FIXTURE'));assert.equal((await handleRankingEvaluation(request('sample-two'),env,options)).status,409);assert.equal(calls,1);}finally{db.close();}});
+test('provider failure consumes its claim and blocks further spending for review',async()=>{const {db,env}=setup();try{let calls=0;const options={now:()=>instant,fetchUpstream:async()=>{calls++;return new Response('PRIVATE_PROVIDER_FIXTURE',{status:429});}};const html=await(await handleRankingEvaluation(request('sample-one'),env,options)).text();assert(!html.includes('PRIVATE_PROVIDER_FIXTURE'));assert(html.includes('<button disabled>Run this fixed case once'));assert.equal((await handleRankingEvaluation(request('sample-two'),env,options)).status,409);assert.equal(calls,1);}finally{db.close();}});
+
+function delayedRequest(id){
+ let release,bodyRequested;
+ const reading=new Promise(resolve=>bodyRequested=resolve);
+ const body=new ReadableStream({pull(controller){bodyRequested();return new Promise(resolve=>{release=()=>{controller.enqueue(new TextEncoder().encode('caseId='+id));controller.close();resolve();};});}},{highWaterMark:0});
+ return {request:new Request('https://next.freedomvillage.church/api/content/evaluation',{method:'POST',duplex:'half',headers:{'Cf-Access-Jwt-Assertion':'LOCAL_ACCESS_FIXTURE',Origin:'https://next.freedomvillage.church','Content-Type':'application/x-www-form-urlencoded'},body}),reading,release:()=>release()};
+}
+test('a delayed body cannot bypass a failure completed before its lock acquisition',async()=>{
+ const {db,env}=setup();try{
+  let calls=0;const options={now:()=>instant,fetchUpstream:async()=>{calls++;return new Response('PRIVATE_PROVIDER_FIXTURE',{status:429});}};
+  const delayed=delayedRequest('sample-two'),second=handleRankingEvaluation(delayed.request,env,options);await delayed.reading;
+  assert.equal((await handleRankingEvaluation(request('sample-one'),env,options)).status,200);
+  delayed.release();const response=await second;assert.equal(response.status,409);assert.equal((await response.json()).status,'prior-attempt-needs-review');assert.equal(calls,1);
+  assert.equal(db.prepare('SELECT count(*) AS count FROM content_checks WHERE id=?').get('ranking-eval-v1:sample-two').count,0);
+ }finally{db.close();}
+});
+test('a delayed body uses current budget and current fixture approval under the lock',async()=>{
+ for(const mode of ['budget','approval']){const {db,env}=setup();try{
+  let calls=0;const delayed=delayedRequest('sample-two'),pending=handleRankingEvaluation(delayed.request,env,{now:()=>instant,fetchUpstream:async()=>{calls++;}});await delayed.reading;
+  if(mode==='budget')db.prepare('INSERT INTO content_checks VALUES(?,?,?)').run('ranking-eval-v1:sample-one',JSON.stringify({status:'ok',estimatedCostUsd:.10}),new Date(instant).toISOString());
+  else db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').run(JSON.stringify({...fixtures,executionApproved:false}),'ranking-fixtures-v1');
+  delayed.release();const response=await pending;assert.equal(response.status,409);assert.equal((await response.json()).status,mode==='budget'?'experiment-budget-exhausted':'credit-verification-required');assert.equal(calls,0);
+  assert.equal(JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get('ranking-eval-v1:lock').result_json).caseId,null);
+ }finally{db.close();}}
+});
