@@ -44,3 +44,17 @@ test('media and motion are explicit, source-limited and have static accessible f
  const detail=await(await handleContentPage(req('/cards/sample-video'),env)).text();assert(detail.includes('Load video'));assert(detail.includes('Watch on YouTube'));assert(!detail.includes('<iframe'));
  }finally{db.close();}
 });
+
+test('practical action card exposes real individual links without nested anchors or a simulated form',async()=>{
+ const {db,add,adapter}=database();try{add('sample-actions',sample({template:'actions',actions:[{label:'Contact',href:'https://example.org/contact'},{label:'Media',href:'https://example.org/media'}]}));
+ const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)}};
+ const html=await(await handleContentPage(req('/'),env)).text(),main=html.match(/<main[\s\S]*?<\/main>/)[0];assert(main.includes('class="practical-actions"'));assert(main.includes('href="https://example.org/contact"'));assert(main.includes('href="https://example.org/media"'));assert(!main.includes('<form'));assert(!/<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<a\b/.test(main));
+ }finally{db.close();}
+});
+
+test('local actions and single-recipient mail handoffs are allowed; header injection is rejected',()=>{
+ const row=c=>({id:'sample-links',content_json:JSON.stringify(c)});
+ const valid=publicCard(row(sample({actions:[{label:'Related',targetId:'sample-other'},{label:'Email',href:'mailto:hello@example.org?subject=My%20question'}]})));assert(valid);assert.equal(valid.actions[0].targetId,'sample-other');
+ for(const href of ['mailto:hello@example.org?bcc=other@example.org','mailto:hello@example.org?subject=Hi%0ABcc:other@example.org','mailto:one@example.org,two@example.org','file:///tmp/private','javascript:alert(1)'])assert.equal(publicCard(row(sample({actions:[{label:'Bad',href}]}))),null);
+ assert.equal(publicCard(row(sample({actions:[{label:'Bad',targetId:'../private'}]}))),null);assert.equal(publicCard(row(sample({actions:[{label:'Bad',targetId:'sample',href:'https://example.org'}]}))),null);
+});
