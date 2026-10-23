@@ -99,7 +99,7 @@
     "dist/air-quality.js": "42b8d579f29bcc3d273c5753c7f3878b4c9144dcb46249e8eb372f2b79815861",
     "dist/scene-bootstrap.js": "988e71208ae9f5170c3baba601f4a95def1e0050f08d3bd8643a85cd494d4a6c",
     "dist/scene-clock.js": "3c418037897520cbb12e1ff45a3775bfb860fde4d2436a890227e0281feb7ba5",
-    "dist/content-view.js": "904b40fb73e92c46f8d650e33f8ab2101b1b20d678062a2816fcaeda4628f58b",
+    "dist/content-view.js": "a13041fb3c584d7f4e88eb8ca016ee5e839c41d91742f2b8f84600cae7541649",
     "dist/content-view.css": "891e5e40fce0f60aa29b7cdab67807c51a9f80d17a0e572b6f0dd15441de50e4"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",

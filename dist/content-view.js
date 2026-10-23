@@ -4,7 +4,8 @@
  const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
  function artwork(card,context='card'){
   const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),image=document.createElementNS(ns,'image');
-  const crop=card.theme==='breakfast'?[1188,0,732,1080]:context==='detail'?[0,0,card.image.width,card.image.height]:[80,420,300,930];
+  // Recompose source imagery only; facts are live text, rather than duplicated poster text.
+  const crop=card.theme==='breakfast'?[1188,0,732,1080]:context==='detail'?[0,420,430,930]:[80,420,300,930];
   svg.setAttribute('viewBox',crop.join(' '));svg.setAttribute('width',crop[2]);svg.setAttribute('height',crop[3]);
   // A viewBox alone does not clip artwork in letterboxed parts of the viewport.
   const defs=document.createElementNS(ns,'defs'),clip=document.createElementNS(ns,'clipPath'),rect=document.createElementNS(ns,'rect'),clipId='pilot-crop-'+(++artSerial);
