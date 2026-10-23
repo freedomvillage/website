@@ -5,19 +5,61 @@
   "compatibility_date": "2026-10-23",
   "workers_dev": false,
   "preview_urls": false,
-  "assets": {"directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/api/*"]},
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
   "env": {
     "staging": {
       "name": "freedom-village-site-staging",
       "workers_dev": false,
       "preview_urls": false,
-      "vars": {"DEPLOYMENT_STAGE": "staging", "AIR_ENABLED": "false", "AIR_STATION": "용산구"}
+      "vars": {
+        "DEPLOYMENT_STAGE": "staging",
+        "AIR_ENABLED": "false",
+        "AIR_STATION": "용산구"
+      }
     },
     "next": {
       "name": "freedom-village-site",
       "workers_dev": false,
       "preview_urls": false,
-      "vars": {"DEPLOYMENT_STAGE": "next", "AIR_ENABLED": "false", "AIR_STATION": "용산구"}
+      "vars": {
+        "DEPLOYMENT_STAGE": "next",
+        "AIR_ENABLED": "true",
+        "AIR_STATION": "용산구",
+        "AIR_PRODUCER_ENABLED": "true",
+        "AIR_DEPLOYMENT_KIND": "production"
+      },
+      "kv_namespaces": [
+        {
+          "binding": "AIR_CACHE",
+          "id": "058e6e2985d24f31b5e36d73bdd1ea12"
+        }
+      ],
+      "triggers": {
+        "crons": [
+          "*/15 * * * *"
+        ]
+      },
+      "previews": {
+        "vars": {
+          "DEPLOYMENT_STAGE": "preview",
+          "AIR_ENABLED": "true",
+          "AIR_PRODUCER_ENABLED": "false",
+          "AIR_DEPLOYMENT_KIND": "preview",
+          "AIR_STATION": "용산구"
+        },
+        "kv_namespaces": [
+          {
+            "binding": "AIR_CACHE",
+            "id": "058e6e2985d24f31b5e36d73bdd1ea12"
+          }
+        ]
+      }
     }
   }
 }

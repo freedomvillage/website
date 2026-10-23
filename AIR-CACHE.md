@@ -60,3 +60,7 @@ Deployment identity needs permission to manage the selected Worker, its cron/set
 - Provider or KV outages must leave the site working and AQ Unknown. Roll back code/config independently if needed; preserve Webflow.
 
 Primary references: https://developers.cloudflare.com/workers/previews/configuration/ ; https://developers.cloudflare.com/workers/runtime-apis/handlers/scheduled/ ; https://gml.noaa.gov/grad/solcalc/solareqns.PDF
+
+## Current rollout configuration
+
+The approved dedicated namespace is `freedom-village-air-cache` (`058e6e2985d24f31b5e36d73bdd1ea12`) in the existing Freedom Village Cloudflare account. `env.next` binds production and modern Preview Base to that same AQ-only namespace. Production enables the sole night-gated `*/15 * * * *` schedule; previews have producer false, kind preview and no key/cron. This configuration initiates authorized real-response validation; it is not evidence that a provider reading has been obtained. Public review routing remains disabled pending separate Access setup.
