@@ -1,0 +1,42 @@
+AIR-CACHE.md
+  h_9a6e2a87fc4a0d 1-62
+README.md
+  h_9a6e2a87fc4a0d 1,3,7,9,20,22,24,26,28,30,32,34,38,42
+dist/air-quality.js
+  h_9a6e2a87fc4a0d 1-59
+dist/app.js
+  h_9a6e2a87fc4a0d 121,148,150-159,161-171
+dist/index.html
+  h_9a6e2a87fc4a0d 6
+package.json
+  h_9a6e2a87fc4a0d 7
+scripts/validate.mjs
+  h_9a6e2a87fc4a0d 6-15,24
+source-manifest.json
+  h_9a6e2a87fc4a0d 78-85
+src/seoul-night.mjs
+  h_9a6e2a87fc4a0d 1-24
+src/worker.mjs
+  h_9a6e2a87fc4a0d 1-8,27-35,37-76
+tests/air-client.test.mjs
+  h_9a6e2a87fc4a0d 1-22
+tests/calendar.cjs
+  h_9a6e2a87fc4a0d 15
+tests/manual-air.cjs
+  h_9a6e2a87fc4a0d 1-2,5-7
+tests/scene.cjs
+  h_9a6e2a87fc4a0d 3
+tests/worker.test.mjs
+  h_9a6e2a87fc4a0d 3-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cd3979f519430320d4c80e31a1d617adc9907e17",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
