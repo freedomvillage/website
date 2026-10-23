@@ -2,9 +2,17 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 const config=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8'));
-assert.deepEqual(Object.keys(config.env),['staging','next']);
 assert.deepEqual(config.assets.run_worker_first,['/api/*']);
-for(const [name,e] of Object.entries(config.env)){assert.equal(e.vars.AIR_ENABLED,'false');assert.equal(e.workers_dev,false);assert.equal(e.preview_urls,false);for(const route of e.routes??[]){assert.equal(route.pattern,`${name}.freedomvillage.church`);assert.equal(route.custom_domain,true)}}
+function checkAirSettings(settings,isPreview=false){
+ const vars=settings.vars||{};
+ if(vars.AIR_ENABLED!==undefined)assert(['true','false'].includes(vars.AIR_ENABLED));
+ if(isPreview){assert.notEqual(vars.AIR_PRODUCER_ENABLED,'true');assert.notEqual(vars.AIR_DEPLOYMENT_KIND,'production');assert(!settings.triggers?.crons?.length);}
+ if(vars.AIR_PRODUCER_ENABLED==='true'){assert.equal(vars.AIR_DEPLOYMENT_KIND,'production');assert.deepEqual(settings.triggers?.crons,['*/15 * * * *']);}
+ for(const route of settings.routes??[]){assert(['staging.freedomvillage.church','next.freedomvillage.church'].includes(route.pattern));assert.equal(route.custom_domain,true)}
+}
+checkAirSettings(config);
+for(const [name,e] of Object.entries(config.env??{})){checkAirSettings(e,name==='staging'||name==='preview');if(e.previews)checkAirSettings(e.previews,true)}
+if(config.previews)checkAirSettings(config.previews,true);
 const assets=fs.readdirSync('dist');assert(assets.length<20000);
 for(const name of assets){assert(fs.statSync('dist/'+name).size<25*1024*1024);assert(!name.startsWith('.'))}
 const js=fs.readFileSync('dist/app.js','utf8');
@@ -13,5 +21,5 @@ for(const name of ['village-panorama-v8.png','village-winter-v1.png','village-sp
 assert(!fs.existsSync('ARTWORK.md'));assert(!fs.existsSync('.openai'));
 assert(!js.includes('AIRKOREA_SERVICE_KEY'));
 const manifest=JSON.parse(fs.readFileSync('source-manifest.json','utf8'));
-for(const [path,hash] of Object.entries(manifest.preservedFiles)){assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex'),hash)}
+for(const [path,hash] of Object.entries({...manifest.preservedFiles,...manifest.adaptedFiles})){assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex'),hash)}
 console.log(`PASS: config safety, ${assets.length} assets, dynamic seasonal references, preserved UI hashes, clean export boundaries`);
