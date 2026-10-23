@@ -75,3 +75,24 @@ test('private raster images are record-bound, explicitly disclosed and source fi
   let canceled=false;env.CONTENT_MEDIA.get=async()=>({size:MAX_MEDIA_BYTES+1,body:new ReadableStream({cancel(){canceled=true;}})});assert.equal((await handleMediaRequest(req('/media/sample-image.jpg'),env)).status,413);assert(canceled);
  }finally{db.close();}
 });
+
+test('authored sections project safe prose and links with bounded finite card references',()=>{
+ const section={heading:'A source heading',paragraphs:['Source prose.'],links:[{label:'Read source',href:'https://example.org/source'}],cardIds:['sample-related'],editorial:'PRIVATE_NOTE'};
+ const row=sections=>({id:'sample-sections',content_json:JSON.stringify(sample({sections}))});
+ const projected=publicCard(row([section]));assert(projected);assert(!JSON.stringify(projected).includes('PRIVATE_NOTE'));
+ for(const sections of [null,Array(11).fill(section),[{...section,links:[{label:'Unsafe',href:'javascript:alert(1)'}]}],[{...section,cardIds:['../private']}],[{...section,cardIds:['sample-sections']}],[{...section,cardIds:['sample-related','sample-related']}],[{...section,paragraphs:[]}]] )assert.equal(publicCard(row(sections)),null);
+});
+
+test('embedded finite sets reuse eligible cards inside prose with unique IDs and no feed',async()=>{
+ const {db,add,adapter}=database();try{
+  const block={heading:'Source <heading>',paragraphs:['Text before the cards.'],links:[{label:'Source reference',href:'https://example.org/source'}],cardIds:['sample-visible','sample-held','sample-expired','sample-archived']};
+  add('sample-parent',sample({sections:[block,{...block,heading:'Another section',cardIds:['sample-synthetic','sample-visible']}],related:['sample-visible']}));
+  add('sample-visible',sample({title:'Visible canonical card'}));add('sample-held',sample({title:'HELD_CONTENT',hold:true}));add('sample-expired',sample({title:'EXPIRED_CONTENT'}),'draft','2020-01-01T00:00:00Z');add('sample-archived',sample({title:'ARCHIVED_CONTENT'}),'archived');add('sample-synthetic',sample({title:'SYNTHETIC_CONTENT',isSynthetic:true}));
+  const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)}};
+  const html=await(await handleContentPage(req('/cards/sample-parent'),env)).text(),main=html.match(/<main[\s\S]*?<\/main>/)[0];
+  for(const marker of ['HELD_CONTENT','EXPIRED_CONTENT','ARCHIVED_CONTENT','SYNTHETIC_CONTENT'])assert(!main.includes(marker));
+  assert(main.includes('Source &lt;heading&gt;'));assert(main.includes('href="https://example.org/source"'));assert.equal((main.match(/href="\/cards\/sample-visible"/g)||[]).length,3);
+  assert.equal((main.match(/<h3>Visible canonical card<\/h3>/g)||[]).length,2);assert(!main.includes('load-more'));
+  const ids=[...main.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);assert(main.indexOf('Text before the cards.')<main.indexOf('embedded-sample-parent-0-card-sample-visible'));
+ }finally{db.close();}
+});

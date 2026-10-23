@@ -9,12 +9,12 @@ function art(c,context){
 }
 function facts(c){return `<div class="pilot-facts"><p class="pilot-date">${escape(c.date)}</p><p class="pilot-time">${escape(c.time)}</p><p class="pilot-venue">${escape(c.venue)}</p></div>`;}
 export function renderCard(c){if(c.schemaVersion===2)return renderLibraryCard(c);return `<article class="card pilot-card pilot-${c.theme}" id="card-${c.id}"><a class="pilot-card-link" href="${cardPath(c)}" aria-label="${escape(c.title)} — event details"><div class="pilot-copy"><h2>${escape(c.title)}</h2>${facts(c)}<p class="pilot-excerpt">${escape(c.summary)}</p><span class="pilot-detail-link">Event details ↗</span></div>${art(c,'card')}</a></article>`;}
-export function renderDetail(c,related=[]){if(c.schemaVersion===2)return renderLibraryDetail(c,related);return `<article class="detail-shell pilot-detail pilot-${c.theme}"><a class="back" href="/">← Back</a><div class="pilot-detail-hero"><div class="pilot-detail-copy"><h1 tabindex="-1">${escape(c.title)}</h1>${facts(c)}</div><figure class="pilot-detail-art">${art(c,'detail')}</figure></div><div class="detail-body">${c.address?`<p class="pilot-address">${escape(c.address)}</p>`:''}${c.detail.map(p=>`<p>${escape(p)}</p>`).join('')}${c.actions.map(a=>`<a class="pilot-action" href="${escape(a.href)}" target="_blank" rel="noopener noreferrer">${escape(a.label)} ↗</a>`).join('')}</div></article>`;}
-function mainHtml(catalog,card,message,related=[]){
- const content=message?`<article class="detail-shell"><h1>${escape(message.title)}</h1><p>${escape(message.text)}</p><a href="/">Return to cards</a></article>`:card?renderDetail(card,related):'';
+export function renderDetail(c,related=[],embedded=[]){if(c.schemaVersion===2)return renderLibraryDetail(c,related,embedded);return `<article class="detail-shell pilot-detail pilot-${c.theme}"><a class="back" href="/">← Back</a><div class="pilot-detail-hero"><div class="pilot-detail-copy"><h1 tabindex="-1">${escape(c.title)}</h1>${facts(c)}</div><figure class="pilot-detail-art">${art(c,'detail')}</figure></div><div class="detail-body">${c.address?`<p class="pilot-address">${escape(c.address)}</p>`:''}${c.detail.map(p=>`<p>${escape(p)}</p>`).join('')}${c.actions.map(a=>`<a class="pilot-action" href="${escape(a.href)}" target="_blank" rel="noopener noreferrer">${escape(a.label)} ↗</a>`).join('')}</div></article>`;}
+function mainHtml(catalog,card,message,related=[],embedded=[]){
+ const content=message?`<article class="detail-shell"><h1>${escape(message.title)}</h1><p>${escape(message.text)}</p><a href="/">Return to cards</a></article>`:card?renderDetail(card,related,embedded):'';
  return `<main id="main" tabindex="-1"><section id="collection"${card||message?' hidden':''}><h1 class="${catalog.topic?'topic-title':'visually-hidden'}">${escape(TOPICS[catalog.topic]||'The Church at Freedom Village')}</h1><div class="collection-meta"><span id="collection-label"></span><span id="count" aria-live="polite"></span></div><div id="grid" class="grid server-content">${catalog.items.map(renderCard).join('')}${!catalog.items.length&&!card&&!message?'<p class="empty-collection">No cards in this draft collection yet.</p>':''}</div>${catalog.nextCursor?`<a class="load-more" href="${catalog.topic?'/topics/'+catalog.topic:'/'}?after=${encodeURIComponent(catalog.nextCursor)}">More cards ↓</a>`:''}<footer><span>Private draft</span></footer></section><section id="detail"${!card&&!message?' hidden':''}>${content}</section></main>`;
 }
-export async function renderPageShell(request,env,catalog,card,status,message,related=[],mainOverride=null){
+export async function renderPageShell(request,env,catalog,card,status,message,related=[],mainOverride=null,embedded=[]){
  const asset=await env.ASSETS.fetch(new Request(new URL('/',request.url),{method:'GET'}));
  if(!asset.ok)throw new Error('Shell unavailable');
  let html=await asset.text();
@@ -23,7 +23,7 @@ export async function renderPageShell(request,env,catalog,card,status,message,re
  .replace(/<meta name="description" content="[^"]*">/,`<meta name="description" content="${escape(description)}">`)
  .replace('<head>','<head><base href="/"><meta name="robots" content="noindex,nofollow"><meta property="og:type" content="website"><meta property="og:title" content="'+escape(title)+'"><meta property="og:description" content="'+escape(description)+'">')
  .replace(/<nav aria-label="Explore the community" id="filters"><\/nav>/,()=>`<nav aria-label="Explore the community" id="filters">${Object.entries(TOPICS).map(([id,label])=>`<a href="/topics/${id}"${catalog.topic===id?' aria-current="page"':''}>${escape(label)}</a>`).join('')}</nav>`)
- .replace(/<main id="main"[\s\S]*?<\/main>/,()=>mainOverride??mainHtml(catalog,card,message,related));
+ .replace(/<main id="main"[\s\S]*?<\/main>/,()=>mainOverride??mainHtml(catalog,card,message,related,embedded));
  const boot={...catalog,page:{path:new URL(request.url).pathname,status}};
  html=html.replace('<script src="content-view.js">',()=>`<script type="application/json" id="content-bootstrap">${serializeBoot(boot)}</script><script src="content-view.js">`)
  .replace('</head>','<noscript><style>#site-loading,.prompt-composer,.village-scene{display:none!important}html:not([data-site-revealed="true"]) body>:not(#site-loading){visibility:visible!important}.video-load,.motion-toggle,.video-player p{display:none!important}@media(max-width:700px){#menu-toggle,.drawer-close,#sidebar .brand{display:none!important}#sidebar{position:static!important;transform:none!important;width:auto!important;inset:auto!important;padding:0 20px 16px!important;background:transparent!important;border:0!important}#sidebar .sidebar-inner{max-height:none!important;overflow:visible!important}#filters{flex-direction:row;flex-wrap:wrap;gap:4px 16px}#filters a{min-height:44px;display:inline-flex;align-items:center;margin:0;padding:4px 0}}</style></noscript></head>');
@@ -38,7 +38,7 @@ export async function handleContentPage(request,env,{now=Date.now()}={}){
   const to=path==='/index.html'?'/':path.slice(0,-1);return new Response(null,{status:308,headers:{Location:to,'Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});
  }
  try{
-  let catalog={status:'ok',schemaVersion:1,items:[],nextCursor:null},card=null,status=200,message=null,related=[];
+  let catalog={status:'ok',schemaVersion:1,items:[],nextCursor:null},card=null,status=200,message=null,related=[],embedded=[];
   const after=url.searchParams.get('after')||'',topic=path.startsWith('/topics/')?path.slice(8):'';
   if(!validCursor(after)||[...url.searchParams.keys()].some(k=>k!=='after')||url.searchParams.getAll('after').length>1)return json({error:'Invalid query'},400);
   if(path==='/'||(topic&&Object.hasOwn(TOPICS,topic)))catalog=await readCatalog(env.CONTENT_DB,{now,after,topic});
@@ -47,11 +47,12 @@ export async function handleContentPage(request,env,{now=Date.now()}={}){
    card=row&&publicCard(row);if(card){
     if(path!==cardPath(card))return new Response(null,{status:308,headers:{Location:cardPath(card),'Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});
     catalog.items=[card];
-    if(card.related?.length){const rows=await env.CONTENT_DB.prepare(`SELECT id,content_json FROM content_cards WHERE id IN (${card.related.map(()=>'?').join(',')}) AND status='draft' AND (expires_at IS NULL OR expires_at>?)`).bind(...card.related,new Date(now).toISOString()).all();related=(rows.results||[]).map(publicCard).filter(c=>c&&c.schemaVersion===2&&c.id!==card.id).sort((a,b)=>card.related.indexOf(a.id)-card.related.indexOf(b.id));}
+    const requested=[...new Set([...(card.related||[]),...(card.sections||[]).flatMap(s=>s.cardIds)])];
+    if(requested.length){const rows=await env.CONTENT_DB.prepare(`SELECT id,content_json FROM content_cards WHERE id IN (${requested.map(()=>'?').join(',')}) AND status='draft' AND (expires_at IS NULL OR expires_at>?)`).bind(...requested,new Date(now).toISOString()).all();embedded=(rows.results||[]).map(publicCard).filter(c=>c&&c.schemaVersion===2&&c.id!==card.id);related=embedded.filter(c=>card.related?.includes(c.id)).sort((a,b)=>card.related.indexOf(a.id)-card.related.indexOf(b.id));}
    }else status=404;
   }else status=404;
   if(status===404)message={title:'Page not found',text:'This page is not available.'};
-  return await renderPageShell(request,env,catalog,card,status,message,related);
+  return await renderPageShell(request,env,catalog,card,status,message,related,null,embedded);
  }catch{
   try{return await renderPageShell(request,env,{status:'unavailable',items:[],nextCursor:null},null,503,{title:'Content unavailable',text:'Please try again later.'});}
   catch{return new Response('Content unavailable',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});}
