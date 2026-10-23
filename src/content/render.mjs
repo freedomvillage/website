@@ -18,10 +18,12 @@ function genericArt(c,detail=false){
 }
 const genericFacts=c=>c.facts.length?`<div class="library-facts">${c.facts.map(v=>`<p>${escape(v)}</p>`).join('')}</div>`:'';
 const motionControl=c=>c.design.motion==='gradient'?'<button class="motion-toggle" type="button" aria-pressed="false" aria-label="Pause background animation" hidden>Pause animation</button>':'';
-export function renderLibraryCard(c){
- if(['actions','utility'].includes(c.template))return `<article class="card library-card practical-card theme-${c.design.theme}" id="card-${c.id}"><div class="library-copy"><h2><a href="${cardPath(c)}">${escape(c.title)}</a></h2><p class="library-excerpt">${escape(c.summary)}</p></div><div class="practical-actions">${c.actions.map(a=>`<a ${actionAttrs(a)}>${escape(a.label)} <span aria-hidden="true">↗</span></a>`).join('')}</div></article>`;
+export function renderLibraryCard(c,namespace=''){
+ namespace=typeof namespace==='string'?namespace:'';
+ const domId=escape((namespace?namespace+'-':'')+'card-'+c.id);
+ if(['actions','utility'].includes(c.template))return `<article class="card library-card practical-card theme-${c.design.theme}" id="${domId}"><div class="library-copy"><h2><a href="${cardPath(c)}">${escape(c.title)}</a></h2><p class="library-excerpt">${escape(c.summary)}</p></div><div class="practical-actions">${c.actions.map(a=>`<a ${actionAttrs(a)}>${escape(a.label)} <span aria-hidden="true">↗</span></a>`).join('')}</div></article>`;
  const motion=c.design.motion==='gradient',art=genericArt(c);
- return `<article class="card library-card theme-${c.design.theme} layout-${c.design.layout} size-${c.design.size}${motion?' has-motion':''}" id="card-${c.id}"><a class="library-card-link" href="${cardPath(c)}"><div class="library-copy"><h2>${escape(c.title)}</h2>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div>${art}</a>${motionControl(c)}</article>`;
+ return `<article class="card library-card theme-${c.design.theme} layout-${c.design.layout} size-${c.design.size}${motion?' has-motion':''}" id="${domId}"><a class="library-card-link" href="${cardPath(c)}"><div class="library-copy"><h2>${escape(c.title)}</h2>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div>${art}</a>${motionControl(c)}</article>`;
 }
 export function renderLibraryDetail(c,related=[]){
  const video=c.media?.kind==='youtube'?`<div class="video-player" data-video="${c.media.videoId}"><button type="button" class="video-load" data-video-title="${escape(c.media.title)}">▶ Load video</button><p>Video loads from YouTube when selected.</p><a href="https://www.youtube.com/watch?v=${c.media.videoId}" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a></div>`:'';
