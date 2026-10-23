@@ -1,0 +1,18 @@
+dist/index.html
+  h_9a6e2a87fc4a0d 2,4
+dist/style.css
+  h_9a6e2a87fc4a0d 93,123-126
+source-manifest.json
+  h_9a6e2a87fc4a0d 2,22-24,86-89,94,100-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f423bede2bd41639ca72c3a579fc8048ee30b0d0",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
