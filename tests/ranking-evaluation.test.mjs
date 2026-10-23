@@ -5,7 +5,22 @@ const instant=Date.parse('2026-10-24T00:00:00Z'),secret='LOCAL_TEST_VALUE_NOT_A_
 const fixtures={version:1,isSyntheticQuery:true,executionApproved:true,remainingCreditsUsd:1,creditVerifiedAt:new Date(instant).toISOString(),cases:[{id:'sample-one',query:'baptisim',expectedUsefulIds:['sample-baptism']},{id:'sample-two',query:'a different question',expectedUsefulIds:[]}]};
 const content=(title,summary)=>({schemaVersion:2,template:'story',title,summary,detail:['Fixture paragraph.'],facts:[],categories:['faith'],actions:[],related:[],media:null,design:{theme:'paper',layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false});
 function setup(overrides={}){const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE content_cards(id TEXT PRIMARY KEY,status TEXT,content_json TEXT,expires_at TEXT); CREATE TABLE content_checks(id TEXT PRIMARY KEY,result_json TEXT,created_at TEXT)');db.prepare('INSERT INTO content_checks VALUES(?,?,?)').run('ranking-fixtures-v1',JSON.stringify({...fixtures,...overrides}),new Date(instant).toISOString());for(const [id,c]of [['sample-baptism',content('Baptism','Considering baptism?')],['sample-community',content('Community','A group for shared life.')]])db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(c),null);
- const adapter={prepare(sql){const st=db.prepare(sql);return {bind(...a){return {first:async()=>st.get(...a),all:async()=>({results:st.all(...a)}),run:async()=>({meta:{changes:Number(st.run(...a).changes)}})}}}};return {db,env:{CONTENT_PILOT_ENABLED:'true',JEV_ENABLED:'true',TYPESAFE_API_KEY:secret,CONTENT_DB:adapter}};}
+ const adapter={
+  prepare(sql){
+   const st=db.prepare(sql);
+   return {
+    bind(...a){
+     return {
+      first:async()=>st.get(...a),
+      all:async()=>({results:st.all(...a)}),
+      run:async()=>{const result=st.run(...a);return {meta:{changes:Number(result.changes)}};}
+     };
+    }
+   };
+  }
+ };
+ return {db,env:{CONTENT_PILOT_ENABLED:'true',JEV_ENABLED:'true',TYPESAFE_API_KEY:secret,CONTENT_DB:adapter}};
+}
 const request=(id=null,origin='https://next.freedomvillage.church')=>new Request('https://next.freedomvillage.church/api/content/evaluation',{method:id===null?'GET':'POST',headers:{'Cf-Access-Jwt-Assertion':'LOCAL_ACCESS_FIXTURE',...(id===null?{}:{Origin:origin,'Content-Type':'application/x-www-form-urlencoded'})},...(id===null?{}:{body:'caseId='+id})});
 function provider(counter){return async(url,options)=>{counter.calls++;assert.equal(url,'https://api.typesafe.ai/v1/systemone');assert.equal(options.redirect,'manual');const body=JSON.parse(options.body);assert.equal(body.model,'jev-1.14.0');const answers=Object.fromEntries(Object.keys(body.questions).map((key,i)=>[key,{type:'score',score:i?0:2,confidence:1,probabilities:{0:i?1:0,1:0,2:i?0:1}}]));return Response.json({model:'jev-1.14.0',usage:{input_tokens:100,output_tokens:20},answers});};}
 test('fixture shape and request bounds reject unapproved arbitrary inputs',()=>{assert(validFixtures(fixtures));assert(!validFixtures({...fixtures,isSyntheticQuery:false}));assert(!validFixtures({...fixtures,cases:[...fixtures.cases,fixtures.cases[0]]}));assert(!validFixtures({...fixtures,cases:[{id:'bad',query:'x'.repeat(501),expectedUsefulIds:[]}]}));assert.throws(()=>rankingRequest('x',[]));assert.throws(()=>rankingRequest('x',Array(65).fill({})));assert.throws(()=>rankingRequest('x',[{id:'a',title:'a',summary:'a'}],'unapproved-model'));});
