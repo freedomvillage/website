@@ -14,6 +14,7 @@
       "/events/*",
       "/cards/*",
       "/topics/*",
+      "/studies/*",
       "/api/*",
       "/media/*",
       "/robots.txt",

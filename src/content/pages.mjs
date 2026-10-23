@@ -14,7 +14,7 @@ function mainHtml(catalog,card,message,related=[]){
  const content=message?`<article class="detail-shell"><h1>${escape(message.title)}</h1><p>${escape(message.text)}</p><a href="/">Return to cards</a></article>`:card?renderDetail(card,related):'';
  return `<main id="main" tabindex="-1"><section id="collection"${card||message?' hidden':''}><h1 class="${catalog.topic?'topic-title':'visually-hidden'}">${escape(TOPICS[catalog.topic]||'The Church at Freedom Village')}</h1><div class="collection-meta"><span id="collection-label"></span><span id="count" aria-live="polite"></span></div><div id="grid" class="grid server-content">${catalog.items.map(renderCard).join('')}${!catalog.items.length&&!card&&!message?'<p class="empty-collection">No cards in this draft collection yet.</p>':''}</div>${catalog.nextCursor?`<a class="load-more" href="${catalog.topic?'/topics/'+catalog.topic:'/'}?after=${encodeURIComponent(catalog.nextCursor)}">More cards ↓</a>`:''}<footer><span>Private draft</span></footer></section><section id="detail"${!card&&!message?' hidden':''}>${content}</section></main>`;
 }
-async function shell(request,env,catalog,card,status,message,related=[]){
+export async function renderPageShell(request,env,catalog,card,status,message,related=[],mainOverride=null){
  const asset=await env.ASSETS.fetch(new Request(new URL('/',request.url),{method:'GET'}));
  if(!asset.ok)throw new Error('Shell unavailable');
  let html=await asset.text();
@@ -23,7 +23,7 @@ async function shell(request,env,catalog,card,status,message,related=[]){
  .replace(/<meta name="description" content="[^"]*">/,`<meta name="description" content="${escape(description)}">`)
  .replace('<head>','<head><base href="/"><meta name="robots" content="noindex,nofollow"><meta property="og:type" content="website"><meta property="og:title" content="'+escape(title)+'"><meta property="og:description" content="'+escape(description)+'">')
  .replace(/<nav aria-label="Explore the community" id="filters"><\/nav>/,()=>`<nav aria-label="Explore the community" id="filters">${Object.entries(TOPICS).map(([id,label])=>`<a href="/topics/${id}"${catalog.topic===id?' aria-current="page"':''}>${escape(label)}</a>`).join('')}</nav>`)
- .replace(/<main id="main"[\s\S]*?<\/main>/,()=>mainHtml(catalog,card,message,related));
+ .replace(/<main id="main"[\s\S]*?<\/main>/,()=>mainOverride??mainHtml(catalog,card,message,related));
  const boot={...catalog,page:{path:new URL(request.url).pathname,status}};
  html=html.replace('<script src="content-view.js">',()=>`<script type="application/json" id="content-bootstrap">${serializeBoot(boot)}</script><script src="content-view.js">`)
  .replace('</head>','<noscript><style>#site-loading,.prompt-composer,.village-scene{display:none!important}html:not([data-site-revealed="true"]) body>:not(#site-loading){visibility:visible!important}.video-load,.motion-toggle,.video-player p{display:none!important}@media(max-width:700px){#menu-toggle,.drawer-close,#sidebar .brand{display:none!important}#sidebar{position:static!important;transform:none!important;width:auto!important;inset:auto!important;padding:0 20px 16px!important;background:transparent!important;border:0!important}#sidebar .sidebar-inner{max-height:none!important;overflow:visible!important}#filters{flex-direction:row;flex-wrap:wrap;gap:4px 16px}#filters a{min-height:44px;display:inline-flex;align-items:center;margin:0;padding:4px 0}}</style></noscript></head>');
@@ -51,9 +51,9 @@ export async function handleContentPage(request,env,{now=Date.now()}={}){
    }else status=404;
   }else status=404;
   if(status===404)message={title:'Page not found',text:'This page is not available.'};
-  return await shell(request,env,catalog,card,status,message,related);
+  return await renderPageShell(request,env,catalog,card,status,message,related);
  }catch{
-  try{return await shell(request,env,{status:'unavailable',items:[],nextCursor:null},null,503,{title:'Content unavailable',text:'Please try again later.'});}
+  try{return await renderPageShell(request,env,{status:'unavailable',items:[],nextCursor:null},null,503,{title:'Content unavailable',text:'Please try again later.'});}
   catch{return new Response('Content unavailable',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});}
  }
 }
