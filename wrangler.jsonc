@@ -59,7 +59,13 @@
             "id": "058e6e2985d24f31b5e36d73bdd1ea12"
           }
         ]
-      }
+      },
+      "routes": [
+        {
+          "pattern": "next.freedomvillage.church",
+          "custom_domain": true
+        }
+      ]
     }
   }
 }
