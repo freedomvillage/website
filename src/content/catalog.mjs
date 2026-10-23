@@ -1,5 +1,6 @@
 // Private next-site experiment, not a public publication or final authoring schema.
 export const PAGE_SIZE=24;
+export const MAX_MEDIA_BYTES=8*1024*1024;
 const ID=/^[a-z][a-z0-9-]{0,79}$/;
 const text=(v,n)=>typeof v==='string'&&v.trim().length>0&&v.length<=n;
 const imagePath=/^\/media\/([a-z][a-z0-9-]{0,79})\.(png|jpg|jpeg|webp|avif)$/;
@@ -23,7 +24,7 @@ function versionTwo(row,c){
  !Array.isArray(c.categories)||c.categories.length<1||c.categories.length>7||!c.categories.every(x=>categories.has(x))||new Set(c.categories).size!==c.categories.length||
  !Array.isArray(c.actions)||c.actions.length>6||!c.actions.every(validAction)||
  !Array.isArray(c.related)||c.related.length>6||!c.related.every(x=>ID.test(x))||
- !designs.has(c.design?.theme)||!['text','date','brand','graphic'].includes(c.design?.layout)||!['none','star','hills','rings'].includes(c.design?.motif)||
+ !designs.has(c.design?.theme)||!['text','date','brand','graphic','image'].includes(c.design?.layout)||!['none','star','hills','rings'].includes(c.design?.motif)||
  !['none','gradient'].includes(c.design?.motion)||!['regular','feature'].includes(c.design?.size)||
  !Number.isSafeInteger(c.homePriority)||c.homePriority<0||c.homePriority>100)return null;
  if(['actions','utility'].includes(c.template)&&c.actions.length===0)return null;
@@ -31,8 +32,14 @@ function versionTwo(row,c){
  if(c.media!==null){
   if(c.media?.kind==='brand'&&sourceAsset(c.media.src)&&text(c.media.alt,300))media={kind:'brand',src:c.media.src,alt:c.media.alt};
   else if(c.media?.kind==='youtube'&&/^[A-Za-z0-9_-]{11}$/.test(c.media.videoId)&&text(c.media.title,160))media={kind:'youtube',videoId:c.media.videoId,title:c.media.title};
+  else if(c.media?.kind==='image'&&imagePath.exec(c.media.src||'')?.[1]===row.id&&text(c.media.alt,300)&&text(c.media.caption,200)&&
+   Number.isSafeInteger(c.media.width)&&c.media.width>0&&c.media.width<=12000&&Number.isSafeInteger(c.media.height)&&c.media.height>0&&c.media.height<=12000&&
+   ['private-draft','historical','synthetic'].includes(c.media.disclosure)&&['contain','cover'].includes(c.media.fit)&&['4:3','3:2','16:9'].includes(c.media.ratio)&&
+   ['x','y'].every(k=>typeof c.media.focalPoint?.[k]==='number'&&Number.isFinite(c.media.focalPoint[k])&&c.media.focalPoint[k]>=0&&c.media.focalPoint[k]<=100))
+   media={kind:'image',src:c.media.src,alt:c.media.alt,caption:c.media.caption,width:c.media.width,height:c.media.height,disclosure:c.media.disclosure,fit:c.media.fit,ratio:c.media.ratio,focalPoint:{x:c.media.focalPoint.x,y:c.media.focalPoint.y}};
   else return null;
  }
+ if(c.design.layout==='image'&&media?.kind!=='image')return null;
  return {id:row.id,schemaVersion:2,template:c.template,title:c.title,summary:c.summary,detail:[...c.detail],facts:[...c.facts],
  categories:[...c.categories],actions:c.actions.map(projectAction),related:[...c.related],media,
  design:{theme:c.design.theme,layout:c.design.layout,motif:c.design.motif,motion:c.design.motion,size:c.design.size},homePriority:c.homePriority,isSynthetic:false};
@@ -89,8 +96,9 @@ export async function handleMediaRequest(request,env,{now=Date.now()}={}){
  const u=new URL(request.url),match=imagePath.exec(u.pathname);if(!match||u.search)return json({error:'Not found'},404);
  try{
  const row=await env.CONTENT_DB.prepare(`SELECT id,content_json FROM content_cards WHERE id=? AND status='draft' AND (expires_at IS NULL OR expires_at>?)`).bind(match[1],new Date(now).toISOString()).first();
- const card=row&&publicCard(row);if(!card||card.image?.src!==u.pathname)return json({error:'Not found'},404);
+ const card=row&&publicCard(row);if(!card||(card.image?.src!==u.pathname&&(card.media?.kind!=='image'||card.media.src!==u.pathname)))return json({error:'Not found'},404);
  const object=await env.CONTENT_MEDIA[request.method==='HEAD'?'head':'get'](u.pathname.slice('/media/'.length));if(!object)return json({error:'Not found'},404);
+ if(!Number.isSafeInteger(object.size)||object.size<0||object.size>MAX_MEDIA_BYTES){await object.body?.cancel();return json({error:'Media unavailable'},413);}
  const types={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',avif:'image/avif'};
  return new Response(request.method==='HEAD'?null:object.body,{headers:{'Content-Type':types[match[2]],'Content-Length':String(object.size),
  'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Robots-Tag':'noindex','Cross-Origin-Resource-Policy':'same-origin'}});
