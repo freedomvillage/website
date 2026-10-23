@@ -1,0 +1,50 @@
+.gitignore
+  h_9a6e2a87fc4a0d 1-6
+PUBLICATION-AUDIT.md
+  h_9a6e2a87fc4a0d 1-23
+README.md
+  h_9a6e2a87fc4a0d 1-50
+RELEASE-VALIDATION.md
+  h_9a6e2a87fc4a0d 1-15
+dist/_headers
+  h_9a6e2a87fc4a0d 1-6
+dist/app.js
+  h_9a6e2a87fc4a0d 1-77
+dist/appearance.js
+  h_9a6e2a87fc4a0d 1-6
+dist/composer.js
+  h_9a6e2a87fc4a0d 1-16
+dist/index.html
+  h_9a6e2a87fc4a0d 1-6
+dist/scene-edge-mask.svg
+  h_9a6e2a87fc4a0d 1
+dist/style.css
+  h_9a6e2a87fc4a0d 1-98
+package-lock.json
+  h_9a6e2a87fc4a0d 1-1547
+package.json
+  h_9a6e2a87fc4a0d 1-15
+scripts/validate.mjs
+  h_9a6e2a87fc4a0d 1-17
+source-manifest.json
+  h_9a6e2a87fc4a0d 1-27
+src/worker.mjs
+  h_9a6e2a87fc4a0d 1-59
+tests/manual-air.cjs
+  h_9a6e2a87fc4a0d 1
+tests/worker.test.mjs
+  h_9a6e2a87fc4a0d 1-15
+wrangler.jsonc
+  h_9a6e2a87fc4a0d 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "24f2779f705efac4a4e3ea82c3556caec584a516",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
