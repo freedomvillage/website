@@ -4,8 +4,10 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
-      - 'dist/content-view.*'
-      - 'dist/index.html'
+      - 'dist/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'source-manifest.json'
       - 'wrangler.jsonc'
       - '.github/workflows/content-validation.yml'
 permissions:
@@ -28,4 +30,4 @@ jobs:
       - name: Verify server content and preserved air behavior
         run: |
           node --version
-          node --test tests/content-pages.test.mjs tests/content-library.test.mjs tests/worker.test.mjs tests/air-diagnostics.test.mjs tests/air-client.test.mjs
+          npm test

@@ -40,7 +40,7 @@ test('clean generic detail and topic pages use canonical facts and finite relate
 test('media and motion are explicit, source-limited and have static accessible fallback',async()=>{
  const {db,add,adapter}=database();try{add('sample-motion',sample({design:{theme:'youth',layout:'brand',motif:'none',motion:'gradient',size:'feature'},media:{kind:'brand',src:'https://cdn.prod.website-files.com/60e0035471e8115799a8640b/sample.svg',alt:'Sample brand'}}));add('sample-video',sample({template:'sermon',media:{kind:'youtube',videoId:'abcdefghijk',title:'Sample video'}}));
  const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)}};
- const list=await(await handleContentPage(req('/'),env)).text();assert(list.includes('Pause background animation'));assert(list.includes('loading="lazy"'));assert(!list.includes('<iframe'));
+ const list=await(await handleContentPage(req('/'),env)).text();assert(list.includes('Pause background animation'));assert(list.includes('loading="lazy"'));assert(!list.includes('<iframe'));const motionDetail=await(await handleContentPage(req('/cards/sample-motion'),env)).text();assert(motionDetail.includes('Pause background animation'));assert(motionDetail.includes('#sidebar{position:static!important'));assert(motionDetail.includes('#menu-toggle,.drawer-close'));
  const detail=await(await handleContentPage(req('/cards/sample-video'),env)).text();assert(detail.includes('Load video'));assert(detail.includes('Watch on YouTube'));assert(!detail.includes('<iframe'));
  }finally{db.close();}
 });
