@@ -1,7 +1,7 @@
 /* Cached observations only. This client never calls an external air-data provider. */
 (function (root) {
  'use strict';
- const POLL_MS = 15 * 60 * 1000, MAX_AGE_MS = 3 * 60 * 60 * 1000;
+ const POLL_MS = 15 * 60 * 1000, MAX_AGE_MS = 60 * 60 * 1000;
  function usableReading(value, now) {
   if (!value || value.status !== 'ok' || typeof value.pm25 !== 'number' || !Number.isFinite(value.pm25) || value.pm25 < 0 || value.pm25 > 1000) return null;
   const observed = Date.parse(value.observedAt), until = Date.parse(value.validUntil);

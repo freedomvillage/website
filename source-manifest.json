@@ -79,8 +79,8 @@
   "adaptedFiles": {
     "dist/app.js": "b174d8e1d37b0448598813be58e8303a3a741197a44f9469946a36a82f3d710c",
     "dist/index.html": "708dab9a2f0dde2da6dd9feeb1cea8bae34dbc852a1ccf3cc041e59061e07319",
-    "dist/air-quality.js": "904264b58a739db5db42c0b0df5184d029cbefb194ef11fb35e5d6b6e2d06e7f"
+    "dist/air-quality.js": "02b19bd369b826ced0bd8dfe78d0ecd4a3a3ccf76bc4dd131d589558415c6609"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
-  "adaptation": "Night-only shared cached air-quality integration; source artwork unchanged."
+  "adaptation": "Night-only shared cached air-quality integration with a 60-minute observation limit; source artwork unchanged."
 }

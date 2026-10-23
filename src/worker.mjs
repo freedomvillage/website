@@ -2,7 +2,7 @@ import {nightWindow} from './seoul-night.mjs';
 // Provider schema remains fixture-tested until an authorized real response is verified.
 const SOURCE='https://www.airkorea.or.kr/';
 const ENDPOINT='https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty';
-export const MAX_AGE_MS=3*60*60*1000;
+export const MAX_AGE_MS=60*60*1000;
 export const CACHE_KEY='air-quality:latest:v1';
 export const SLOT_KEY='air-quality:attempt-slot:v1';
 const SLOT_MS=15*60*1000;

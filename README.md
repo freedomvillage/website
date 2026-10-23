@@ -29,7 +29,7 @@ The intended workflow uses one Worker with a temporary `next.freedomvillage.chur
 
 See [AIR-CACHE.md](AIR-CACHE.md) for behavior, configuration and validation. HTTP requests only read a dedicated shared AQ KV namespace; visitors and preview sliders cannot call AirKorea. One production scheduled handler may refresh every 15 minutes, only during actual Seoul night. Previews share the public observation cache and have no provider key or producer schedule. The KV duplicate-slot guard is best effort, not an atomic exactly-once quota guarantee.
 
-The UI uses a fresh current-evening observation or neutral Unknown, supports explicit manual preview, and labels cached source/time separately from actual tower lighting. Missing, flagged, stale, failed and daytime data never become zero. Provider/KV failures leave the website usable.
+The UI starts at neutral Unknown and uses only a current-evening observation younger than 60 minutes; it returns to Unknown at expiry, supports explicit manual preview, and labels cached source/time separately from actual tower lighting. Missing, flagged, stale, failed and daytime data never become zero. Provider/KV failures leave the website usable.
 
 Production is configured to refresh during actual Seoul night every 15 minutes using the dedicated `freedom-village-air-cache` namespace; previews use the same namespace with the producer disabled and no provider key. Actual API response, deployed binding and access validation must be recorded before claiming live coverage. Review URL exposure remains disabled pending Access setup. Do not log the key, upstream URL or raw provider response. The namespace ID and cron are tracked in `wrangler.jsonc`; Access and live API validation are independent rollout checks.
 
