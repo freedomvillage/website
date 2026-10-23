@@ -1,0 +1,20 @@
+dist/index.html
+  h_9a6e2a87fc4a0d 4-6
+dist/scene-clock.js
+  h_9a6e2a87fc4a0d 6
+dist/style.css
+  h_9a6e2a87fc4a0d 141-160
+source-manifest.json
+  h_9a6e2a87fc4a0d 22,98,101,146-153
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6e6ef756315c6485d364cd361a21d9bd5af5f675",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
