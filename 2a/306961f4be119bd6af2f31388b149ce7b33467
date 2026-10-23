@@ -1,0 +1,14 @@
+src/content/evaluation.mjs
+  h_9a6e2a87fc4a0d 52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2a306961f4be119bd6af2f31388b149ce7b33467",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
