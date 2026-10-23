@@ -1,0 +1,36 @@
+dist/app.js
+  h_9a6e2a87fc4a0d 1-2,10
+dist/content-view.css
+  h_9a6e2a87fc4a0d 1-4
+dist/content-view.js
+  h_9a6e2a87fc4a0d 1-40
+dist/index.html
+  h_9a6e2a87fc4a0d 2,5-6
+docs/PRIVATE-CONTENT-PILOT.md
+  h_9a6e2a87fc4a0d 1-13
+migrations/content/0001_content.sql
+  h_9a6e2a87fc4a0d 1-19
+source-manifest.json
+  h_9a6e2a87fc4a0d 97-98,101-103,113-124
+src/content/catalog.mjs
+  h_9a6e2a87fc4a0d 1-53
+src/content/check.mjs
+  h_9a6e2a87fc4a0d 1-24
+src/content/jev.mjs
+  h_9a6e2a87fc4a0d 1-94
+src/worker.mjs
+  h_9a6e2a87fc4a0d 3-4,44-46
+wrangler.jsonc
+  h_9a6e2a87fc4a0d 12-13,36-38,71-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b19d4369f6ca2c16cad44b155f725b114b76ebe7",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
