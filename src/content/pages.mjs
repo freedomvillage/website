@@ -19,14 +19,14 @@ async function shell(request,env,catalog,card,status,message,related=[]){
  if(!asset.ok)throw new Error('Shell unavailable');
  let html=await asset.text();
  const title=message?.title||card?.title||TOPICS[catalog.topic]||'Freedom Village',description=card?.summary||'Private website draft for The Church at Freedom Village.';
- html=html.replace(/<title>[\s\S]*?<\/title>/,`<title>${escape(title)} — The Church at Freedom Village</title>`)
+ html=html.replace('href="#main"',()=>`href="${escape(new URL(request.url).pathname)}#main"`).replace(/<title>[\s\S]*?<\/title>/,`<title>${escape(title)} — The Church at Freedom Village</title>`)
  .replace(/<meta name="description" content="[^"]*">/,`<meta name="description" content="${escape(description)}">`)
  .replace('<head>','<head><base href="/"><meta name="robots" content="noindex,nofollow"><meta property="og:type" content="website"><meta property="og:title" content="'+escape(title)+'"><meta property="og:description" content="'+escape(description)+'">')
  .replace(/<nav aria-label="Explore the community" id="filters"><\/nav>/,()=>`<nav aria-label="Explore the community" id="filters">${Object.entries(TOPICS).map(([id,label])=>`<a href="/topics/${id}"${catalog.topic===id?' aria-current="page"':''}>${escape(label)}</a>`).join('')}</nav>`)
  .replace(/<main id="main"[\s\S]*?<\/main>/,()=>mainHtml(catalog,card,message,related));
  const boot={...catalog,page:{path:new URL(request.url).pathname,status}};
  html=html.replace('<script src="content-view.js">',()=>`<script type="application/json" id="content-bootstrap">${serializeBoot(boot)}</script><script src="content-view.js">`)
- .replace('</head>','<noscript><style>#site-loading,.prompt-composer,.village-scene{display:none!important}html:not([data-site-revealed="true"]) body>:not(#site-loading){visibility:visible!important}</style></noscript></head>');
+ .replace('</head>','<noscript><style>#site-loading,.prompt-composer,.village-scene{display:none!important}html:not([data-site-revealed="true"]) body>:not(#site-loading){visibility:visible!important}.video-load,.motion-toggle,.video-player p{display:none!important}@media(max-width:700px){#menu-toggle,.drawer-close,#sidebar .brand{display:none!important}#sidebar{position:static!important;transform:none!important;width:auto!important;inset:auto!important;padding:0 20px 16px!important;background:transparent!important;border:0!important}#sidebar .sidebar-inner{max-height:none!important;overflow:visible!important}#filters{flex-direction:row;flex-wrap:wrap;gap:4px 16px}#filters a{min-height:44px;display:inline-flex;align-items:center;margin:0;padding:4px 0}}</style></noscript></head>');
  return new Response(request.method==='HEAD'?null:html,{status,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'private, no-store','X-Robots-Tag':'noindex, nofollow','X-Content-Type-Options':'nosniff'}});
 }
 export async function handleContentPage(request,env,{now=Date.now()}={}){

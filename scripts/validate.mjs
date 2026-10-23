@@ -2,7 +2,13 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 const config=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8'));
-assert.deepEqual(config.assets.run_worker_first,['/api/*']);
+const privateWorkerRoutes=['/','/index.html','/events/*','/cards/*','/topics/*','/api/*','/media/*','/robots.txt','/sitemap.xml','/llms.txt'];
+assert.deepEqual([...config.assets.run_worker_first].sort(),privateWorkerRoutes.sort());
+assert.equal(config.assets.not_found_handling,'none');
+assert.equal(config.workers_dev,false);assert.equal(config.preview_urls,false);
+for(const settings of Object.values(config.env??{})){assert.equal(settings.workers_dev,false);assert.equal(settings.preview_urls,false);}
+assert.deepEqual(config.env.next.routes,[{pattern:'next.freedomvillage.church',custom_domain:true}]);
+assert.equal(config.env.next.vars.CONTENT_PILOT_ENABLED,'true');
 function checkAirSettings(settings,isPreview=false){
  const vars=settings.vars||{};
  if(vars.AIR_ENABLED!==undefined)assert(['true','false'].includes(vars.AIR_ENABLED));

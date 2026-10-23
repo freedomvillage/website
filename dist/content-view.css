@@ -47,3 +47,5 @@
 @media(prefers-reduced-motion:reduce){.has-motion .library-brand-art{animation:none!important}.motion-toggle{display:none}}
 
 .theme-youth .library-brand-art img{filter:brightness(0) invert(1)}.theme-paper .library-brand-art{background:#f0ecdf}
+
+.library-detail>.motion-toggle{position:relative;bottom:auto;right:auto;margin:0 0 18px;min-height:40px;padding:8px 14px;font-size:12px}
