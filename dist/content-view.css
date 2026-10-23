@@ -31,9 +31,10 @@
 .library-brand-art{display:flex;align-items:center;justify-content:center;min-height:220px;background:linear-gradient(125deg,#216b77,#7c3a78,#bd3c36,#d27c45);background-size:250% 250%;padding:34px;overflow:hidden}
 .library-brand-art img{display:block;width:100%;max-height:210px;object-fit:contain}
 .card.library-card.layout-brand .library-card-link{flex-direction:column-reverse}.card.layout-brand .library-copy{padding-bottom:54px}
-.has-motion.is-visible:not(.motion-paused) .library-brand-art{animation:brand-drift 18s ease-in-out infinite alternate}
+.has-motion .library-brand-art{animation:brand-drift 18s ease-in-out infinite alternate;animation-play-state:paused}
+.has-motion.is-visible:not(.motion-paused) .library-brand-art{animation-play-state:running}
 @keyframes brand-drift{from{background-position:0% 50%}to{background-position:100% 50%}}
-.motion-toggle{position:absolute;bottom:16px;right:18px;z-index:2;border:1px solid currentColor;border-radius:20px;min-height:32px;padding:4px 10px;background:transparent;color:inherit;font:10px Arial,sans-serif;cursor:pointer}
+.motion-toggle{position:absolute;bottom:16px;right:18px;z-index:2;border:1px solid currentColor;border-radius:24px;min-height:44px;padding:8px 12px;background:transparent;color:inherit;font:11px Arial,sans-serif;cursor:pointer}
 .motion-toggle[hidden]{display:none}.library-card-link:focus-visible{outline:3px solid currentColor;outline-offset:-6px}
 .library-sermon-art{position:relative;min-height:180px;display:flex;align-items:center;justify-content:center;background:#253e35;color:#efe4c9;overflow:hidden}.library-sermon-art>span{display:grid;place-content:center;width:70px;height:70px;border:1px solid currentColor;border-radius:50%;font-size:22px;position:relative;z-index:1}.library-sermon-art .library-motif{position:absolute;width:220px;height:220px;opacity:.35;left:50%;top:50%;transform:translate(-50%,-50%);margin:0}
 .library-detail{padding:34px clamp(24px,5vw,64px) 52px;border-radius:20px;background:#efebdf;color:#243b34;overflow:hidden;position:relative}
@@ -48,7 +49,7 @@
 
 .theme-youth .library-brand-art img{filter:brightness(0) invert(1)}.theme-paper .library-brand-art{background:#f0ecdf}
 
-.library-detail>.motion-toggle{position:relative;bottom:auto;right:auto;margin:0 0 18px;min-height:40px;padding:8px 14px;font-size:12px}
+.library-detail>.motion-toggle{position:relative;bottom:auto;right:auto;margin:0 0 18px;min-height:44px;padding:8px 14px;font-size:12px}
 
 .practical-card .library-copy{padding-bottom:20px}.practical-card h2 a{height:auto!important;color:inherit}.practical-actions{padding:0 30px 24px;display:flex;flex-direction:column;gap:0}.card .practical-actions a{height:auto;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid currentColor;padding:11px 0;color:inherit;font-size:13px}.practical-actions a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
 
