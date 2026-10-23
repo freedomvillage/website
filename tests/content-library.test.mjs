@@ -63,6 +63,7 @@ test('private raster images are record-bound, explicitly disclosed and source fi
  const media={kind:'image',src:'/media/sample-image.jpg',alt:'Source image description.',caption:'Source image, 2025.',width:1024,height:769,disclosure:'historical',fit:'contain',ratio:'4:3',focalPoint:{x:48,y:62}};
  const row=extra=>({id:'sample-image',content_json:JSON.stringify(sample({media:{...media,...extra},design:{theme:'paper',layout:'image',motif:'none',motion:'none',size:'feature'}}))});
  assert(publicCard(row({sourceUrl:'PRIVATE_SOURCE',rightsNote:'PRIVATE_NOTE'})));assert(!JSON.stringify(publicCard(row({sourceUrl:'PRIVATE_SOURCE'}))).includes('PRIVATE_SOURCE'));
+ const artwork=publicCard(row({disclosure:'source-artwork',ratio:'1:1'}));assert(artwork);assert.equal(artwork.media.ratio,'1:1');
  for(const extra of [{src:'/media/other-image.jpg'},{src:'https://example.org/image.jpg'},{src:'/media/sample-image.svg'},{caption:''},{disclosure:'cleared'},{focalPoint:{x:101,y:50}},{width:13000},{ratio:'1; color:red'}])assert.equal(publicCard(row(extra)),null);
  const {db,add,adapter}=database();try{
   add('sample-image',JSON.parse(row({disclosure:'synthetic'}).content_json));let reads=0;

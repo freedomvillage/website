@@ -69,3 +69,7 @@
 
 /* Reserve the full 44px control plus its offset/gap, including finite related sets. */
 .card.library-card.has-motion .library-copy{padding-bottom:76px}.related-grid .card.library-card.has-motion .library-copy{padding-bottom:76px!important}
+
+/* Let original series covers lead without competing with a second poster-sized title. */
+.library-detail.has-source-artwork h1{font-size:clamp(28px,3vw,42px);letter-spacing:-.8px}
+@media(min-width:701px){.library-detail.has-source-artwork .library-detail-heading{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:28px}}
