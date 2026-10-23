@@ -34,7 +34,7 @@ function versionTwo(row,c){
   else if(c.media?.kind==='youtube'&&/^[A-Za-z0-9_-]{11}$/.test(c.media.videoId)&&text(c.media.title,160))media={kind:'youtube',videoId:c.media.videoId,title:c.media.title};
   else if(c.media?.kind==='image'&&imagePath.exec(c.media.src||'')?.[1]===row.id&&text(c.media.alt,300)&&text(c.media.caption,200)&&
    Number.isSafeInteger(c.media.width)&&c.media.width>0&&c.media.width<=12000&&Number.isSafeInteger(c.media.height)&&c.media.height>0&&c.media.height<=12000&&
-   ['private-draft','historical','synthetic'].includes(c.media.disclosure)&&['contain','cover'].includes(c.media.fit)&&['4:3','3:2','16:9'].includes(c.media.ratio)&&
+   ['private-draft','historical','synthetic','source-artwork'].includes(c.media.disclosure)&&['contain','cover'].includes(c.media.fit)&&['1:1','4:3','3:2','16:9'].includes(c.media.ratio)&&
    ['x','y'].every(k=>typeof c.media.focalPoint?.[k]==='number'&&Number.isFinite(c.media.focalPoint[k])&&c.media.focalPoint[k]>=0&&c.media.focalPoint[k]<=100))
    media={kind:'image',src:c.media.src,alt:c.media.alt,caption:c.media.caption,width:c.media.width,height:c.media.height,disclosure:c.media.disclosure,fit:c.media.fit,ratio:c.media.ratio,focalPoint:{x:c.media.focalPoint.x,y:c.media.focalPoint.y}};
   else return null;

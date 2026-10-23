@@ -9,7 +9,7 @@ function motif(name){
 }
 function genericArt(c,detail=false){
  if(c.media?.kind==='image'){
-  const m=c.media,label={synthetic:'Concept artwork · synthetic portraits',historical:'Archive photograph','private-draft':'Private image draft'}[m.disclosure];
+  const m=c.media,label={synthetic:'Concept artwork · synthetic portraits',historical:'Archive photograph','private-draft':'Private image draft','source-artwork':'Source artwork'}[m.disclosure];
   return `<figure class="library-image"><div class="library-image-frame" style="aspect-ratio:${m.ratio.replace(':','/')}"><img src="${escape(m.src)}" alt="${escape(m.alt)}" width="${m.width}" height="${m.height}" loading="lazy" decoding="async" style="object-fit:${m.fit};object-position:${m.focalPoint.x}% ${m.focalPoint.y}%"></div><figcaption>${escape(label)} · ${escape(m.caption)}</figcaption></figure>`;
  }
  if(c.media?.kind==='brand')return `<div class="library-brand-art"><img src="${escape(c.media.src)}" alt="${escape(c.media.alt)}" loading="lazy" decoding="async"></div>`;
@@ -27,5 +27,5 @@ export function renderLibraryCard(c,namespace=''){
 }
 export function renderLibraryDetail(c,related=[]){
  const video=c.media?.kind==='youtube'?`<div class="video-player" data-video="${c.media.videoId}"><button type="button" class="video-load" data-video-title="${escape(c.media.title)}">▶ Load video</button><p>Video loads from YouTube when selected.</p><a href="https://www.youtube.com/watch?v=${c.media.videoId}" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a></div>`:'';
- return `<article class="detail-shell library-detail theme-${c.design.theme}${c.design.motion==='gradient'?' has-motion':''}${c.media?.kind==='image'?' has-image':''}"><a class="back" href="/">← Back</a><header class="library-detail-heading"><div><h1 tabindex="-1">${escape(c.title)}</h1>${genericFacts(c)}</div>${genericArt(c,true)}</header>${motionControl(c)}<div class="detail-body">${c.detail.map(p=>`<p>${escape(p)}</p>`).join('')}${video}${c.actions.map(a=>`<a class="pilot-action" ${actionAttrs(a)}>${escape(a.label)} ↗</a>`).join('')}</div></article>${related.length?`<section class="related-content" aria-labelledby="related-title"><h2 id="related-title">Related</h2><div class="related-grid">${related.map(renderLibraryCard).join('')}</div></section>`:''}`;
+ return `<article class="detail-shell library-detail theme-${c.design.theme}${c.design.motion==='gradient'?' has-motion':''}${c.media?.kind==='image'?' has-image':''}${c.media?.disclosure==='source-artwork'?' has-source-artwork':''}"><a class="back" href="/">← Back</a><header class="library-detail-heading"><div><h1 tabindex="-1">${escape(c.title)}</h1>${genericFacts(c)}</div>${genericArt(c,true)}</header>${motionControl(c)}<div class="detail-body">${c.detail.map(p=>`<p>${escape(p)}</p>`).join('')}${video}${c.actions.map(a=>`<a class="pilot-action" ${actionAttrs(a)}>${escape(a.label)} ↗</a>`).join('')}</div></article>${related.length?`<section class="related-content" aria-labelledby="related-title"><h2 id="related-title">Related</h2><div class="related-grid">${related.map(renderLibraryCard).join('')}</div></section>`:''}`;
 }
