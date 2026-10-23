@@ -29,7 +29,7 @@
 .library-card.size-feature{grid-column:span 2}.library-card.size-feature .library-card-link{min-height:360px}.library-card.size-feature .library-copy{max-width:75%;padding:38px}.card.library-card.size-feature h2{font-size:clamp(38px,4vw,64px)}
 .library-motif{width:150px;height:150px;fill:currentColor;opacity:.22;align-self:flex-end;margin:0 16px 18px}.layout-graphic .library-motif{width:58%;height:auto;margin-top:-30px;opacity:.6}.size-feature .library-motif{position:absolute;right:-25px;bottom:-24px;width:220px;height:220px;margin:0;z-index:0}
 .library-brand-art{display:flex;align-items:center;justify-content:center;min-height:220px;background:linear-gradient(125deg,#216b77,#7c3a78,#bd3c36,#d27c45);background-size:250% 250%;padding:34px;overflow:hidden}
-.library-brand-art img{display:block;width:100%;max-height:210px;object-fit:contain;filter:brightness(0) invert(1)}
+.library-brand-art img{display:block;width:100%;max-height:210px;object-fit:contain}
 .card.library-card.layout-brand .library-card-link{flex-direction:column-reverse}.card.layout-brand .library-copy{padding-bottom:54px}
 .has-motion.is-visible:not(.motion-paused) .library-brand-art{animation:brand-drift 18s ease-in-out infinite alternate}
 @keyframes brand-drift{from{background-position:0% 50%}to{background-position:100% 50%}}
@@ -45,3 +45,5 @@
 @media(max-width:1100px){.library-copy{padding:25px}.card.library-card h2{font-size:32px}.library-card.size-feature .library-copy{max-width:85%;padding:30px}.related-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.library-card.size-feature{grid-column:auto}.library-card.size-feature .library-copy{max-width:100%;padding:30px}.card.library-card.size-feature h2{font-size:42px}.library-card.size-feature .library-card-link{min-height:350px}.size-feature .library-motif{opacity:.2}.library-detail{padding:24px 26px 40px}.library-detail-heading{grid-template-columns:minmax(0,1fr);gap:22px}.library-detail-heading>.library-motif{max-width:150px;justify-self:end;display:none}.library-detail h1{font-size:42px}.library-detail .library-brand-art{min-height:200px}.related-grid{grid-template-columns:minmax(0,1fr)}.related-grid .library-card-link{min-height:220px}.video-player{padding:15px}}
 @media(prefers-reduced-motion:reduce){.has-motion .library-brand-art{animation:none!important}.motion-toggle{display:none}}
+
+.theme-youth .library-brand-art img{filter:brightness(0) invert(1)}.theme-paper .library-brand-art{background:#f0ecdf}

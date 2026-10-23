@@ -33,7 +33,7 @@ test('clean generic detail and topic pages use canonical facts and finite relate
  const {db,add,adapter}=database();try{add('sample-story',sample({related:['sample-related']}));add('sample-related',sample({title:'Related sample',categories:['families']}));
  const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)}};
  const r=await handleContentPage(req('/cards/sample-story'),env),html=await r.text();assert.equal(r.status,200);assert(html.includes('A complete readable paragraph.'));assert(html.includes('Related sample'));assert(html.includes('href="/cards/sample-related"'));assert(!html.includes('iframe'));
- const t=await handleContentPage(req('/topics/families'),env),topic=await t.text();assert.equal(t.status,200);assert(topic.includes('aria-current="page">Families'));assert(topic.includes('Related sample'));assert(!topic.includes('A complete readable paragraph.'));
+ const t=await handleContentPage(req('/topics/families'),env),topic=await t.text();assert.equal(t.status,200);assert(topic.includes('aria-current="page">Families'));assert(topic.includes('Related sample'));assert(!topic.includes('href="/cards/sample-story"'));
  assert.equal((await handleContentPage(req('/events/sample-story'),env)).status,308);
  }finally{db.close();}
 });
