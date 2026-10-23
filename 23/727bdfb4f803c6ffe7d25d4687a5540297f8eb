@@ -1,0 +1,30 @@
+.github/workflows/content-validation.yml
+  h_9a6e2a87fc4a0d 7-10,33
+dist/content-view.css
+  h_9a6e2a87fc4a0d 50-51
+package.json
+  h_9a6e2a87fc4a0d 7
+scripts/validate.mjs
+  h_9a6e2a87fc4a0d 5-11
+source-manifest.json
+  h_9a6e2a87fc4a0d 103
+src/content/pages.mjs
+  h_9a6e2a87fc4a0d 22,29
+src/content/render.mjs
+  h_9a6e2a87fc4a0d 14,17,21
+tests/content-library.test.mjs
+  h_9a6e2a87fc4a0d 43
+tests/content-pages.test.mjs
+  h_9a6e2a87fc4a0d 8,32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "23727bdfb4f803c6ffe7d25d4687a5540297f8eb",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
