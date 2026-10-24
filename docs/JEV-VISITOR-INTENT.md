@@ -34,8 +34,9 @@ and confirmation that existing credit is sufficient; no purchase is involved.
 Each upstream call times out after eight seconds, the sequence has a 55-second
 deadline, input is limited to 500 characters/4KB and five seconds to read, and
 provider output is limited to 64KB. Origin/content-type checks supplement the
-existing Cloudflare Access boundary. No new credential, URL or authentication
-mechanism is introduced. Responses are private/no-store/noindex. Provider URLs
+existing Cloudflare Access boundary. No credential or Cloudflare Access policy is changed. Saved diagnostics add an
+originating-user ownership check through the existing Access identity service,
+with no caller-supplied owner identity accepted. Responses are private/no-store/noindex. Provider URLs
 are fixed and redirects are not followed.
 
 Client-generated random request IDs make uncertain-outcome replay idempotent.

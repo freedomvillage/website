@@ -1,8 +1,12 @@
 // Cloud-only SQLite + intercepted provider tests. No actual requests or credentials.
 import test from 'node:test';import assert from 'node:assert/strict';import {DatabaseSync} from 'node:sqlite';
-import {handleIntent,intentBatches,INTENT_STATE,RECOVERY} from '../src/content/intent.mjs';
-import {rankingRequest} from '../src/content/jev.mjs';import {createWorker} from '../src/worker.mjs';
+import {handleIntent as realHandleIntent,intentBatches,INTENT_STATE,RECOVERY} from '../src/content/intent.mjs';
+import {rankingRequest} from '../src/content/jev.mjs';import {createWorker as realCreateWorker} from '../src/worker.mjs';
 const instant=Date.parse('2026-10-24T14:00:00Z'),secret='SYNTHETIC_TEST_VALUE';
+const OWNER_A='a'.repeat(64),OWNER_B='b'.repeat(64);
+const fixtureOwner=async request=>request.headers.get('X-Fixture-User')==='second'?OWNER_B:OWNER_A;
+const handleIntent=(request,env,options={})=>realHandleIntent(request,env,{resolveOwner:fixtureOwner,...options});
+const createWorker=options=>realCreateWorker({...options,resolveIntentOwner:fixtureOwner});
 const card=i=>({schemaVersion:2,template:'story',title:'Content '+i,summary:'Useful church information '+i,detail:['Public paragraph.'],facts:[],categories:['faith'],actions:[],related:[],media:null,design:{theme:'paper',layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false});
 function setup(count=71){
  const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE content_cards(id TEXT PRIMARY KEY,status TEXT,content_json TEXT,expires_at TEXT);CREATE TABLE content_checks(id TEXT PRIMARY KEY,result_json TEXT,created_at TEXT)');
@@ -129,6 +133,32 @@ test('latest pending receipt and unavailable current inspection are read-only, t
  const {db,env}=setup(2);try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)};const first=await(await handleIntent(request(),env,options)).json(),calls=seen.length;
  const latest=()=>new Request('https://next.freedomvillage.church/api/content/intent?receipt=latest',{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS'}});
  failCatalogReads(env,1);const inspected=await(await handleIntent(latest(),env,options)).json();assert.equal(inspected.status,'ok');assert.equal(inspected.currentInspection.status,'unavailable');assert.equal(seen.length,calls);
- const id='jev-intent-request:22222222-2222-4222-8222-222222222222';db.prepare('INSERT INTO content_checks VALUES(?,?,?)').run(id,null,new Date(instant+1000).toISOString());const pending=await handleIntent(latest(),env,options);assert.equal(pending.status,409);assert.deepEqual(await pending.json(),{status:'pending-or-interrupted',requestId:id});assert.equal(seen.length,calls);assert(first.receipt.selection);
+ const id='jev-intent-request:22222222-2222-4222-8222-222222222222';db.prepare('INSERT INTO content_checks VALUES(?,?,?)').run(id,JSON.stringify({status:'pending',ownerScope:OWNER_A,requestId:id}),new Date(instant+1000).toISOString());const pending=await handleIntent(latest(),env,options);assert.equal(pending.status,409);assert.deepEqual(await pending.json(),{status:'pending-or-interrupted',requestId:id});assert.equal(seen.length,calls);assert(first.receipt.selection);
  }finally{db.close();}
+});
+
+test('saved receipts, replay and latest are isolated to the originating user, including pending and legacy rows',async()=>{
+ const {db,env}=setup(2);try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)};const first=await(await handleIntent(request(),env,options)).json(),id=first.receipt.requestId,calls=seen.length;
+ const get=(receipt,second=false)=>new Request('https://next.freedomvillage.church/api/content/intent?receipt='+encodeURIComponent(receipt),{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS',...(second?{'X-Fixture-User':'second'}:{})}});
+ assert.equal((await handleIntent(get(id),env,options)).status,200);assert.equal((await handleIntent(get(id,true),env,options)).status,404);assert.equal((await handleIntent(get('latest',true),env,options)).status,404);
+ assert.equal((await handleIntent(request(undefined,{'X-Fixture-User':'second'}),env,options)).status,404);assert.equal(seen.length,calls);
+ const stored=JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(id).result_json);assert.equal(stored.ownerScope,OWNER_A);assert(!JSON.stringify(first).includes(OWNER_A));
+ const secondInput={query:'Another question',requestId:'jev-intent-request:22222222-2222-4222-8222-222222222222'};
+ const second=await(await handleIntent(request(secondInput,{'X-Fixture-User':'second'}),env,{...options,now:()=>instant+11000})).json();assert.equal(second.status,'ok');
+ assert.equal((await(await handleIntent(get('latest'),env,options)).json()).requestId,id);assert.equal((await(await handleIntent(get('latest',true),env,options)).json()).requestId,secondInput.requestId);
+ const secondStatus=await(await handleIntent(new Request('https://next.freedomvillage.church/api/content/intent',{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS','X-Fixture-User':'second'}}),env,options)).json();assert.deepEqual(Object.keys(secondStatus.recovery).sort(),['model','status']);
+ delete stored.ownerScope;db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').run(JSON.stringify(stored),id);const legacy=db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(id).result_json;
+ assert.equal((await handleIntent(get(id),env,options)).status,404);assert.equal((await handleIntent(request(),env,options)).status,404);assert.equal(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(id).result_json,legacy,'legacy data is retained, never retroactively claimed');
+ }finally{db.close();}
+});
+test('unverified identity cannot read D1 or spend; raw identity/owner fields cannot be supplied in the question body',async()=>{
+ const {db,env}=setup(2);try{let calls=0;const options={now:()=>instant,fetchUpstream:async()=>{calls++;},resolveOwner:async()=>null};assert.equal((await handleIntent(request(null),env,options)).status,403);assert.equal((await handleIntent(request(),env,options)).status,403);assert.equal(calls,0);
+ const body={query:'A question',requestId:'jev-intent-request:11111111-1111-4111-8111-111111111111',ownerScope:OWNER_A};assert.equal((await handleIntent(request(body),env,{...options,resolveOwner:fixtureOwner})).status,400);assert.equal(calls,0);
+ }finally{db.close();}
+});
+test('failed and uncertain batches never claim future planned inputs were sent',async()=>{
+ for(const uncertain of [false,true]){const {db,env}=setup(140);try{const seen=[],upstream=provider(seen,{failureAt:3});const fetchUpstream=async(...args)=>{if(uncertain&&seen.length===2){seen.push(JSON.parse(args[1].body));throw Error('SYNTHETIC_TRANSPORT_ERROR');}return upstream(...args);};
+ const response=await handleIntent(request(),env,{now:()=>instant,fetchUpstream}),value=await response.json();assert.equal(response.status,503);assert.equal(value.receipt.batches.length,2);assert.equal(value.receipt.batchPlan[0].dispatch,'http-response');assert.equal(value.receipt.batchPlan[1].dispatch,uncertain?'transport-uncertain':'http-response');assert(value.receipt.batchPlan.slice(2).every(b=>b.dispatch==='not-attempted'));
+ const attemptedIds=value.receipt.batches.flatMap(b=>b.candidateIds),inputIds=value.receipt.candidateInputs.map(c=>c.id);assert.deepEqual(inputIds,attemptedIds);assert(inputIds.length<value.receipt.candidateCount);assert(value.receipt.batchPlan.slice(2).flatMap(b=>b.candidateIds).every(id=>!inputIds.includes(id)));
+ }finally{db.close();}}
 });

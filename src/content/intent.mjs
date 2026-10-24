@@ -1,6 +1,7 @@
 import {privateNextRequest,readCatalog,json} from './catalog.mjs';
 import {rankingRequest,rankPublishedCards} from './jev.mjs';
 import {renderCard,cardPath} from './pages.mjs';
+import {resolveIntentOwner} from './intent-owner.mjs';
 
 // Explicit recovery approved on 2026-10-24 after review of the failed evaluation.
 // Historical evaluation rows are never updated, deleted or treated as successful.
@@ -12,7 +13,7 @@ const error=(status,http=409,extra={})=>json({status,...extra},http);
 const parse=row=>row?.result_json?JSON.parse(row.result_json):null;
 async function get(db,id){return db.prepare('SELECT result_json FROM content_checks WHERE id=?').bind(id).first();}
 async function save(db,id,value){await db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').bind(JSON.stringify(value),id).run();}
-async function claim(db,id,at){return (await db.prepare('INSERT OR IGNORE INTO content_checks(id,created_at) VALUES(?,?)').bind(id,new Date(at).toISOString()).run()).meta?.changes===1;}
+async function claim(db,id,at,initial){return (await db.prepare('INSERT OR IGNORE INTO content_checks(id,result_json,created_at) VALUES(?,?,?)').bind(id,JSON.stringify(initial),new Date(at).toISOString()).run()).meta?.changes===1;}
 
 export async function intentCatalog(db,now){
  const cards=[],ids=new Set(),cursors=new Set();let after='';
@@ -46,7 +47,7 @@ async function body(request){
  finally{clearTimeout(timer);reader.releaseLock();}
 }
 function publicReceipt(r){return {requestId:r.requestId,status:r.status,model:r.model||null,requestedModel:r.requestedModel||null,candidateCount:r.candidateIds.length,candidateIds:r.candidateIds,batches:r.batches,
- candidateInputs:r.candidateInputs||null,rankedBeforeEligibility:r.rankedBeforeEligibility||null,selection:r.selection||null,
+ candidateInputs:r.candidateInputs||null,candidateInputScope:r.batchPlan?'attempted-or-transport-uncertain':'legacy-delivery-not-established',batchPlan:r.batchPlan||null,rankedBeforeEligibility:r.rankedBeforeEligibility||null,selection:r.selection||null,
  usage:r.usage,knownUsage:r.knownUsage||r.usage,usageComplete:r.usageComplete??Boolean(r.usage),estimatedCostUsd:r.estimatedCostUsd,ranked:r.ranked||[],failure:r.failure||null,completedAt:r.completedAt};}
 function selectionFor(receipt,cards,now){
  const byId=new Map(cards.map(c=>[c.id,c])),ranked=receipt.rankedBeforeEligibility||receipt.ranked||[];
@@ -74,27 +75,35 @@ async function results(receipt,db,now,{persistSelection=false}={}){
  return json({status:'ok',receipt:publicReceipt(saved),renderSelection:selection,selectedIds:selection.selectedIds,html});
 }
 
-export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now}={}){
+export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now,resolveOwner=resolveIntentOwner}={}){
  if(!privateNextRequest(request,env))return error('not-found',404);
  if(!['GET','POST'].includes(request.method))return error('method-not-allowed',405,{allowed:'GET, POST'});
+ if(request.method==='POST'&&(request.headers.get('Origin')!=='https://next.freedomvillage.church'||!/^application\/json(?:\s*;|$)/i.test(request.headers.get('Content-Type')||'')))return error('invalid-origin-or-type',403);
+ let ownerScope;try{ownerScope=await resolveOwner(request);}catch{}
+ if(typeof ownerScope!=='string'||!/^[a-f0-9]{64}$/.test(ownerScope))return error('identity-unavailable',403);
  const db=env.CONTENT_DB;
  try{
   if(request.method==='GET'){
    const params=new URL(request.url).searchParams,id=params.get('receipt');
    if([...params.keys()].some(k=>k!=='receipt')||params.getAll('receipt').length>1||(id&&id!=='latest'&&!/^jev-intent-request:[0-9a-f-]{36}$/.test(id)))return error('invalid-receipt',400);
    if(id){
-    const row=id==='latest'?await db.prepare('SELECT id,result_json FROM content_checks WHERE id LIKE ? ORDER BY created_at DESC,id DESC LIMIT 1').bind('jev-intent-request:%').first():await get(db,id),value=parse(row);
-    return value?json(await inspectReceipt(value,db,now())):error(row?'pending-or-interrupted':'not-found',row?409:404,{requestId:row?.id||(id==='latest'?null:id)});
+    const row=id==='latest'?await db.prepare("SELECT id,result_json FROM content_checks WHERE id LIKE ? AND json_extract(result_json,'$.ownerScope')=? ORDER BY created_at DESC,id DESC LIMIT 1").bind('jev-intent-request:%',ownerScope).first():await get(db,id),value=parse(row);
+    // Legacy/unowned rows stay intact, but cannot be retroactively claimed by
+    // someone who merely knows a UUID. Other users get the same404 as missing.
+    if(!value||value.ownerScope!==ownerScope)return error('not-found',404);
+    if(value.status==='pending')return error('pending-or-interrupted',409,{requestId:value.requestId,...(value.batchPlan?{batchPlan:value.batchPlan}:{})});
+    return json(await inspectReceipt(value,db,now()));
    }
    const recovery=await get(db,RECOVERY),state=parse(await get(db,INTENT_STATE));
    const configured=env.JEV_ENABLED==='true'&&typeof env.TYPESAFE_API_KEY==='string'&&Boolean(env.TYPESAFE_API_KEY.trim());
-   return json({status:state?.stopped?'stopped':state?.busy?'pending-or-interrupted':configured?'ready':'unconfigured',recovery:recovery?(parse(recovery)||{status:'pending-or-interrupted'}):{status:'not-run'},budgetUsd:BUDGET_USD,spentOrReservedUsd:state?.spent||0});
+   const savedRecovery=parse(recovery),recoveryStatus=savedRecovery?.status||'pending-or-interrupted';
+   const recoveryView=savedRecovery?.ownerScope===ownerScope?Object.fromEntries(Object.entries(savedRecovery).filter(([key])=>key!=='ownerScope')):recovery?{status:recoveryStatus,model:savedRecovery?.model||null}:{status:'not-run'};
+   return json({status:state?.stopped?'stopped':state?.busy?'pending-or-interrupted':configured?'ready':'unconfigured',recovery:recoveryView,budgetUsd:BUDGET_USD,spentOrReservedUsd:state?.spent||0});
   }
-  if(request.headers.get('Origin')!=='https://next.freedomvillage.church'||!/^application\/json(?:\s*;|$)/i.test(request.headers.get('Content-Type')||''))return error('invalid-origin-or-type',403);
   let input;try{input=await body(request);}catch{return error('invalid-input',400);}
   if(!input||Object.keys(input).length!==2||typeof input.query!=='string'||!input.query.trim()||input.query.length>500||!/^jev-intent-request:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(input.requestId||''))return error('invalid-input',400);
   const existing=await get(db,input.requestId);
-  if(existing){const receipt=parse(existing);return receipt?await results(receipt,db,now()):error('pending-or-interrupted');}
+  if(existing){const receipt=parse(existing);if(receipt?.ownerScope!==ownerScope)return error('not-found',404);return receipt.status==='pending'?error('pending-or-interrupted',409,{requestId:receipt.requestId}):await results(receipt,db,now());}
   if(env.JEV_ENABLED!=='true'||!env.TYPESAFE_API_KEY)return error('unconfigured',503);
   // No query is written to D1, URLs, analytics or application logs.
   const query=input.query.trim(),instant=now();
@@ -118,23 +127,28 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    state.spent+=reservation;state.lastStartedAt=instant;await save(db,INTENT_STATE,state);
    const started=now(),deadline=started+55000,receipts=[];
    const run=async(q,batch)=>{
-    if(now()>=deadline)return {status:'unavailable',ranked:[],failure:{version:1,stage:'transport',code:'request-deadline'}};
+    if(now()>=deadline)return {status:'unavailable',dispatch:'not-sent',ranked:[],failure:{version:1,stage:'transport',code:'request-deadline'}};
     return rankPublishedCards(q,batch,env,{fetchUpstream,model:MODEL,signal:AbortSignal.timeout(Math.max(1,deadline-now()))});
    };
    let actualCost=0,unknownUsage=false;
    const account=result=>{if(result.usage)actualCost+=result.usage.inputTokens*.042/1000000;else unknownUsage=true;};
    if(!recovery){
-    if(!await claim(db,RECOVERY,instant))return error('recovery-already-claimed');
+    if(!await claim(db,RECOVERY,instant,{status:'pending',ownerScope}))return error('recovery-already-claimed');
     const result=await run(FIXED_QUERY,diagnosticCards);account(result);
-    const receipt={...result,isSyntheticQuery:true,query:FIXED_QUERY,candidateIds:diagnosticCards.map(c=>c.id),estimatedCostUsd:result.usage?result.usage.inputTokens*.042/1000000:null,completedAt:new Date(now()).toISOString(),recoveryOf:'ranking-eval-v1:short-stay-kids'};
+    const receipt={...result,ownerScope,isSyntheticQuery:true,query:FIXED_QUERY,candidateIds:diagnosticCards.map(c=>c.id),estimatedCostUsd:result.usage?result.usage.inputTokens*.042/1000000:null,completedAt:new Date(now()).toISOString(),recoveryOf:'ranking-eval-v1:short-stay-kids'};
     await save(db,RECOVERY,receipt);
     if(result.status!=='ok'){state.stopped=true;return error('recovery-failed',503,{diagnostic:{status:result.status,failure:result.failure||null,validation:result.validation||null,usage:result.usage||null}});}
    }
-   const requestId=input.requestId;if(!await claim(db,requestId,now()))return error('pending-or-interrupted');
+   const requestId=input.requestId;if(!await claim(db,requestId,now(),{status:'pending',ownerScope,requestId}))return error('pending-or-interrupted');
    let ranked=[],usage={inputTokens:0,outputTokens:0},failed=null;
-   for(const batch of batches){
+   const candidateInputs=[],candidateIds=cards.map(c=>c.id),batchPlan=batches.map((batch,index)=>({index,candidateIds:batch.map(c=>c.id),dispatch:'not-attempted'}));
+   for(const [index,batch] of batches.entries()){
+    batchPlan[index].dispatch='pending-or-uncertain';
+    await save(db,requestId,{status:'pending',ownerScope,requestId,candidateIds,batches:receipts,batchPlan,candidateInputs});
     const result=await run(query,batch);account(result);
-    receipts.push({status:result.status,candidateIds:batch.map(c=>c.id),model:result.model||null,usage:result.usage||null,failure:result.failure||null,validation:result.validation||null});
+    const dispatch=result.dispatch||'transport-uncertain';batchPlan[index].dispatch=dispatch;
+    if(dispatch!=='not-sent')candidateInputs.push(...rankingRequest(query,batch,MODEL).state.candidates);
+    receipts.push({status:result.status,dispatch,candidateIds:batch.map(c=>c.id),model:result.model||null,usage:result.usage||null,failure:result.failure||null,validation:result.validation||null});
     if(result.usage){usage.inputTokens+=result.usage.inputTokens;usage.outputTokens+=result.usage.outputTokens;}
     if(result.status!=='ok'){failed=result;break;}
     ranked.push(...result.ranked);
@@ -147,8 +161,7 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    const current=failed?[]:await intentCatalog(db,now()),eligible=new Set(current.map(c=>c.id));
    ranked=ranked.filter(r=>eligible.has(r.id));
    const usageComplete=receipts.every(r=>r.usage);
-   const candidateInputs=batches.flatMap(batch=>rankingRequest(query,batch,MODEL).state.candidates);
-   const receipt={requestId,status:failed?'unavailable':'ok',model:failed?null:MODEL,requestedModel:MODEL,candidateIds:cards.map(c=>c.id),candidateInputs,batches:receipts,ranked,rankedBeforeEligibility,usage:usageComplete?usage:null,knownUsage:usage,usageComplete,
+   const receipt={requestId,ownerScope,status:failed?'unavailable':'ok',model:failed?null:MODEL,requestedModel:MODEL,candidateIds,candidateInputs,batchPlan,batches:receipts,ranked,rankedBeforeEligibility,usage:usageComplete?usage:null,knownUsage:usage,usageComplete,
     estimatedCostUsd:receipts.every(r=>r.usage)?receipts.reduce((sum,r)=>sum+r.usage.inputTokens*.042/1000000,0):null,elapsedMs:Math.max(0,now()-started),completedAt:new Date(now()).toISOString(),...(failed?{failure:failed.failure||null}:{})};
    await save(db,requestId,receipt);
    if(!unknownUsage)state.spent=Math.max(0,state.spent-reservation+actualCost);
