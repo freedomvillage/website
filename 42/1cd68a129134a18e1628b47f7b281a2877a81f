@@ -1,0 +1,20 @@
+dist/index.html
+  h_9a6e2a87fc4a0d 6
+dist/style.css
+  h_9a6e2a87fc4a0d 162,164
+source-manifest.json
+  h_9a6e2a87fc4a0d 98,104-105
+tests/composer.cjs
+  h_9a6e2a87fc4a0d 44-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "421cd68a129134a18e1628b47f7b281a2877a81f",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
