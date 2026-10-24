@@ -1,0 +1,24 @@
+docs/PROTOTYPE-COPY.md
+  h_9a6e2a87fc4a0d 3,5,11
+docs/imports/prototype-copy-2026-10-24.sql
+  h_9a6e2a87fc4a0d 1-2
+docs/imports/temporary-visit-2026-10-24.sql
+  h_9a6e2a87fc4a0d 1-4
+src/content/prototype-copy-data.mjs
+  h_9a6e2a87fc4a0d 3,126-198
+src/content/prototype-copy.mjs
+  h_9a6e2a87fc4a0d 9-14
+tests/prototype-copy.test.mjs
+  h_9a6e2a87fc4a0d 66-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5bf1fb9f1621f39bea97a633d151160729fab122",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
