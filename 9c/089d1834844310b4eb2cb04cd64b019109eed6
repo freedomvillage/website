@@ -1,0 +1,44 @@
+dist/composer.js
+  h_9a6e2a87fc4a0d 29-30,34
+dist/content-view.js
+  h_9a6e2a87fc4a0d 3,71-72,75-76,83,86-88,91-92,96-101
+dist/feed-history.js
+  h_9a6e2a87fc4a0d 1-75
+dist/index.html
+  h_9a6e2a87fc4a0d 6
+dist/intent.js
+  h_9a6e2a87fc4a0d 15
+dist/style.css
+  h_9a6e2a87fc4a0d 168
+docs/JEV-FIRST-LIVE-RECEIPT.md
+  h_9a6e2a87fc4a0d 1-50
+package.json
+  h_9a6e2a87fc4a0d 7
+source-manifest.json
+  h_9a6e2a87fc4a0d 15,22,98,102,104-107
+src/content/intent.mjs
+  h_9a6e2a87fc4a0d 48-49,52,68-69,75,90,116,118,126-127,134
+src/content/jev.mjs
+  h_9a6e2a87fc4a0d 69
+tests/composer.cjs
+  h_9a6e2a87fc4a0d 51,53-54
+tests/content-intent.test.mjs
+  h_9a6e2a87fc4a0d 87-109
+tests/feed-history.test.mjs
+  h_9a6e2a87fc4a0d 1-62
+tests/intent-client.test.mjs
+  h_9a6e2a87fc4a0d 15
+tests/ranking-evaluation.test.mjs
+  h_9a6e2a87fc4a0d 157-163
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9c089d1834844310b4eb2cb04cd64b019109eed6",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
