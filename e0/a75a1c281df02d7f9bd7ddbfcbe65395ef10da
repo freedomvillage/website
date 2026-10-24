@@ -1,0 +1,28 @@
+dist/content-view.css
+  h_9a6e2a87fc4a0d 41-43,45,55,77-112
+dist/content-view.js
+  h_9a6e2a87fc4a0d 10,20-23,28-30,32-39,41
+dist/index.html
+  h_9a6e2a87fc4a0d 6
+dist/style.css
+  h_9a6e2a87fc4a0d 161-170
+source-manifest.json
+  h_9a6e2a87fc4a0d 22,98,102-103
+src/content/pages.mjs
+  h_9a6e2a87fc4a0d 22
+src/content/render.mjs
+  h_9a6e2a87fc4a0d 27,39
+tests/content-library.test.mjs
+  h_9a6e2a87fc4a0d 43,113-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e0a75a1c281df02d7f9bd7ddbfcbe65395ef10da",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
