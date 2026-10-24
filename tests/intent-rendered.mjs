@@ -62,7 +62,7 @@ try{
   await page.screenshot({path:resolve(output,name+'-retry.png')});
   await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='48 ranked resources loaded');
   await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='71 ranked resources loaded');
-  assert.equal(await page.locator('#intent-more').count(),0);assert.equal(providerCalls,calls);
+  assert.equal(await page.locator('#intent-more').count(),0);assert.equal(providerCalls,calls);const continuationProviderCalls=providerCalls-calls;
   const ids=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));assert.equal(new Set(ids).size,71);assert.equal(ids[0],'card-connect-card');assert.equal(ids[1],'card-freedom-kids');
   await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
   await page.screenshot({path:resolve(output,name+'-ranked-tail.png')});
@@ -74,7 +74,7 @@ try{
   await page.locator('#prompt-text').fill('Synthetic no-close question');await page.locator('#prompt-submit').click();
   await page.waitForFunction(()=>document.querySelector('#composer-status')?.textContent.startsWith('No close matches.'));
   assert.equal(await page.locator('#grid > article.card').count(),24);await page.screenshot({path:resolve(output,name+'-no-close.png')});assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({viewport:name,candidateCount:71,rendered:ids.length,weakSecond:true,noCloseRetained:24,continuationProviderCalls:providerCalls-calls-2,composerWithinViewport:true,pageErrors:errors}));
+  console.log(JSON.stringify({viewport:name,candidateCount:71,rendered:ids.length,weakSecond:true,noCloseRetained:24,continuationProviderCalls,composerWithinViewport:true,pageErrors:errors}));
   await context.close();db.close();
  }
 }finally{await browser.close();}
