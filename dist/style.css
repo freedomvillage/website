@@ -165,6 +165,6 @@ html[data-site-revealed="true"] #site-loading{display:none}
 .composer-bottom{justify-content:space-between}
 .composer-bottom p{font-size:12px;line-height:1.5}
 .composer-actions #scene-settings{width:auto;flex-basis:auto;gap:8px;border-radius:22px;font-size:12px;padding:8px 12px}
-html{scroll-padding-bottom:calc(var(--composer-height,250px) + 72px + env(safe-area-inset-bottom,0px) + var(--keyboard-offset,0px))}main,body.content-detail main{padding-bottom:calc(var(--composer-height,250px) + 72px + env(safe-area-inset-bottom,0px) + var(--keyboard-offset,0px))!important}main :is(a,button,input,summary,[tabindex]){scroll-margin-bottom:calc(var(--composer-height,250px) + 72px + env(safe-area-inset-bottom,0px) + var(--keyboard-offset,0px))}
+html{scroll-padding-bottom:var(--composer-clearance,290px)}main,body.content-detail main{padding-bottom:calc(var(--composer-height,250px) + 72px + env(safe-area-inset-bottom,0px) + var(--keyboard-offset,0px))!important}main :is(a,button,input,summary,[tabindex]){scroll-margin-bottom:12px}
 
 @media(max-width:700px){.composer-bottom p{font-size:11px}}

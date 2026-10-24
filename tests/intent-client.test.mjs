@@ -12,7 +12,7 @@ test('actual query goes only to the same-origin POST and returned cards render; 
 });
 test('pending submit is single flight and uncertain retry reuses the exact claim',async()=>{
  let release;const wait=new Promise(r=>release=r),requests=[];const {context,nodes}=setup(async(_,options)=>{requests.push(JSON.parse(options.body));await wait;throw Error('Unconfirmed outcome');});
- const first=context.submitVisitorIntent('A question');assert.equal(nodes['prompt-submit'].disabled,true);await context.submitVisitorIntent('A question');assert.equal(requests.length,1);release();await first;assert(nodes['composer-status'].textContent.includes('not been retried'));await context.submitVisitorIntent('A question');assert.equal(requests.length,2);assert.equal(requests[0].requestId,requests[1].requestId);
+ const first=context.submitVisitorIntent('A question');assert.equal(nodes['prompt-submit'].disabled,true);assert(nodes['prompt-composer'].dataset.requestId);await context.submitVisitorIntent('A question');assert.equal(requests.length,1);release();await first;assert(nodes['composer-status'].textContent.includes('not been retried'));await context.submitVisitorIntent('A question');assert.equal(requests.length,2);assert.equal(requests[0].requestId,requests[1].requestId);
 });
 test('bounds, server failures and expired authentication never masquerade as results',async()=>{
  for(const response of [()=>Response.json({status:'recovery-failed'},{status:503}),()=>new Response('<html>Sign in</html>',{headers:{'Content-Type':'text/html'}})]){

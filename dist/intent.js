@@ -12,6 +12,7 @@
   pending=true;button.disabled=true;form.setAttribute('aria-busy','true');status.textContent='Finding relevant church content…';
   // An uncertain network outcome reuses the same claim; it cannot double-charge.
   if(query.trim()!==lastQuery){lastQuery=query.trim();requestId='jev-intent-request:'+crypto.randomUUID();}
+  form.dataset.requestId=requestId;
   try{
    const response=await fetch('/api/content/intent',{method:'POST',credentials:'same-origin',cache:'no-store',redirect:'error',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({query:query.trim(),requestId}),signal:AbortSignal.timeout(65000)});
    if(!response.headers.get('Content-Type')?.includes('application/json'))throw Error('Session or service unavailable');

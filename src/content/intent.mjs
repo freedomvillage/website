@@ -45,10 +45,11 @@ async function body(request){
  try{while(true){const part=await Promise.race([reader.read(),deadline]);if(part.done)break;bytes+=part.value.byteLength;if(bytes>4096){await reader.cancel();throw Error('Body limit');}text+=decoder.decode(part.value,{stream:true});}return JSON.parse(text+decoder.decode());}
  finally{clearTimeout(timer);reader.releaseLock();}
 }
-function publicReceipt(r){return {requestId:r.requestId,status:r.status,model:r.model||null,candidateCount:r.candidateIds.length,candidateIds:r.candidateIds,batches:r.batches,
- usage:r.usage,estimatedCostUsd:r.estimatedCostUsd,ranked:r.ranked||[],failure:r.failure||null,completedAt:r.completedAt};}
+function publicReceipt(r){return {requestId:r.requestId,status:r.status,model:r.model||null,requestedModel:r.requestedModel||null,candidateCount:r.candidateIds.length,candidateIds:r.candidateIds,batches:r.batches,
+ usage:r.usage,knownUsage:r.knownUsage||r.usage,usageComplete:r.usageComplete??Boolean(r.usage),estimatedCostUsd:r.estimatedCostUsd,ranked:r.ranked||[],failure:r.failure||null,completedAt:r.completedAt};}
 async function results(receipt,db,now){
  if(receipt.status!=='ok')return error('ranking-failed',503,{receipt:publicReceipt(receipt)});
+ if(receipt.model!==MODEL||!Array.isArray(receipt.batches)||receipt.batches.some(b=>b.status!=='ok'||b.model!==MODEL))return error('model-receipt-needs-review');
  const cards=await intentCatalog(db,now),byId=new Map(cards.map(c=>[c.id,c]));
  const selected=receipt.ranked.filter(r=>r.score>=1&&byId.has(r.id)).slice(0,24);
  return json({status:'ok',receipt:publicReceipt(receipt),selectedIds:selected.map(r=>r.id),html:selected.map(r=>renderCard(byId.get(r.id))).join('')});
@@ -64,13 +65,14 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    if(id&&!/^jev-intent-request:[0-9a-f-]{36}$/.test(id))return error('invalid-receipt',400);
    if(id){const row=await get(db,id),value=parse(row);return value?json(publicReceipt(value)):error(row?'pending-or-interrupted':'not-found',row?409:404);}
    const recovery=await get(db,RECOVERY),state=parse(await get(db,INTENT_STATE));
-   return json({status:state?.stopped?'stopped':state?.busy?'pending-or-interrupted':'ready',recovery:recovery?(parse(recovery)||{status:'pending-or-interrupted'}):{status:'not-run'},budgetUsd:BUDGET_USD,spentOrReservedUsd:state?.spent||0});
+   const configured=env.JEV_ENABLED==='true'&&typeof env.TYPESAFE_API_KEY==='string'&&Boolean(env.TYPESAFE_API_KEY.trim());
+   return json({status:state?.stopped?'stopped':state?.busy?'pending-or-interrupted':configured?'ready':'unconfigured',recovery:recovery?(parse(recovery)||{status:'pending-or-interrupted'}):{status:'not-run'},budgetUsd:BUDGET_USD,spentOrReservedUsd:state?.spent||0});
   }
   if(request.headers.get('Origin')!=='https://next.freedomvillage.church'||!/^application\/json(?:\s*;|$)/i.test(request.headers.get('Content-Type')||''))return error('invalid-origin-or-type',403);
   let input;try{input=await body(request);}catch{return error('invalid-input',400);}
   if(!input||Object.keys(input).length!==2||typeof input.query!=='string'||!input.query.trim()||input.query.length>500||!/^jev-intent-request:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(input.requestId||''))return error('invalid-input',400);
   const existing=await get(db,input.requestId);
-  if(existing){const receipt=parse(existing);return receipt?results(receipt,db,now()):error('pending-or-interrupted');}
+  if(existing){const receipt=parse(existing);return receipt?await results(receipt,db,now()):error('pending-or-interrupted');}
   if(env.JEV_ENABLED!=='true'||!env.TYPESAFE_API_KEY)return error('unconfigured',503);
   // No query is written to D1, URLs, analytics or application logs.
   const query=input.query.trim(),instant=now();
@@ -85,7 +87,7 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    if(state.stopped)return error('prior-attempt-needs-review');
    if(instant-state.lastStartedAt<MIN_INTERVAL)return error('rate-limited',429);
    const recoveryRow=await get(db,RECOVERY),recovery=parse(recoveryRow);
-   if(recoveryRow&&recovery?.status!=='ok')return error('recovery-needs-review');
+   if(recoveryRow&&(recovery?.status!=='ok'||recovery.model!==MODEL))return error('recovery-needs-review');
    let cards,batches;try{cards=await intentCatalog(db,instant);batches=intentBatches(query,cards);}catch{return error('catalog-unavailable',503);}
    const diagnosticCards=['freedom-kids','connect-card'].map(id=>cards.find(c=>c.id===id));
    if(!recovery&&diagnosticCards.some(c=>!c))return error('recovery-candidates-unavailable',503);
@@ -111,8 +113,9 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    for(const batch of batches){
     const result=await run(query,batch);account(result);
     receipts.push({status:result.status,candidateIds:batch.map(c=>c.id),model:result.model||null,usage:result.usage||null,failure:result.failure||null,validation:result.validation||null});
+    if(result.usage){usage.inputTokens+=result.usage.inputTokens;usage.outputTokens+=result.usage.outputTokens;}
     if(result.status!=='ok'){failed=result;break;}
-    ranked.push(...result.ranked);usage.inputTokens+=result.usage.inputTokens;usage.outputTokens+=result.usage.outputTokens;
+    ranked.push(...result.ranked);
    }
    ranked.sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
    if(failed){state.stopped=true;ranked=[];}
@@ -120,14 +123,15 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    // cannot become visible merely because they were eligible at request start.
    const current=failed?[]:await intentCatalog(db,now()),eligible=new Set(current.map(c=>c.id));
    ranked=ranked.filter(r=>eligible.has(r.id));
-   const receipt={requestId,status:failed?'unavailable':'ok',model:MODEL,candidateIds:cards.map(c=>c.id),batches:receipts,ranked,usage,
+   const usageComplete=receipts.every(r=>r.usage);
+   const receipt={requestId,status:failed?'unavailable':'ok',model:failed?null:MODEL,requestedModel:MODEL,candidateIds:cards.map(c=>c.id),batches:receipts,ranked,usage:usageComplete?usage:null,knownUsage:usage,usageComplete,
     estimatedCostUsd:receipts.every(r=>r.usage)?receipts.reduce((sum,r)=>sum+r.usage.inputTokens*.042/1000000,0):null,elapsedMs:Math.max(0,now()-started),completedAt:new Date(now()).toISOString(),...(failed?{failure:failed.failure||null}:{})};
    await save(db,requestId,receipt);
    if(!unknownUsage)state.spent=Math.max(0,state.spent-reservation+actualCost);
    if(failed)return error('ranking-failed',503,{receipt:publicReceipt(receipt)});
    // The score is a relevance position, not a calibrated probability. Return
    // useful/partial answers (>= the descriptive middle level), never a fake answer.
-   return results(receipt,db,now());
+   return await results(receipt,db,now());
   }catch{state.stopped=true;return error('request-interrupted',503);}
   finally{await release();}
  }catch{return error('unavailable',503);}

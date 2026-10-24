@@ -26,11 +26,11 @@ function submitPrototype(event){event?.preventDefault();if(typeof globalThis.sub
 promptForm.addEventListener('submit',submitPrototype);document.getElementById('prompt-submit').addEventListener('click',submitPrototype);
 promptText.addEventListener('keydown',event=>{if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)&&!event.isComposing)submitPrototype(event)});
 promptText.addEventListener('input',()=>{promptText.style.height='auto';promptText.style.height=Math.min(150,promptText.scrollHeight)+'px'});
-function updateKeyboardOffset(){const v=window.visualViewport;const editing=document.activeElement===promptText;const offset=v&&editing?Math.max(0,window.innerHeight-v.height-v.offsetTop):0;document.documentElement.style.setProperty('--keyboard-offset',Math.round(offset)+'px');}
-window.visualViewport?.addEventListener('resize',updateKeyboardOffset);window.visualViewport?.addEventListener('scroll',updateKeyboardOffset);promptText.addEventListener('focus',updateKeyboardOffset);promptText.addEventListener('blur',()=>{document.documentElement.style.setProperty('--keyboard-offset','0px')});
+function updateKeyboardOffset(){const v=window.visualViewport;const editing=document.activeElement===promptText;const offset=v&&editing?Math.max(0,window.innerHeight-v.height-v.offsetTop):0;document.documentElement.style.setProperty('--keyboard-offset',Math.round(offset)+'px');window.requestAnimationFrame?.(updateComposerClearance);}
+window.visualViewport?.addEventListener('resize',updateKeyboardOffset);window.visualViewport?.addEventListener('scroll',updateKeyboardOffset);promptText.addEventListener('focus',updateKeyboardOffset);promptText.addEventListener('blur',()=>{document.documentElement.style.setProperty('--keyboard-offset','0px');window.requestAnimationFrame?.(updateComposerClearance);});
 updateAppearanceControls();
 
 // Reserve the actual overlay height, including expanded drafts; no scroll hijack.
-function updateComposerClearance(){const height=promptForm.getBoundingClientRect().height;if(Number.isFinite(height)&&height>0)document.documentElement.style.setProperty('--composer-height',Math.ceil(height)+'px');}
+function updateComposerClearance(){const rect=promptForm.getBoundingClientRect(),height=rect.height;if(Number.isFinite(height)&&height>0)document.documentElement.style.setProperty('--composer-height',Math.ceil(height)+'px');if(Number.isFinite(rect.top)&&Number.isFinite(window.innerHeight))document.documentElement.style.setProperty('--composer-clearance',Math.ceil(Math.max(0,window.innerHeight-rect.top+12))+'px');}
 if(typeof ResizeObserver==='function')new ResizeObserver(updateComposerClearance).observe(promptForm);
 window.addEventListener?.('resize',updateComposerClearance);updateComposerClearance();

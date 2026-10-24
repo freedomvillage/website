@@ -66,6 +66,7 @@ async function boundedJson(response) {
 export function rankingResult(payload, request) {
   const keys = Object.keys(request.questions);
   if(typeof payload?.model!=='string'||!MODEL.test(payload.model))invalid('model');
+  if(request.model!=='jev-latest'&&payload.model!==request.model)invalid('model');
   if(!payload.answers||Array.isArray(payload.answers)||typeof payload.answers!=='object'||Object.keys(payload.answers).length!==keys.length)invalid('answer-count');
   if(!keys.every(key=>Object.hasOwn(payload.answers,key)))invalid('answer-keys');
   if(!integer(payload.usage?.input_tokens)||!integer(payload.usage?.output_tokens))invalid('usage');
