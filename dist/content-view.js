@@ -3,12 +3,22 @@
  let started=false,loading=false;
  const motionItems=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)');
  function legacyLink(){const p=new URLSearchParams(location.hash.slice(1)),id=p.get('story');if(id&&/^[a-z][a-z0-9-]{0,79}$/.test(id)){location.replace('/events/'+id);return true;}if(location.hash==='#all'){location.replace('/');return true;}return false;}
- function motionState(){for(const el of motionItems)el.classList.toggle('is-visible',el.dataset.inView==='true'&&!document.hidden&&!reduced.matches);}
+ function motionState(){for(const el of motionItems){
+  const inView=el.dataset.inView==='true'&&!document.hidden;
+  el.classList.toggle('is-visible',inView&&!reduced.matches);
+  if(inView&&el.dataset.artEntrance==='true'&&!el.dataset.artSeen){el.dataset.artSeen='true';if(!reduced.matches)el.classList.add('art-entered');}
+ }}
  const observer=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{for(const e of entries)e.target.dataset.inView=String(e.isIntersecting);motionState();},{threshold:.05}):null;
  function enhance(scope=document){
+  for(const disclosure of scope.querySelectorAll('.craft-reveal'))if(!disclosure.dataset.ready){disclosure.dataset.ready='true';disclosure.addEventListener('toggle',()=>requestAnimationFrame(()=>{if(typeof sizeCards==='function')sizeCards();}));}
+
   for(const el of scope.querySelectorAll('.has-motion'))if(!motionItems.has(el)){
    motionItems.add(el);observer?.observe(el);
   }
+  for(const button of scope.querySelectorAll('.series-load'))if(!button.dataset.ready){button.dataset.ready='true';button.hidden=false;button.addEventListener('click',()=>{
+   const box=button.closest('[data-series]'),id=box?.dataset.series;if(!/^PL[A-Za-z0-9_-]{8,78}$/.test(id||''))return;
+   const frame=document.createElement('iframe');frame.src='https://www.youtube-nocookie.com/embed/videoseries?list='+id;frame.title=button.dataset.seriesTitle||'Teaching series';frame.allow='encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='no-referrer';frame.loading='lazy';frame.tabIndex=0;button.replaceWith(frame);frame.focus({preventScroll:true});requestAnimationFrame(()=>{if(typeof sizeCards==='function')sizeCards();});
+  });}
   for(const button of scope.querySelectorAll('.video-load'))if(!button.dataset.ready){button.dataset.ready='true';button.addEventListener('click',()=>{
    const box=button.closest('[data-video]'),id=box?.dataset.video;if(!/^[A-Za-z0-9_-]{11}$/.test(id||''))return;
    const frame=document.createElement('iframe');frame.src='https://www.youtube-nocookie.com/embed/'+id;frame.title=button.dataset.videoTitle||'Sermon video';frame.allow='encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='no-referrer';frame.loading='lazy';button.replaceWith(frame);
