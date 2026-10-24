@@ -1,6 +1,6 @@
 // Progressive enhancement: canonical cards, details and navigation arrive in server HTML.
 (function(root){
- let started=false,loading=false;
+ let started=false,loading=false,intentActive=false;
  const motionItems=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)');
  function legacyLink(){const p=new URLSearchParams(location.hash.slice(1)),id=p.get('story');if(id&&/^[a-z][a-z0-9-]{0,79}$/.test(id)){location.replace('/events/'+id);return true;}if(location.hash==='#all'){location.replace('/');return true;}return false;}
  function motionState(){for(const el of motionItems){
@@ -69,7 +69,7 @@
   let autoFailed=false,ended=false;
   const nearBottom=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)&&!autoFailed)load(false);},{rootMargin:'600px 0px',threshold:0}):null;
   async function load(manual){
-   if(loading||ended)return;loading=true;nearBottom?.unobserve(more);more.textContent='Loading…';more.setAttribute('aria-busy','true');
+   if(loading||ended||intentActive)return;loading=true;nearBottom?.unobserve(more);more.textContent='Loading…';more.setAttribute('aria-busy','true');
    try{
     const url=new URL(more.href);if(url.origin!==location.origin)throw Error();
     const response=await fetch(url,{credentials:'same-origin',cache:'no-store',redirect:'error',signal:AbortSignal.timeout(10000)});
@@ -77,6 +77,7 @@
     const page=new DOMParser().parseFromString(await response.text(),'text/html'),grid=document.getElementById('grid'),incoming=page.querySelector('#grid');if(!incoming||!grid)throw Error();
     const next=page.querySelector('.load-more'),href=next?new URL(next.getAttribute('href'),url):null;
     if(href&&(href.origin!==location.origin||href.href===url.href))throw Error();
+    if(intentActive)return;
     let first=null;for(const article of incoming.children)if(article.matches('article.card')&&!document.getElementById(article.id)){const copy=document.importNode(article,true);grid.append(copy);first??=copy.querySelector('a');}
     enhance(grid);autoFailed=false;
     if(href){more.href=href.href;more.textContent='More cards ↓';}else{ended=true;nearBottom?.disconnect();more.remove();}
@@ -89,5 +90,17 @@
  }
  reduced.addEventListener('change',motionState);
  document.addEventListener('visibilitychange',motionState);
- root.contentView={render(){if(legacyLink())return;if(!started){started=true;enhance();detailBack();connectDraft();pagination();}}};
+ root.contentView={render(){if(legacyLink())return;if(!started){started=true;enhance();detailBack();connectDraft();pagination();}},showIntent(html){
+  const grid=document.getElementById('grid'),collection=document.getElementById('collection'),detail=document.getElementById('detail');if(!grid||!collection||!detail)throw Error('Results view unavailable');
+  intentActive=true;document.querySelector('.load-more')?.remove();
+  const parsed=new DOMParser().parseFromString('<div>'+html+'</div>','text/html'),articles=[...parsed.body.firstElementChild.children];
+  if(articles.some(el=>!el.matches('article.card')))throw Error('Invalid results');
+  // Keep the original grid node used by masonry sizing; no generated JS executes.
+  grid.replaceChildren(...articles.map(el=>document.importNode(el,true)));collection.hidden=false;detail.hidden=true;document.body.classList.remove('content-detail');
+  const heading=collection.querySelector('h1');if(heading){heading.className='topic-title';heading.textContent='For your question';heading.tabIndex=-1;}
+  document.getElementById('collection-label').textContent=articles.length?'Relevant church content':'No clear matches. Try a more specific question or browse the collections.';
+  document.getElementById('count').textContent=articles.length+' matches';
+  if(!document.getElementById('intent-return')){const back=document.createElement('a');back.id='intent-return';back.href=location.pathname+location.search;back.textContent='Return to browsing';collection.insertBefore(back,grid);}
+  enhance(grid);heading?.focus();
+ }};
 })(globalThis);

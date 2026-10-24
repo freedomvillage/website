@@ -22,7 +22,7 @@ for(const [dialog,closeId]of [[settingsDialog,'settings-close'],[advancedDialog,
 }
 setInterval(()=>{if(settingsDialog.open)updateActualAirSummary();},30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateActualAirSummary();});
-function submitPrototype(event){event?.preventDefault();document.getElementById('composer-status').textContent=promptText.value.trim()?'Prototype only—nothing was sent. Your draft remains here.':'Write a question to try the layout. Nothing will be sent.';promptText.focus();}
+function submitPrototype(event){event?.preventDefault();if(typeof globalThis.submitVisitorIntent==='function'){void globalThis.submitVisitorIntent(promptText.value);return;}document.getElementById('composer-status').textContent=promptText.value.trim()?'Questions are unavailable. Nothing was sent. Your draft remains here.':'Write a question to find relevant church content.';promptText.focus();}
 promptForm.addEventListener('submit',submitPrototype);document.getElementById('prompt-submit').addEventListener('click',submitPrototype);
 promptText.addEventListener('keydown',event=>{if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)&&!event.isComposing)submitPrototype(event)});
 promptText.addEventListener('input',()=>{promptText.style.height='auto';promptText.style.height=Math.min(150,promptText.scrollHeight)+'px'});

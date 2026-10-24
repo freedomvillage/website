@@ -1,0 +1,86 @@
+// Cloud-only SQLite + intercepted provider tests. No actual requests or credentials.
+import test from 'node:test';import assert from 'node:assert/strict';import {DatabaseSync} from 'node:sqlite';
+import {handleIntent,intentBatches,INTENT_STATE,RECOVERY} from '../src/content/intent.mjs';
+import {rankingRequest} from '../src/content/jev.mjs';import {createWorker} from '../src/worker.mjs';
+const instant=Date.parse('2026-10-24T14:00:00Z'),secret='SYNTHETIC_TEST_VALUE';
+const card=i=>({schemaVersion:2,template:'story',title:'Content '+i,summary:'Useful church information '+i,detail:['Public paragraph.'],facts:[],categories:['faith'],actions:[],related:[],media:null,design:{theme:'paper',layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false});
+function setup(count=71){
+ const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE content_cards(id TEXT PRIMARY KEY,status TEXT,content_json TEXT,expires_at TEXT);CREATE TABLE content_checks(id TEXT PRIMARY KEY,result_json TEXT,created_at TEXT)');
+ const put=(id,c=card(id),status='draft',expiry=null)=>db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run(id,status,JSON.stringify(c),expiry);
+ put('freedom-kids');put('connect-card');for(let i=2;i<count;i++)put('sample-'+String(i).padStart(3,'0'));
+ const oldFailure=JSON.stringify({status:'unavailable',category:'invalid-response',usage:{inputTokens:8035,outputTokens:538}});
+ db.prepare('INSERT INTO content_checks VALUES(?,?,?)').run('ranking-eval-v1:short-stay-kids',oldFailure,new Date(instant).toISOString());
+ const adapter={prepare(sql){
+  const statement=db.prepare(sql);
+  return {bind(...args){return {
+   first:async()=>statement.get(...args),
+   all:async()=>({results:statement.all(...args)}),
+   run:async()=>({meta:{changes:Number(statement.run(...args).changes)}})
+  };}};
+ }};
+ return {db,put,oldFailure,env:{CONTENT_DB:adapter,CONTENT_PILOT_ENABLED:'true',JEV_ENABLED:'true',TYPESAFE_API_KEY:secret}};
+}
+const request=(input={query:'I would like community.',requestId:'jev-intent-request:11111111-1111-4111-8111-111111111111'},headers={})=>new Request('https://next.freedomvillage.church/api/content/intent',{method:input===null?'GET':'POST',headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS',...(input===null?{}:{Origin:'https://next.freedomvillage.church','Content-Type':'application/json'}),...headers},...(input===null?{}:{body:JSON.stringify(input)})});
+function provider(seen,{failureAt=0,wait,onCall}={}){return async(url,options)=>{
+ const body=JSON.parse(options.body);seen.push(body);await onCall?.(seen.length,body);if(wait)await wait;
+ assert.equal(url,'https://api.typesafe.ai/v1/systemone');assert.equal(options.redirect,'manual');assert.equal(options.headers.Authorization,'Bearer '+secret);assert.equal(body.model,'jev-1.14.0');
+ if(seen.length===failureAt)return Response.json({message:'PRIVATE_PROVIDER_TEXT',model:'jev-1.14.0',usage:{input_tokens:10,output_tokens:4},answers:{}});
+ return Response.json({model:'jev-1.14.0',usage:{input_tokens:100,output_tokens:20},answers:Object.fromEntries(Object.keys(body.questions).map(key=>[key,{type:'score',score:2,confidence:1,legend:{0:'No',1:'Part',2:'Direct'},probabilities:{0:0,1:0,2:1}}]))});
+};}
+test('71 candidates are all ranked, recovery is once, old failure immutable; returned IDs and HTML are actual validated records',async()=>{
+ const {db,env,oldFailure}=setup();try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)};
+ const response=await createWorker(options).fetch(request(),env);assert.equal(response.status,200);const value=await response.json();
+ assert.equal(value.receipt.candidateCount,71);assert.equal(value.receipt.ranked.length,71);assert.equal(value.selectedIds.length,24);assert(value.html.includes('card-connect-card'));assert(!JSON.stringify(value).includes(secret));
+ assert.deepEqual(new Set(seen.slice(1).flatMap(b=>b.state.candidates.map(c=>c.id))),new Set(value.receipt.ranked.map(r=>r.id)));
+ assert.equal(seen[0].state.candidates.length,2);assert.deepEqual(seen[0].state.candidates.map(c=>c.id),['freedom-kids','connect-card']);
+ assert(seen.length>2);assert.equal(JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(RECOVERY).result_json).status,'ok');
+ assert.equal(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get('ranking-eval-v1:short-stay-kids').result_json,oldFailure);
+ const stored=db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(value.receipt.requestId).result_json;assert(!stored.includes('I would like community.'));
+ const count=seen.length;assert.equal((await handleIntent(request(),env,options)).status,200);assert.equal(seen.length,count,'same request ID replays receipt without spending');
+ }finally{db.close();}
+});
+test('batch byte/card boundaries preserve every candidate without lexical preselection',()=>{
+ const cards=Array.from({length:256},(_,i)=>({id:'sample-'+i,title:'A'.repeat(160),summary:'B'.repeat(600),facts:Array(6).fill('C'.repeat(160))}));
+ const batches=intentBatches('Q'.repeat(500),cards);assert.deepEqual(batches.flat(),cards);for(const b of batches){assert(b.length<=64);assert(new TextEncoder().encode(JSON.stringify(rankingRequest('Q'.repeat(500),b,'jev-1.14.0'))).length<=40000);}
+ assert.throws(()=>intentBatches('q',Array(257).fill(cards[0])));
+});
+test('auth/origin/type/shape/query limits and GET do not call Jev',async()=>{
+ const {db,env}=setup(2);try{let calls=0;const options={now:()=>instant,fetchUpstream:async()=>{calls++;throw Error();}};
+ assert.equal((await handleIntent(request(null),env,options)).status,200);
+ assert.equal((await handleIntent(request({}, {Origin:'https://evil.invalid'}),env,options)).status,403);
+ assert.equal((await handleIntent(request({}, {'Content-Type':'text/plain'}),env,options)).status,403);
+ for(const input of [{query:'a'},{query:'a'.repeat(501),requestId:'bad'},{query:'a',requestId:'https://evil.invalid'},{query:'',requestId:'bad'}])assert.equal((await handleIntent(request(input),env,options)).status,400);
+ assert.equal((await handleIntent(request(),{...env,CONTENT_PILOT_ENABLED:'false'},options)).status,404);assert.equal(calls,0);
+ }finally{db.close();}
+});
+test('invalid recovery retains safe diagnosis, stops further calls, never exposes raw response',async()=>{
+ const {db,env}=setup(2);try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen,{failureAt:1})};
+ const response=await handleIntent(request(),env,options);assert.equal(response.status,503);const text=await response.text();assert(!text.includes('PRIVATE_PROVIDER_TEXT'));assert(text.includes('answer-count'));
+ assert.equal((await handleIntent(request(),env,options)).status,409);assert.equal(seen.length,1);assert(JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(INTENT_STATE).result_json).stopped);
+ }finally{db.close();}
+});
+test('partial batch failure never renders a partial success or retries recovery',async()=>{
+ const {db,env}=setup();try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen,{failureAt:3})};const response=await handleIntent(request(),env,options);assert.equal(response.status,503);const result=await response.json();assert.equal(result.status,'ranking-failed');assert.deepEqual(result.receipt.ranked,[]);assert.equal(result.html,undefined);await handleIntent(request(),env,options);assert.equal(seen.length,3);}finally{db.close();}
+});
+test('single flight coalesces simultaneous requests and pending claims cannot be stolen',async()=>{
+ const {db,env}=setup(2);let release;const wait=new Promise(r=>release=r);try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen,{wait})},pending=handleIntent(request(),env,options);
+ while(!seen.length)await new Promise(r=>setImmediate(r));assert.equal((await handleIntent(request(),env,options)).status,409);assert.equal(seen.length,1);release();assert.equal((await pending).status,200);
+ }finally{release();db.close();}
+});
+test('published/held/synthetic/expired/invalid rows excluded, including an empty raw page; expiry during provider call is rechecked',async()=>{
+ const {db,env,put}=setup(2);try{
+ for(let i=0;i<25;i++)put('bad-'+i,{...card(i),title:''});
+ put('held',{...card('held'),hold:true});put('synthetic',{...card('synthetic'),isSynthetic:true});put('published',card('published'),'published');put('expired',card('expired'),'draft',new Date(instant-1).toISOString());
+ let time=instant;put('expires-during',card('expires-during'),'draft',new Date(instant+1000).toISOString());
+ const seen=[],response=await handleIntent(request(),env,{now:()=>time,fetchUpstream:provider(seen,{onCall(n){if(n===2)time+=2000;}})});const result=await response.json();assert.equal(response.status,200);
+ assert.deepEqual(new Set(seen.slice(1).flatMap(x=>x.state.candidates.map(c=>c.id))),new Set(['freedom-kids','connect-card','expires-during']));assert(!result.selectedIds.includes('expires-during'));assert(!result.html.includes('expires-during'));
+ }finally{db.close();}
+});
+test('rate/budget stop before provider and receipt reads contain no query or secret',async()=>{
+ const {db,env}=setup(2);try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)};const first=await(await handleIntent(request(),env,options)).json();
+ const second={query:'Another question',requestId:'jev-intent-request:22222222-2222-4222-8222-222222222222'};assert.equal((await handleIntent(request(second),env,options)).status,429);const count=seen.length;
+ db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').run(JSON.stringify({busy:false,stopped:false,spent:.10,lastStartedAt:0}),INTENT_STATE);
+ assert.equal((await handleIntent(request(second),env,options)).status,409);assert.equal(seen.length,count);
+ const receiptRequest=new Request('https://next.freedomvillage.church/api/content/intent?receipt='+encodeURIComponent(first.receipt.requestId),{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS'}});const text=await(await handleIntent(receiptRequest,env,options)).text();assert(text.includes('"status":"ok"'));assert(!text.includes('I would like community.'));assert(!text.includes(secret));assert.equal(seen.length,count);
+ }finally{db.close();}
+});
