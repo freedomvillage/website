@@ -1,3 +1,4 @@
+import {prototypeCopy} from './prototype-copy.mjs';
 // Private next-site experiment, not a public publication or final authoring schema.
 export const PAGE_SIZE=24;
 export const MAX_MEDIA_BYTES=8*1024*1024;
@@ -57,7 +58,7 @@ function versionTwo(row,c){
 export function publicCard(row){
  let c;try{c=JSON.parse(row.content_json);}catch{return null;}
  if(c?.hold===true||c?.isSynthetic===true)return null;
- if(c?.schemaVersion===2)return versionTwo(row,c);
+ if(c?.schemaVersion===2){const projected=versionTwo(row,c);return projected?prototypeCopy(projected):null;}
  if(!ID.test(row.id)||c?.schemaVersion!==1||c.template!=='event'||!text(c.title,160)||!text(c.summary,600)||
  !text(c.date,80)||!text(c.time,80)||!text(c.venue,160)||(c.address!==null&&!text(c.address,200))||
  !['breakfast','city'].includes(c.theme)||!Array.isArray(c.detail)||c.detail.length>8||!c.detail.every(p=>text(p,2000))||
