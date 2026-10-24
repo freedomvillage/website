@@ -110,7 +110,7 @@
   collection.hidden=false;detail.hidden=true;document.body.classList.remove('content-detail');
   const heading=collection.querySelector('h1');if(heading){heading.className='topic-title';heading.textContent='For your question';heading.tabIndex=-1;}
   document.getElementById('collection-label').textContent=selection.totalCount?(selection.closeMatchCount?'Church resources ranked for your question':'No close matches. You can still browse all ranked church resources.'):'No eligible church resources are available right now.';
-  document.getElementById('count').textContent=grid.children.length+' of '+selection.totalCount+' ranked resources';
+  document.getElementById('count').textContent=grid.children.length+' ranked resources loaded';
   if(!document.getElementById('intent-return')){const back=document.createElement('a');back.id='intent-return';back.href=location.pathname+location.search;back.textContent='Return to browsing';collection.insertBefore(back,grid);}
   enhance(grid);if(append)copies[0]?.querySelector('a')?.focus({preventScroll:true});else heading?.focus();
  }};

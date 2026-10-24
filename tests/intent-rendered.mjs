@@ -54,12 +54,12 @@ try{
   await page.goto(origin);await page.locator('html[data-site-revealed="true"]').waitFor({timeout:30000});
   await page.screenshot({path:resolve(output,name+'-browse.png')});
   await page.locator('#prompt-text').fill('Synthetic review question');await page.locator('#prompt-submit').click();
-  await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='24 of 71 ranked resources');
+  await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='24 ranked resources loaded');
   await page.screenshot({path:resolve(output,name+'-ranked-head.png')});
   const calls=providerCalls;
   failPage=true;await page.locator('#intent-more').click();await page.getByRole('button',{name:'Could not load. Try again ↓'}).waitFor();
-  await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='48 of 71 ranked resources');
-  await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='71 of 71 ranked resources');
+  await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='48 ranked resources loaded');
+  await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='71 ranked resources loaded');
   assert.equal(await page.locator('#intent-more').count(),0);assert.equal(providerCalls,calls);
   const ids=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));assert.equal(new Set(ids).size,71);assert.equal(ids[0],'card-connect-card');assert.equal(ids[1],'card-freedom-kids');
   await page.screenshot({path:resolve(output,name+'-ranked-tail.png')});
