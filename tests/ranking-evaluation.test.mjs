@@ -91,3 +91,12 @@ test('oversized fresh single-pass evaluation is rejected before a claim or provi
   assert.equal(db.prepare('SELECT count(*) AS count FROM content_checks WHERE id=?').get('ranking-eval-v1:sample-one').count,0);
  }finally{db.close();}
 });
+
+// Fractional position/probability/legend contract: https://docs.typesafe.ai/primitives/score
+// This is a synthetic compatibility fixture, not the discarded live failure response.
+test('documented fractional Score shape with a rubric legend is accepted without retaining the legend',()=>{
+ const request=rankingRequest('Synthetic visitor query',[{id:'sample-one',title:'Synthetic title',summary:'Synthetic description'}],'jev-1.14.0');
+ const payload={model:'jev-1.14.0',usage:{input_tokens:332,output_tokens:18},answers:{card_0:{type:'score',score:1.43,confidence:.35,legend:{0:'Synthetic low',1:'Synthetic middle',2:'Synthetic high'},probabilities:{0:0,1:.57,2:.43}}}};
+ const result=rankingResult(payload,request);assert.equal(result.status,'ok');assert.equal(result.ranked[0].score,1.43);assert.equal(result.ranked[0].confidence,.35);
+ assert.deepEqual(result.ranked[0].probabilities,{0:0,1:.57,2:.43});assert(!JSON.stringify(result).includes('legend'));assert(!JSON.stringify(result).includes('Synthetic middle'));
+});
