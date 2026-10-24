@@ -43,7 +43,7 @@ test('the shared projection reaches API, homepage and detail once, with no datab
   const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(shell)}};
   const request=path=>new Request('https://next.freedomvillage.church'+path,{headers:{'Cf-Access-Jwt-Assertion':'LOCAL_FIXTURE'}});
   const api=await(await handleCatalogRequest(request('/api/content'),env)).json();assert.deepEqual(api.items[0].facts,['Sunday · 2:10 PM']);
-  for(const path of ['/','/cards/sunday-gatherings']){const response=await handleContentPage(request(path),env),html=await response.text(),main=html.match(/<main[\s\S]*?<\/main>/)[0];assert.equal(response.status,200);assert.equal((main.match(/Sunday · 2:10 PM/g)||[]).length,1);assert(html.includes('noindex'));}
+  for(const path of ['/','/cards/sunday-gatherings']){const response=await handleContentPage(request(path),env),html=await response.text(),main=html.match(/<main[\s\S]*?<\/main>/)[0],detailStart=main.indexOf('<section id="detail"'),visible=path==='/'?main.slice(0,detailStart):main.slice(detailStart);assert.equal(response.status,200);assert(!visible.startsWith('<section id="detail" hidden'));assert.equal((visible.match(/Sunday · 2:10 PM/g)||[]).length,1);assert(html.includes('noindex'));}
   assert.equal(db.prepare('SELECT content_json FROM content_cards').get().content_json,stored);assert.equal(db.prepare('SELECT count(*) AS count FROM content_cards').get().count,1);assert.equal(writes,0);
  }finally{db.close();}
 });
