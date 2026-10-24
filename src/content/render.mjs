@@ -22,7 +22,7 @@ export function renderLibraryCard(c,namespace='',headingLevel=2){
  const heading=headingLevel===3?'h3':'h2';
  namespace=typeof namespace==='string'?namespace:'';
  const domId=escape((namespace?namespace+'-':'')+'card-'+c.id);
- if(['actions','utility'].includes(c.template))return `<article class="card library-card practical-card theme-${c.design.theme}" id="${domId}"><div class="library-copy"><${heading}><a href="${cardPath(c)}">${escape(c.title)}</a></${heading}><p class="library-excerpt">${escape(c.summary)}</p></div><div class="practical-actions">${c.actions.map(a=>`<a ${actionAttrs(a)}>${escape(a.label)} <span aria-hidden="true">↗</span></a>`).join('')}</div></article>`;
+ if(['actions','utility'].includes(c.template))return `<article class="card library-card practical-card theme-${c.design.theme}" id="${domId}"><div class="library-copy"><${heading}><a href="${cardPath(c)}">${escape(c.title)}</a></${heading}>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div><div class="practical-actions">${c.actions.map(a=>`<a ${actionAttrs(a)}>${escape(a.label)} <span aria-hidden="true">↗</span></a>`).join('')}</div></article>`;
  const motion=c.design.motion==='gradient',art=genericArt(c);
  return `<article class="card library-card theme-${c.design.theme} layout-${c.design.layout} size-${c.design.size}${motion?' has-motion':''}" id="${domId}"><a class="library-card-link" href="${cardPath(c)}"><div class="library-copy"><${heading}>${escape(c.title)}</${heading}>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div>${art}</a></article>`;
 }
