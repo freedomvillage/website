@@ -41,3 +41,8 @@ const html=fs.readFileSync('dist/index.html','utf8'),ids=[...html.matchAll(/\bid
  for(const invalid of [{status:'unknown',pm25:null},{status:'ok',pm25:-1},{status:'ok',pm25:9,observedAt:new Date(now-3600000).toISOString(),validUntil:new Date(now+60000).toISOString()}]){c.measuredResult=invalid;vm.runInContext('liveAirReading=measuredResult;updateActualAirSummary()',c);assert.equal(nodes['actual-air-summary'].hidden,true);assert.equal(nodes['actual-air-value'].textContent,'');assert.equal(nodes['actual-air-detail'].textContent,'');}
  c.airQualityClient.stop();console.log('PASS: actual client measured modal survives Clock/Light/Dark; unavailable/stale/invalid data hidden, no extra cache reads');
 })().catch(error=>{console.error(error);process.exitCode=1;});
+
+assert(html.indexOf('id="prompt-composer"')<html.indexOf('<main id="main"'),'intent entry remains discoverable before the full feed and SSR main replacement');
+assert(html.includes('<label for="prompt-text">What can we help you find?</label>'));assert(html.includes('Prototype only — questions are not sent.'));assert(!html.includes('Search preview is not active yet.'));
+const composerCss=fs.readFileSync('dist/style.css','utf8');assert(!composerCss.includes('.prompt-composer textarea,#prompt-submit{display:none}'));assert(composerCss.includes('.prompt-composer textarea{display:block}'));assert(composerCss.includes('#prompt-submit{display:inline-flex}'));
+console.log('PASS: visible intent entry before catalog; original no-send draft interaction and Appearance retained');
