@@ -49,11 +49,16 @@ async function body(request){
 function publicReceipt(r){return {requestId:r.requestId,status:r.status,model:r.model||null,requestedModel:r.requestedModel||null,candidateCount:r.candidateIds.length,candidateIds:r.candidateIds,batches:r.batches,
  inputProjection:r.inputProjection||'summary-facts-v1',candidateInputs:r.candidateInputs||null,candidateInputScope:r.batchPlan?'attempted-or-transport-uncertain':'legacy-delivery-not-established',batchPlan:r.batchPlan||null,rankedBeforeEligibility:r.rankedBeforeEligibility||null,selection:r.selection||null,
  usage:r.usage,knownUsage:r.knownUsage||r.usage,usageComplete:r.usageComplete??Boolean(r.usage),estimatedCostUsd:r.estimatedCostUsd,ranked:r.ranked||[],failure:r.failure||null,completedAt:r.completedAt};}
-function selectionFor(receipt,cards,now){
+function selectionFor(receipt,cards,now,after=''){
  const byId=new Map(cards.map(c=>[c.id,c])),ranked=receipt.rankedBeforeEligibility||receipt.ranked||[];
- const eligible=ranked.filter(r=>byId.has(r.id)),above=eligible.filter(r=>r.score>=1),selected=above.slice(0,24);
- return {version:1,minimumScore:1,scoreRange:[0,2],limit:24,evaluatedAt:new Date(now).toISOString(),selectedIds:selected.map(r=>r.id),selectedPaths:selected.map(r=>cardPath(byId.get(r.id))),
-  belowThresholdIds:eligible.filter(r=>r.score<1).map(r=>r.id),unavailableIds:ranked.filter(r=>!byId.has(r.id)).map(r=>r.id),overLimitIds:above.slice(24).map(r=>r.id)};
+ const index=after?ranked.findIndex(r=>r.id===after):-1;
+ if(after&&index<0)return null;
+ // Advance in the immutable ranking, not a freshly filtered list: expiry or
+ // removal before the cursor must never skip an unseen resource.
+ const eligible=ranked.filter(r=>byId.has(r.id)),remaining=ranked.slice(index+1).filter(r=>byId.has(r.id)),selected=remaining.slice(0,24);
+ return {version:2,noticeMinimumScore:1,scoreRange:[0,2],limit:24,after,totalCount:eligible.length,closeMatchCount:eligible.filter(r=>r.score>=1).length,
+  nextCursor:remaining.length>24?selected.at(-1).id:null,evaluatedAt:new Date(now).toISOString(),selectedIds:selected.map(r=>r.id),selectedPaths:selected.map(r=>cardPath(byId.get(r.id))),
+  belowThresholdIds:eligible.filter(r=>r.score<1).map(r=>r.id),unavailableIds:ranked.filter(r=>!byId.has(r.id)).map(r=>r.id),remainingIds:remaining.slice(24).map(r=>r.id)};
 }
 async function inspectReceipt(receipt,db,now){
  const value=publicReceipt(receipt);if(receipt.status!=='ok')return value;
@@ -65,11 +70,13 @@ async function inspectReceipt(receipt,db,now){
    }))}};
  }catch{return {...value,currentInspection:{status:'unavailable',scope:'current-eligible-catalog-not-original-render'}};}
 }
-async function results(receipt,db,now,{persistSelection=false}={}){
+async function results(receipt,db,now,{persistSelection=false,after=''}={}){
  if(receipt.status!=='ok')return error('ranking-failed',503,{receipt:publicReceipt(receipt)});
  if(receipt.model!==MODEL||!Array.isArray(receipt.batches)||receipt.batches.some(b=>b.status!=='ok'||b.model!==MODEL))return error('model-receipt-needs-review');
  const cards=await intentCatalog(db,now),byId=new Map(cards.map(c=>[c.id,c]));
- const selection=selectionFor(receipt,cards,now),html=selection.selectedIds.map(id=>renderCard(byId.get(id))).join('');
+ const selection=selectionFor(receipt,cards,now,after);
+ if(!selection)return error('invalid-cursor',400);
+ const html=selection.selectedIds.map(id=>renderCard(byId.get(id))).join('');
  const saved=persistSelection?{...receipt,selection}:receipt;
  if(persistSelection)await save(db,receipt.requestId,saved);
  return json({status:'ok',receipt:publicReceipt(saved),renderSelection:selection,selectedIds:selection.selectedIds,html});
@@ -84,14 +91,18 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
  const db=env.CONTENT_DB;
  try{
   if(request.method==='GET'){
-   const params=new URL(request.url).searchParams,id=params.get('receipt');
-   if([...params.keys()].some(k=>k!=='receipt')||params.getAll('receipt').length>1||(id&&id!=='latest'&&!/^jev-intent-request:[0-9a-f-]{36}$/.test(id)))return error('invalid-receipt',400);
+   const params=new URL(request.url).searchParams,id=params.get('receipt'),after=params.get('after');
+   if([...params.keys()].some(k=>!['receipt','after'].includes(k))||params.getAll('receipt').length>1||params.getAll('after').length>1||(id&&id!=='latest'&&!/^jev-intent-request:[0-9a-f-]{36}$/.test(id))||
+    (after!==null&&(!id||id==='latest'||!/^[a-z][a-z0-9-]{0,79}$/.test(after))))return error('invalid-receipt',400);
    if(id){
     const row=id==='latest'?await db.prepare("SELECT id,result_json FROM content_checks WHERE id LIKE ? AND json_extract(result_json,'$.ownerScope')=? ORDER BY created_at DESC,id DESC LIMIT 1").bind('jev-intent-request:%',ownerScope).first():await get(db,id),value=parse(row);
     // Legacy/unowned rows stay intact, but cannot be retroactively claimed by
     // someone who merely knows a UUID. Other users get the same404 as missing.
     if(!value||value.ownerScope!==ownerScope)return error('not-found',404);
     if(value.status==='pending')return error('pending-or-interrupted',409,{requestId:value.requestId,...(value.batchPlan?{batchPlan:value.batchPlan}:{})});
+    // Continuation only reads this user's saved scores; it cannot enter the
+    // provider, reservation, recovery, or receipt-write path below.
+    if(after!==null)return await results(value,db,now(),{after});
     return json(await inspectReceipt(value,db,now()));
    }
    const recovery=await get(db,RECOVERY),state=parse(await get(db,INTENT_STATE));
@@ -166,8 +177,8 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    await save(db,requestId,receipt);
    if(!unknownUsage)state.spent=Math.max(0,state.spent-reservation+actualCost);
    if(failed)return error('ranking-failed',503,{receipt:publicReceipt(receipt)});
-   // The score is a relevance position, not a calibrated probability. Return
-   // useful/partial answers (>= the descriptive middle level), never a fake answer.
+   // Relevance orders every eligible resource. The descriptive middle level
+   // controls only the no-close-matches notice, never inclusion or pagination.
    return await results(receipt,db,now(),{persistSelection:true});
   }catch{state.stopped=true;return error('request-interrupted',503);}
   finally{await release();}

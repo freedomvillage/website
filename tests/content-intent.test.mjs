@@ -112,13 +112,13 @@ test('historical successful receipts with an unexpected model cannot bypass the 
  }finally{db.close();}
 });
 
-test('selection trace separates the provisional cutoff from missing candidates; latest inspection never calls Jev or rewrites history',async()=>{
+test('weak matches follow stronger resources; threshold is notice metadata and inspection never rewrites history',async()=>{
  const {db,env,put}=setup(2);try{
  put('visit-help',{...card('visit-help'),title:'Your first Sunday',summary:'Ask about visiting in Yangjae.'});
  const family=JSON.parse(db.prepare('SELECT content_json FROM content_cards WHERE id=?').get('freedom-kids').content_json);family.categories=['families'];family.summary='Bible stories, big questions and room to wonder.';db.prepare('UPDATE content_cards SET content_json=? WHERE id=?').run(JSON.stringify(family),'freedom-kids');
  const seen=[],fetchUpstream=async(url,options)=>{const b=JSON.parse(options.body);seen.push(b);return Response.json({model:'jev-1.14.0',usage:{input_tokens:100,output_tokens:20},answers:Object.fromEntries(b.state.candidates.map((c,i)=>{const direct=c.id==='visit-help',partial=c.id==='freedom-kids';return ['card_'+i,{type:'score',score:direct?2:(partial ? .9 : .6),confidence:.7,probabilities:direct?{0:0,1:0,2:1}:partial?{0:.1,1:.9,2:0}:{0:.4,1:.6,2:0}}];}))});};
  const query='Visiting Seoul in Noviember with children.',input={query,requestId:'jev-intent-request:11111111-1111-4111-8111-111111111111'},options={now:()=>instant,fetchUpstream};
- const response=await handleIntent(request(input),env,options),value=await response.json();assert.equal(response.status,200);assert.deepEqual(value.selectedIds,['visit-help']);assert.deepEqual(value.receipt.selection.selectedIds,['visit-help']);assert(value.receipt.selection.belowThresholdIds.includes('freedom-kids'));assert.equal(value.receipt.rankedBeforeEligibility.find(r=>r.id==='freedom-kids').score,.9);
+ const response=await handleIntent(request(input),env,options),value=await response.json();assert.equal(response.status,200);assert.deepEqual(value.selectedIds,['visit-help','freedom-kids','connect-card']);assert.deepEqual(value.receipt.selection.selectedIds,value.selectedIds);assert.equal(value.renderSelection.closeMatchCount,1);assert.equal(value.renderSelection.totalCount,3);assert.equal(value.renderSelection.nextCursor,null);assert(value.receipt.selection.belowThresholdIds.includes('freedom-kids'));assert.equal(value.receipt.rankedBeforeEligibility.find(r=>r.id==='freedom-kids').score,.9);
  assert(value.receipt.candidateInputs.some(c=>c.id==='freedom-kids'&&c.description===family.summary));assert(!JSON.stringify(value.receipt).includes(query));
  const calls=seen.length,saved=db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(input.requestId).result_json;
  const latest=()=>new Request('https://next.freedomvillage.church/api/content/intent?receipt=latest',{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS'}});
@@ -154,6 +154,54 @@ test('saved receipts, replay and latest are isolated to the originating user, in
 test('unverified identity cannot read D1 or spend; raw identity/owner fields cannot be supplied in the question body',async()=>{
  const {db,env}=setup(2);try{let calls=0;const options={now:()=>instant,fetchUpstream:async()=>{calls++;},resolveOwner:async()=>null};assert.equal((await handleIntent(request(null),env,options)).status,403);assert.equal((await handleIntent(request(),env,options)).status,403);assert.equal(calls,0);
  const body={query:'A question',requestId:'jev-intent-request:11111111-1111-4111-8111-111111111111',ownerScope:OWNER_A};assert.equal((await handleIntent(request(body),env,{...options,resolveOwner:fixtureOwner})).status,400);assert.equal(calls,0);
+ }finally{db.close();}
+});
+
+test('all-zero scores still paginate the full owned ranking without provider spend or receipt writes',async()=>{
+ const {db,env}=setup();try{
+ const seen=[],upstream=provider(seen),options={now:()=>instant,fetchUpstream:async(...args)=>{
+  const response=await upstream(...args),value=await response.json();
+  for(const answer of Object.values(value.answers)){answer.score=0;answer.probabilities={0:1,1:0,2:0};}return Response.json(value);
+ }};
+ let page=await(await handleIntent(request(),env,options)).json();const id=page.receipt.requestId,calls=seen.length,ids=[...page.selectedIds];
+ const saved=db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(id).result_json,state=db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(INTENT_STATE).result_json;
+ assert.equal(page.renderSelection.closeMatchCount,0);assert.equal(page.renderSelection.totalCount,71);assert.equal(ids.length,24);
+ // Continuation is a pure receipt read even when new inference is disabled.
+ const continuationEnv={...env,JEV_ENABLED:'false',TYPESAFE_API_KEY:undefined};
+ while(page.renderSelection.nextCursor){
+  const after=page.renderSelection.nextCursor,url='https://next.freedomvillage.church/api/content/intent?'+new URLSearchParams({receipt:id,after});
+  const get=headers=>new Request(url,{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS',...headers}});
+  assert.equal((await handleIntent(get({'X-Fixture-User':'second'}),continuationEnv,options)).status,404);
+  const response=await handleIntent(get(),continuationEnv,options);assert.equal(response.status,200);assert.match(response.headers.get('Cache-Control'),/no-store/);
+  page=await response.json();assert.equal(page.renderSelection.after,after);assert.equal(page.renderSelection.closeMatchCount,0);ids.push(...page.selectedIds);
+ }
+ assert.equal(ids.length,71);assert.equal(new Set(ids).size,71);assert.deepEqual(ids,page.receipt.ranked.map(r=>r.id));assert.equal(page.selectedIds.length,23);
+ assert.equal(seen.length,calls);assert.equal(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(id).result_json,saved);assert.equal(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(INTENT_STATE).result_json,state);
+ }finally{db.close();}
+});
+
+test('continuation rechecks eligibility without skipping ranked neighbors when earlier cards or the cursor disappear',async()=>{
+ const {db,env}=setup();try{
+ const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)},first=await(await handleIntent(request(),env,options)).json(),cursor=first.renderSelection.nextCursor;
+ const remainder=first.receipt.ranked.slice(24).map(r=>r.id),changed=remainder.slice(0,5);
+ db.prepare('DELETE FROM content_cards WHERE id=?').run(first.selectedIds[0]);db.prepare('DELETE FROM content_cards WHERE id=?').run(cursor);
+ const held=JSON.parse(db.prepare('SELECT content_json FROM content_cards WHERE id=?').get(changed[0]).content_json);held.hold=true;db.prepare('UPDATE content_cards SET content_json=? WHERE id=?').run(JSON.stringify(held),changed[0]);
+ db.prepare("UPDATE content_cards SET status='archived' WHERE id=?").run(changed[1]);db.prepare("UPDATE content_cards SET status='published' WHERE id=?").run(changed[2]);db.prepare('UPDATE content_cards SET expires_at=? WHERE id=?').run(new Date(instant-1).toISOString(),changed[3]);
+ const invalid=JSON.parse(db.prepare('SELECT content_json FROM content_cards WHERE id=?').get(changed[4]).content_json);invalid.isSynthetic=true;db.prepare('UPDATE content_cards SET content_json=? WHERE id=?').run(JSON.stringify(invalid),changed[4]);
+ const ids=[],calls=seen.length;let after=cursor;
+ while(after){const response=await handleIntent(new Request('https://next.freedomvillage.church/api/content/intent?'+new URLSearchParams({receipt:first.receipt.requestId,after}),{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS'}}),env,options);assert.equal(response.status,200);const page=await response.json();ids.push(...page.selectedIds);after=page.renderSelection.nextCursor;for(const id of changed)assert(!page.html.includes('id="card-'+id+'"'));}
+ assert.deepEqual(ids,remainder.slice(5));assert.equal(seen.length,calls);
+ }finally{db.close();}
+});
+
+test('continuation rejects malformed, unknown and duplicate cursors and retains model and pending guards',async()=>{
+ const {db,env}=setup();try{
+ const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)},first=await(await handleIntent(request(),env,options)).json(),id=first.receipt.requestId,calls=seen.length;
+ const get=params=>handleIntent(new Request('https://next.freedomvillage.church/api/content/intent?'+params,{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS'}}),env,options);
+ for(const params of ['after=connect-card','receipt=latest&after=connect-card','receipt='+id+'&after=','receipt='+id+'&after=../bad','receipt='+id+'&after=connect-card&after=freedom-kids','receipt='+id+'&after=unknown-card'])assert.equal((await get(params)).status,400);
+ const row=JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(id).result_json);row.batches[0].model='unexpected';db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').run(JSON.stringify(row),id);
+ assert.equal((await get(new URLSearchParams({receipt:id,after:'connect-card'}))).status,409);
+ row.status='pending';db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').run(JSON.stringify(row),id);assert.equal((await get(new URLSearchParams({receipt:id,after:'connect-card'}))).status,409);assert.equal(seen.length,calls);
  }finally{db.close();}
 });
 test('failed and uncertain batches never claim future planned inputs were sent',async()=>{

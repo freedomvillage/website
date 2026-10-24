@@ -1,14 +1,32 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
 const source=fs.readFileSync('dist/intent.js','utf8');
 function setup(fetch){
- const nodes=Object.fromEntries(['prompt-composer','prompt-text','prompt-submit','composer-status'].map(id=>[id,{dataset:{},attrs:{},setAttribute(k,v){this.attrs[k]=v;},removeAttribute(k){delete this.attrs[k];},focus(){this.focused=true;}}]));
- const rendered=[],context={document:{getElementById:id=>nodes[id]},fetch,crypto:{randomUUID:()=> '11111111-1111-4111-8111-111111111111'},AbortSignal,contentView:{showIntent:html=>rendered.push(html)}};
+ const node=()=>({dataset:{},attrs:{},handlers:{},setAttribute(k,v){this.attrs[k]=v;},removeAttribute(k){delete this.attrs[k];},focus(){this.focused=true;},addEventListener(k,v){this.handlers[k]=v;},remove(){this.removed=true;}});
+ const nodes=Object.fromEntries(['prompt-composer','prompt-text','prompt-submit','composer-status','grid'].map(id=>[id,node()]));nodes.grid.after=el=>{nodes[el.id]=el;};
+ const rendered=[],context={document:{getElementById:id=>nodes[id],createElement:node},fetch,URLSearchParams,crypto:{randomUUID:()=> '11111111-1111-4111-8111-111111111111'},AbortSignal,contentView:{showIntent:(html,options)=>rendered.push({html,options})}};
  vm.createContext(context);vm.runInContext(source,context);return {context,nodes,rendered};
 }
-const ok=()=>Response.json({status:'ok',selectedIds:['connect-card'],html:'<article class="card">Connect</article>',receipt:{status:'ok',requestId:'jev-intent-request:11111111-1111-4111-8111-111111111111'}});
+const result=(selection={})=>{const s={version:2,selectedIds:['connect-card'],after:'',nextCursor:null,totalCount:1,closeMatchCount:1,...selection};return {status:'ok',selectedIds:s.selectedIds,html:'<article class="card">Connect</article>',renderSelection:s,receipt:{status:'ok',requestId:'jev-intent-request:11111111-1111-4111-8111-111111111111'}};};
+const ok=()=>Response.json(result());
 test('actual query goes only to the same-origin POST and returned cards render; no automatic second request',async()=>{
  let calls=0;const {context,nodes,rendered}=setup(async(url,options)=>{calls++;assert.equal(url,'/api/content/intent');assert.equal(options.method,'POST');assert.equal(options.credentials,'same-origin');assert.equal(options.redirect,'error');assert.equal(JSON.parse(options.body).query,'Children and community');return ok();});
- await context.submitVisitorIntent(' Children and community ');assert.equal(calls,1);assert.equal(rendered.length,1);assert(nodes['composer-status'].textContent.includes('1 matches'));assert.equal(nodes['prompt-submit'].disabled,false);assert.equal(nodes['prompt-composer'].attrs['aria-busy'],undefined);assert(nodes['prompt-composer'].dataset.receipt);assert.equal(nodes['prompt-text'].maxLength,500);
+ await context.submitVisitorIntent(' Children and community ');assert.equal(calls,1);assert.equal(rendered.length,1);assert(nodes['composer-status'].textContent.includes('resources ranked'));assert.equal(nodes['prompt-submit'].disabled,false);assert.equal(nodes['prompt-composer'].attrs['aria-busy'],undefined);assert(nodes['prompt-composer'].dataset.receipt);assert.equal(nodes['prompt-text'].maxLength,500);
+});
+test('no-close notice retains results and continuation reads the saved ranking with one single-flight GET',async()=>{
+ let calls=0,release;const wait=new Promise(r=>release=r),requests=[];
+ const {context,nodes,rendered}=setup(async(url,options)=>{requests.push({url,options});if(++calls===1)return Response.json(result({totalCount:2,closeMatchCount:0,nextCursor:'connect-card'}));await wait;return Response.json(result({selectedIds:['freedom-kids'],after:'connect-card',totalCount:2,closeMatchCount:0}));});
+ await context.submitVisitorIntent('An unrelated question');assert(nodes['composer-status'].textContent.includes('No close matches'));assert.equal(rendered.length,1);
+ const more=nodes['intent-more'],first=more.handlers.click();await more.handlers.click();assert.equal(calls,2);assert.equal(more.disabled,true);assert.equal(requests[1].options.method,undefined);assert.equal(requests[1].options.body,undefined);assert(requests[1].url.includes('after=connect-card'));assert(!requests[1].url.includes('unrelated'));
+ release();await first;assert.equal(rendered.length,2);assert.equal(rendered[1].options.append,true);assert.equal(more.removed,true);assert(nodes['composer-status'].textContent.includes('No close matches'));
+});
+test('continuation failure can retry the same saved page; a new question discards a stale page',async()=>{
+ let calls=0,release;const wait=new Promise(r=>release=r),requests=[];
+ const {context,nodes,rendered}=setup(async(url,options)=>{requests.push(url);calls++;if(calls===1)return Response.json(result({totalCount:2,nextCursor:'connect-card'}));if(calls===2)throw Error('Synthetic network failure');if(calls===3){await wait;return Response.json(result({selectedIds:['freedom-kids'],after:'connect-card',totalCount:2}));}return ok();});
+ await context.submitVisitorIntent('First question');const old=nodes['intent-more'];await old.handlers.click();assert(old.textContent.includes('Try again'));const stale=old.handlers.click();await context.submitVisitorIntent('New question');release();await stale;
+ assert.equal(requests[1],requests[2]);assert.equal(rendered.length,2);assert(rendered.every(r=>!r.options.append));assert.equal(old.removed,true);assert.equal(nodes['prompt-submit'].disabled,false);
+});
+test('invalid paging metadata never replaces existing results',async()=>{
+ for(const selection of [{version:1},{totalCount:-1},{closeMatchCount:2},{nextCursor:'other-card'}]){const {context,rendered}=setup(async()=>Response.json(result(selection)));await context.submitVisitorIntent('Question');assert.equal(rendered.length,0);}
 });
 test('pending submit is single flight and uncertain retry reuses the exact claim',async()=>{
  let release;const wait=new Promise(r=>release=r),requests=[];const {context,nodes}=setup(async(_,options)=>{requests.push(JSON.parse(options.body));await wait;throw Error('Unconfirmed outcome');});
