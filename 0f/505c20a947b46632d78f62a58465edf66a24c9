@@ -1,0 +1,24 @@
+dist/feed-history.js
+  h_9a6e2a87fc4a0d 22,37-38,43-51
+docs/JEV-FIRST-LIVE-RECEIPT.md
+  h_9a6e2a87fc4a0d 7-13,40-42,52-68
+source-manifest.json
+  h_9a6e2a87fc4a0d 107
+src/content/intent.mjs
+  h_9a6e2a87fc4a0d 3,49,51-67,71-74,83-88,144,150-151,158
+tests/content-intent.test.mjs
+  h_9a6e2a87fc4a0d 110-134
+tests/feed-history.test.mjs
+  h_9a6e2a87fc4a0d 63-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0f505c20a947b46632d78f62a58465edf66a24c9",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
