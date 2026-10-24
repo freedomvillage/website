@@ -1,0 +1,38 @@
+dist/composer.js
+  h_9a6e2a87fc4a0d 25
+dist/content-view.js
+  h_9a6e2a87fc4a0d 3,72,80,93-105
+dist/index.html
+  h_9a6e2a87fc4a0d 6
+dist/intent.js
+  h_9a6e2a87fc4a0d 1-27
+docs/JEV-VISITOR-INTENT.md
+  h_9a6e2a87fc4a0d 1-56
+package.json
+  h_9a6e2a87fc4a0d 7
+source-manifest.json
+  h_9a6e2a87fc4a0d 15,98,102,105-106
+src/content/intent.mjs
+  h_9a6e2a87fc4a0d 1-134
+src/content/jev.mjs
+  h_9a6e2a87fc4a0d 1-2,93,104
+src/worker.mjs
+  h_9a6e2a87fc4a0d 6,49
+tests/composer.cjs
+  h_9a6e2a87fc4a0d 29,46
+tests/content-intent.test.mjs
+  h_9a6e2a87fc4a0d 1-86
+tests/intent-client.test.mjs
+  h_9a6e2a87fc4a0d 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3ee73df81d48409c67b305ed894683f41b4cbe2d",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
