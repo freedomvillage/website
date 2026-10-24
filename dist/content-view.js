@@ -6,6 +6,8 @@
  function motionState(){for(const el of motionItems)el.classList.toggle('is-visible',el.dataset.inView==='true'&&!document.hidden&&!reduced.matches);}
  const observer=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{for(const e of entries)e.target.dataset.inView=String(e.isIntersecting);motionState();},{threshold:.05}):null;
  function enhance(scope=document){
+  for(const disclosure of scope.querySelectorAll('.craft-reveal'))if(!disclosure.dataset.ready){disclosure.dataset.ready='true';disclosure.addEventListener('toggle',()=>requestAnimationFrame(()=>{if(typeof sizeCards==='function')sizeCards();}));}
+
   for(const el of scope.querySelectorAll('.has-motion'))if(!motionItems.has(el)){
    motionItems.add(el);observer?.observe(el);
   }

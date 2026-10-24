@@ -1,3 +1,4 @@
+import {renderCraftCard,renderCraftArt} from './card-craft.mjs';
 // Structured source content only: no stored HTML, script or arbitrary styling is rendered.
 export const escape=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 export const CORE_PAGES=Object.freeze({'/connect':'connect-card','/give':'giving-overview','/prayer':'prayer-and-praise','/resources':'church-resources'});
@@ -9,6 +10,7 @@ function motif(name){
  return shapes[name]?`<svg class="library-motif" viewBox="0 0 200 200" aria-hidden="true" focusable="false">${shapes[name]}</svg>`:'';
 }
 function genericArt(c,detail=false){
+ if(detail){const crafted=renderCraftArt(c,escape);if(crafted)return crafted;}
  if(c.media?.kind==='image'){
   const m=c.media,label={synthetic:'Concept artwork · synthetic portraits',historical:'Archive photograph','private-draft':'Private image draft','source-artwork':'Source artwork'}[m.disclosure];
   return `<figure class="library-image"><div class="library-image-frame" style="aspect-ratio:${m.ratio.replace(':','/')}"><img src="${escape(m.src)}" alt="${escape(m.alt)}" width="${m.width}" height="${m.height}" loading="lazy" decoding="async" style="object-fit:${m.fit};object-position:${m.focalPoint.x}% ${m.focalPoint.y}%"></div><figcaption>${escape(label)} · ${escape(m.caption)}</figcaption></figure>`;
@@ -22,6 +24,7 @@ export function renderLibraryCard(c,namespace='',headingLevel=2){
  const heading=headingLevel===3?'h3':'h2';
  namespace=typeof namespace==='string'?namespace:'';
  const domId=escape((namespace?namespace+'-':'')+'card-'+c.id);
+ const crafted=renderCraftCard(c,{escape,cardPath,heading,domId});if(crafted)return crafted;
  if(['actions','utility'].includes(c.template))return `<article class="card library-card practical-card theme-${c.design.theme}" id="${domId}"><div class="library-copy"><${heading}><a href="${cardPath(c)}">${escape(c.title)}</a></${heading}>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div><div class="practical-actions">${c.actions.map(a=>`<a ${actionAttrs(a)}>${escape(a.label)} <span aria-hidden="true">↗</span></a>`).join('')}</div></article>`;
  const motion=c.design.motion==='gradient',art=genericArt(c);
  return `<article class="card library-card theme-${c.design.theme} layout-${c.design.layout} size-${c.design.size}${motion?' has-motion':''}" id="${domId}"><a class="library-card-link" href="${cardPath(c)}"><div class="library-copy"><${heading}>${escape(c.title)}</${heading}>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div>${art}</a></article>`;
