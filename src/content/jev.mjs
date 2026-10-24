@@ -10,7 +10,7 @@ const LEVELS = [
 const unit = x => typeof x === 'number' && Number.isFinite(x) && x >= 0 && x <= 1;
 const integer = x => Number.isSafeInteger(x) && x >= 0;
 const MODEL=/^jev-[a-zA-Z0-9._-]{1,80}$/;
-const VALIDATION_CODES=new Set(['model','answer-count','usage','answer-type','confidence','score','probability-shape','probability-range','probability-sum','score-consistency']);
+const VALIDATION_CODES=new Set(['model','answer-count','answer-keys','usage','answer-type','confidence','score','probability-shape','probability-range','probability-sum','score-consistency']);
 function invalid(code,index=null){const error=new TypeError('Invalid ranking result');error.validationCode=code;error.questionIndex=index;throw error;}
 
 export function rankingRequest(query, publishedCards, model='jev-latest') {
@@ -39,26 +39,35 @@ export function rankingRequest(query, publishedCards, model='jev-latest') {
   return body;
 }
 
+class BodyFailure extends Error {
+  constructor(code){super('Invalid response body');this.code=code;}
+}
+const failure=(stage,code)=>({version:1,stage,code});
 async function boundedJson(response) {
-  if (!response.body) throw new Error('Invalid response');
+  if (!response.body) throw new BodyFailure('body-missing');
   const reader = response.body.getReader(), chunks = []; let length = 0;
   try {
     while (true) {
       const {done,value} = await reader.read(); if (done) break;
       length += value.byteLength;
-      if (length > 65536) { await reader.cancel(); throw new Error('Invalid response'); }
+      if (length > 65536) { try { await reader.cancel(); } catch {} throw new BodyFailure('body-too-large'); }
       chunks.push(value);
     }
+  } catch(error) {
+    throw error instanceof BodyFailure?error:new BodyFailure('body-read');
   } finally { reader.releaseLock(); }
   const bytes = new Uint8Array(length); let offset = 0;
   for (const chunk of chunks) { bytes.set(chunk,offset); offset += chunk.length; }
-  return JSON.parse(new TextDecoder().decode(bytes));
+  if(!length)throw new BodyFailure('body-empty');
+  let text;try{text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch{throw new BodyFailure('body-encoding');}
+  try{return JSON.parse(text);}catch{throw new BodyFailure('body-json');}
 }
 
 export function rankingResult(payload, request) {
   const keys = Object.keys(request.questions);
   if(typeof payload?.model!=='string'||!MODEL.test(payload.model))invalid('model');
   if(!payload.answers||Array.isArray(payload.answers)||typeof payload.answers!=='object'||Object.keys(payload.answers).length!==keys.length)invalid('answer-count');
+  if(!keys.every(key=>Object.hasOwn(payload.answers,key)))invalid('answer-keys');
   if(!integer(payload.usage?.input_tokens)||!integer(payload.usage?.output_tokens))invalid('usage');
   const ranked = keys.map((key,i) => {
     const a = payload.answers[key], probabilities = a?.probabilities;
@@ -88,16 +97,20 @@ export async function rankPublishedCards(query, publishedCards, env, {fetchUpstr
   let request;
   try { request = rankingRequest(query, publishedCards,model); }
   catch { return {status:'invalid-input', ranked:[]}; }
+  let response;
   try {
-    const response = await fetchUpstream(ENDPOINT, {method:'POST', redirect:'manual',
+    response = await fetchUpstream(ENDPOINT, {method:'POST', redirect:'manual',
       headers:{Authorization:`Bearer ${env.TYPESAFE_API_KEY}`, 'Content-Type':'application/json', Accept:'application/json'},
       body:JSON.stringify(request), signal:AbortSignal.timeout(8000)});
-    if (!response.ok) return {status:'unavailable', category:'http', httpStatus:response.status, ranked:[]};
-    const payload=await boundedJson(response);
-    try { return rankingResult(payload, request); }
-    catch(error) { return {status:'unavailable',category:'invalid-response',httpStatus:response.status,ranked:[],
+  } catch(error) { return {status:'unavailable',category:'transport-or-body',ranked:[],failure:failure('transport',['TimeoutError','AbortError'].includes(error?.name)?'request-timeout-or-abort':'request-failed')}; }
+  if (!response.ok) return {status:'unavailable', category:'http', httpStatus:response.status, ranked:[],failure:failure('http','upstream-status')};
+  let payload;
+  try { payload=await boundedJson(response); }
+  catch(error) { return {status:'unavailable',category:'transport-or-body',httpStatus:response.status,ranked:[],failure:failure('body',error instanceof BodyFailure?error.code:'body-read')}; }
+  try { return rankingResult(payload, request); }
+  catch(error) { return {status:'unavailable',category:'invalid-response',httpStatus:response.status,ranked:[],
+      failure:failure('schema',VALIDATION_CODES.has(error?.validationCode)?error.validationCode:'unknown'),
       validation:{code:VALIDATION_CODES.has(error?.validationCode)?error.validationCode:'unknown',questionIndex:Number.isSafeInteger(error?.questionIndex)&&error.questionIndex>=0&&error.questionIndex<publishedCards.length?error.questionIndex:null,answerCount:payload?.answers&&typeof payload.answers==='object'&&Object.keys(payload.answers).length<=1000?Object.keys(payload.answers).length:null,model:typeof payload?.model==='string'&&MODEL.test(payload.model)?payload.model:null},
       ...(integer(payload?.usage?.input_tokens)&&integer(payload?.usage?.output_tokens)?
         {usage:{inputTokens:payload.usage.input_tokens,outputTokens:payload.usage.output_tokens}}:{})}; }
-  } catch { return {status:'unavailable', category:'transport-or-body', ranked:[]}; }
 }
