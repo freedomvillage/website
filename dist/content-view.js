@@ -3,7 +3,11 @@
  let started=false,loading=false;
  const motionItems=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)');
  function legacyLink(){const p=new URLSearchParams(location.hash.slice(1)),id=p.get('story');if(id&&/^[a-z][a-z0-9-]{0,79}$/.test(id)){location.replace('/events/'+id);return true;}if(location.hash==='#all'){location.replace('/');return true;}return false;}
- function motionState(){for(const el of motionItems)el.classList.toggle('is-visible',el.dataset.inView==='true'&&!document.hidden&&!reduced.matches);}
+ function motionState(){for(const el of motionItems){
+  const inView=el.dataset.inView==='true'&&!document.hidden;
+  el.classList.toggle('is-visible',inView&&!reduced.matches);
+  if(inView&&el.dataset.artEntrance==='true'&&!el.dataset.artSeen){el.dataset.artSeen='true';if(!reduced.matches)el.classList.add('art-entered');}
+ }}
  const observer=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{for(const e of entries)e.target.dataset.inView=String(e.isIntersecting);motionState();},{threshold:.05}):null;
  function enhance(scope=document){
   for(const disclosure of scope.querySelectorAll('.craft-reveal'))if(!disclosure.dataset.ready){disclosure.dataset.ready='true';disclosure.addEventListener('toggle',()=>requestAnimationFrame(()=>{if(typeof sizeCards==='function')sizeCards();}));}

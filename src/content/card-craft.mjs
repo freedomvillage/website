@@ -26,7 +26,7 @@ function reveal(c,label,helpers,includeDetail=true){
  return links||paragraphs?`<details class="craft-reveal"><summary>${label}</summary><div class="craft-reveal-body">${player}${paragraphs}${links?`<div class="craft-links">${links}</div>`:''}</div></details>`:'';
 }
 const title=(c,{heading,cardPath,escape})=>`<${heading}><a href="${cardPath(c)}">${escape(c.title)}</a></${heading}>`;
-const attrs=(c,type,domId)=>`class="card content-presentation presentation-${type} size-${c.design.size}" id="${domId}"`;
+const attrs=(c,type,domId)=>`class="card content-presentation presentation-${type} size-${c.design.size}${type==='teaching'?' has-motion':''}"${type==='teaching'?' data-art-entrance="true"':''} id="${domId}"`;
 export function renderCraftCard(c,helpers){
  const type=kind(c);if(!type)return '';
  const {escape,domId}=helpers,art=renderCraftArt(c,escape);

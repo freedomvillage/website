@@ -128,3 +128,8 @@ html[data-site-revealed="true"] .has-motion.is-visible .library-brand-art{animat
 
 /* One illustration breaks its own color field, within the column's hit/scroll bounds. */
 .card.content-presentation{min-width:0;isolation:isolate}.content-presentation h2,.content-presentation h3{overflow-wrap:anywhere}.content-presentation .craft-art,.content-presentation .craft-visit-mark{pointer-events:none}.presentation-teaching .craft-teaching-window{position:relative;margin:20px 10px 0;padding-bottom:8px}.presentation-teaching .craft-teaching-window::before{content:"";position:absolute;inset:18% 2% 0;background:#e6c5b3;border-radius:56% 54% 18% 14%;pointer-events:none}.presentation-teaching .craft-teaching-window .craft-art{position:relative;z-index:1;transform:translateY(-16px)}.community-collage .craft-community-art{min-width:0;max-width:calc(100% - 8px);margin:0 4px}.craft-reveal,.craft-links{position:relative;overflow:visible}
+
+/* A single finite illustration entrance; no text reveal, fade or brightness change. */
+html[data-site-revealed="true"] .presentation-teaching.art-entered .craft-teaching-window .craft-art{animation:teaching-settle .65s cubic-bezier(.2,.7,.2,1) 1}
+@keyframes teaching-settle{from{transform:translateY(-3px) rotate(-1deg)}to{transform:translateY(-16px) rotate(0)}}
+@media(prefers-reduced-motion:reduce){.presentation-teaching .craft-teaching-window .craft-art{animation:none!important}}
