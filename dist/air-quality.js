@@ -22,7 +22,8 @@
    const state = options.getState();
    return {manual:!!state.manual, hidden:!!state.hidden, visualNight:Number(state.visualNight) > 0, realNight:!!options.isRealNight(time)};
   }
-  function allowed(state) { return !state.manual && !state.hidden && state.visualNight && state.realNight; }
+  // Fetch the shared cache by real conditions, never by the chosen scene theme.
+  function allowed(state) { return !state.manual && !state.hidden && state.realNight; }
   function cancelPending() { serial++; if (pending) { pending.controller?.abort(); cancelTimeout(pending.timeout); pending = null; } }
   function clearExpiry() { if (expiryTimer !== null) cancelTimeout(expiryTimer); expiryTimer = null; }
   function display(state, time, reason) {
@@ -34,7 +35,8 @@
    // Every callback rechecks wall time, so sleep/throttling or clock changes cannot revive stale data.
    if (fresh) expiryTimer = scheduleTimeout(() => { expiryTimer = null; const time = now(); display(stateAt(time),time); }, Math.max(1,Date.parse(fresh.validUntil)-time));
    if (state.manual) return;
-   const valid = state.realNight && state.visualNight ? fresh : null;
+   // Observation validity is independent of whether the scene can display haze.
+   const valid = fresh;
    options.render(valid || {status:'unknown',pm25:null,observedAt:null,validUntil:null,reason:reason || (!state.realNight ? 'daytime' : !state.visualNight ? 'scene-daytime' : 'missing-or-stale')});
   }
   async function tick() {

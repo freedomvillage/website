@@ -95,12 +95,13 @@
   ],
   "adaptedFiles": {
     "dist/app.js": "60b141f12391a68ca8b07c7e36b8a9f73e6f4ca980c78d013bfa1592a86f413b",
-    "dist/index.html": "42ef45e5a3407f31138a9ab01f49a71cc166c0d209f655d07a555521858e3cdf",
-    "dist/air-quality.js": "42b8d579f29bcc3d273c5753c7f3878b4c9144dcb46249e8eb372f2b79815861",
+    "dist/index.html": "c598b51d1b7085eb1d41fab27ab54e9dfc249be9403e413dd600d7595c939c97",
+    "dist/air-quality.js": "6b6d4943437566d35a59b1c917da9ac923117f13eea03e79ad6f0985931d401d",
     "dist/scene-bootstrap.js": "988e71208ae9f5170c3baba601f4a95def1e0050f08d3bd8643a85cd494d4a6c",
     "dist/scene-clock.js": "d2898bf2e4b94e9f78c8b9d046da6c472f2f90895f02d19b25dc2bcc72e3b3d3",
     "dist/content-view.js": "6e3c7f05a3647f1f2d292aa5d7a19bf395229895cdd278fcb546dbac5af44ce2",
-    "dist/content-view.css": "ca445e26eb7c467d31717ef06a982d5f6187c0a0fded479a2c36f8ef6114db2a"
+    "dist/content-view.css": "ca445e26eb7c467d31717ef06a982d5f6187c0a0fded479a2c36f8ef6114db2a",
+    "dist/composer.js": "da68a00e8748d8b917f9e0b71345a95049e6b8e7778ffa971fd73fa273865d96"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
   "adaptation": "Shared night-only air-quality cache and one-hour observation limit, reconciled with approved UI runtime and artwork overlays; original paintings unchanged.",
