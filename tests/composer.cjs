@@ -32,7 +32,7 @@ const html=fs.readFileSync('dist/index.html','utf8'),ids=[...html.matchAll(/\bid
 // Real client -> measured state -> modal, with actual mode buttons and fixed time.
 (async()=>{
  let cacheReads=0;nodes['scene-air-manual'].checked=false;vm.runInContext("setAppearanceMode('light')",c);
- c.airQualityClient=c.createAirQualityClient({now:()=>now,getState:()=>({visualNight:vm.runInContext("appearanceMode==='light'?0:1",c),manual:false,hidden:false}),isRealNight:()=>true,
+ c.airQualityClient=c.createAirQualityClient({now:()=>now,clearInterval(){},getState:()=>({visualNight:vm.runInContext("appearanceMode==='light'?0:1",c),manual:false,hidden:false}),isRealNight:()=>true,
   fetch:async()=>{cacheReads++;return {ok:true,json:async()=>({status:'ok',pm25:9,station:'용산구',observedAt:new Date(now-15*60000).toISOString(),validUntil:new Date(now+45*60000).toISOString()})};},
   render:reading=>{c.measuredResult=reading;vm.runInContext('liveAirReading=measuredResult;updateActualAirSummary()',c);}});
  await c.airQualityClient.tick();assert.equal(nodes['actual-air-value'].textContent,'9 µg/m³');assert.equal(nodes['actual-air-summary'].hidden,false);
