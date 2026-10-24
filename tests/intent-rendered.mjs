@@ -57,7 +57,9 @@ try{
   await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='24 ranked resources loaded');
   await page.screenshot({path:resolve(output,name+'-ranked-head.png')});
   const calls=providerCalls;
+  await page.locator('#intent-more').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(output,name+'-more.png')});
   failPage=true;await page.locator('#intent-more').click();await page.getByRole('button',{name:'Could not load. Try again ↓'}).waitFor();
+  await page.screenshot({path:resolve(output,name+'-retry.png')});
   await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='48 ranked resources loaded');
   await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='71 ranked resources loaded');
   assert.equal(await page.locator('#intent-more').count(),0);assert.equal(providerCalls,calls);
