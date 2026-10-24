@@ -1,0 +1,14 @@
+tests/prototype-copy.test.mjs
+  h_9a6e2a87fc4a0d 46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e595979ff24cee436b42f67512d2883a5092c3d8",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
