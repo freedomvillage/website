@@ -124,3 +124,11 @@ test('ministry detail presents an introduction and local next step before long p
   assert(!html.includes('Pause background animation'));
  }finally{db.close();}
 });
+
+test('persistent Connect and Give actions remain same-tab internal navigation',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const html=readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
+ const links=[...html.matchAll(/<a\b[^>]*href="\/(?:connect|give)"[^>]*>[^<]*<\/a>/g)].map(m=>m[0]);
+ assert.equal(links.length,4);
+ for(const link of links){assert(!link.includes('target="_blank"'));assert(!link.includes('↗'));}
+});
