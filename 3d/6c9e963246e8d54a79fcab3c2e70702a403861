@@ -1,0 +1,30 @@
+dist/content-view.css
+  h_9a6e2a87fc4a0d 113-120
+dist/content-view.js
+  h_9a6e2a87fc4a0d 41-56,82
+docs/PROTOTYPE-COPY.md
+  h_9a6e2a87fc4a0d 12-17
+package.json
+  h_9a6e2a87fc4a0d 7
+source-manifest.json
+  h_9a6e2a87fc4a0d 102-103
+src/content/prototype-copy-data.mjs
+  h_9a6e2a87fc4a0d 3,199-240
+src/content/prototype-copy.mjs
+  h_9a6e2a87fc4a0d 9-14
+src/content/render.mjs
+  h_9a6e2a87fc4a0d 37-41,44
+tests/connect-draft.test.mjs
+  h_9a6e2a87fc4a0d 1-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3d6c9e963246e8d54a79fcab3c2e70702a403861",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
