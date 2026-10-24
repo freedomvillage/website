@@ -107,3 +107,28 @@ test('historical successful receipts with an unexpected model cannot bypass the 
  const fresh=await handleIntent(request({query:'Another question',requestId:'jev-intent-request:22222222-2222-4222-8222-222222222222'}),env,{...options,now:()=>instant+11000});assert.equal(fresh.status,409);assert.equal((await fresh.json()).status,'recovery-needs-review');assert.equal(seen.length,count);
  }finally{db.close();}
 });
+
+test('selection trace separates the provisional cutoff from missing candidates; latest inspection never calls Jev or rewrites history',async()=>{
+ const {db,env,put}=setup(2);try{
+ put('visit-help',{...card('visit-help'),title:'Your first Sunday',summary:'Ask about visiting in Yangjae.'});
+ const family=JSON.parse(db.prepare('SELECT content_json FROM content_cards WHERE id=?').get('freedom-kids').content_json);family.categories=['families'];family.summary='Bible stories, big questions and room to wonder.';db.prepare('UPDATE content_cards SET content_json=? WHERE id=?').run(JSON.stringify(family),'freedom-kids');
+ const seen=[],fetchUpstream=async(url,options)=>{const b=JSON.parse(options.body);seen.push(b);return Response.json({model:'jev-1.14.0',usage:{input_tokens:100,output_tokens:20},answers:Object.fromEntries(b.state.candidates.map((c,i)=>{const direct=c.id==='visit-help',partial=c.id==='freedom-kids';return ['card_'+i,{type:'score',score:direct?2:(partial ? .9 : .6),confidence:.7,probabilities:direct?{0:0,1:0,2:1}:partial?{0:.1,1:.9,2:0}:{0:.4,1:.6,2:0}}];}))});};
+ const query='Visiting Seoul in Noviember with children.',input={query,requestId:'jev-intent-request:11111111-1111-4111-8111-111111111111'},options={now:()=>instant,fetchUpstream};
+ const response=await handleIntent(request(input),env,options),value=await response.json();assert.equal(response.status,200);assert.deepEqual(value.selectedIds,['visit-help']);assert.deepEqual(value.receipt.selection.selectedIds,['visit-help']);assert(value.receipt.selection.belowThresholdIds.includes('freedom-kids'));assert.equal(value.receipt.rankedBeforeEligibility.find(r=>r.id==='freedom-kids').score,.9);
+ assert(value.receipt.candidateInputs.some(c=>c.id==='freedom-kids'&&c.description===family.summary));assert(!JSON.stringify(value.receipt).includes(query));
+ const calls=seen.length,saved=db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(input.requestId).result_json;
+ const latest=()=>new Request('https://next.freedomvillage.church/api/content/intent?receipt=latest',{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS'}});
+ const inspection=await(await handleIntent(latest(),env,options)).json();assert.equal(inspection.requestId,input.requestId);assert.equal(inspection.currentInspection.scope,'current-eligible-catalog-not-original-render');assert.equal(inspection.currentInspection.familyAndVisitInputs.find(c=>c.projection.id==='freedom-kids').savedScore.score,.9);assert.equal(seen.length,calls);assert.equal(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(input.requestId).result_json,saved);
+ // Older live receipts have no original selection/input snapshot. A current
+ // reinspection must never present a new inference as their actual past render.
+ const old=JSON.parse(saved);delete old.selection;delete old.candidateInputs;delete old.rankedBeforeEligibility;db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').run(JSON.stringify(old),input.requestId);
+ const legacy=await(await handleIntent(latest(),env,options)).json();assert.equal(legacy.selection,null);assert.equal(legacy.candidateInputs,null);assert(legacy.currentInspection);assert.equal(seen.length,calls);
+ }finally{db.close();}
+});
+test('latest pending receipt and unavailable current inspection are read-only, truthful outcomes',async()=>{
+ const {db,env}=setup(2);try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)};const first=await(await handleIntent(request(),env,options)).json(),calls=seen.length;
+ const latest=()=>new Request('https://next.freedomvillage.church/api/content/intent?receipt=latest',{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS'}});
+ failCatalogReads(env,1);const inspected=await(await handleIntent(latest(),env,options)).json();assert.equal(inspected.status,'ok');assert.equal(inspected.currentInspection.status,'unavailable');assert.equal(seen.length,calls);
+ const id='jev-intent-request:22222222-2222-4222-8222-222222222222';db.prepare('INSERT INTO content_checks VALUES(?,?,?)').run(id,null,new Date(instant+1000).toISOString());const pending=await handleIntent(latest(),env,options);assert.equal(pending.status,409);assert.deepEqual(await pending.json(),{status:'pending-or-interrupted',requestId:id});assert.equal(seen.length,calls);assert(first.receipt.selection);
+ }finally{db.close();}
+});
