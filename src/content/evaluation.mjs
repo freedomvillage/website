@@ -9,7 +9,8 @@ export function validFixtures(value){
  return value?.version===1&&value.isSyntheticQuery===true&&Array.isArray(value.cases)&&value.cases.length>0&&value.cases.length<=MAX_CASES&&
  new Set(value.cases.map(c=>c?.id)).size===value.cases.length&&value.cases.every(c=>typeof c?.id==='string'&&ID.test(c.id)&&typeof c.query==='string'&&c.query.trim()&&c.query.length<=500&&Array.isArray(c.expectedUsefulIds)&&c.expectedUsefulIds.length<=16&&c.expectedUsefulIds.every(id=>typeof id==='string'&&ID.test(id)));
 }
-async function catalog(env){let items=[],after='';for(let page=0;page<4;page++){const result=await readCatalog(env.CONTENT_DB,{after});items.push(...result.items);if(items.length>64)throw Error('Catalog too large');if(!result.nextCursor)return items;after=result.nextCursor;}throw Error('Catalog too large');}
+class CatalogLimitError extends Error {}
+async function catalog(env,limit=64){let items=[],after='';for(let page=0;page<12;page++){const result=await readCatalog(env.CONTENT_DB,{after});items.push(...result.items);if(items.length>limit)throw new CatalogLimitError('Catalog too large');if(!result.nextCursor)return items;after=result.nextCursor;}throw new CatalogLimitError('Catalog too large');}
 export function comparisons(query,cards,result,expected){
  const lexical=lexicalRank(query,cards),top=ranked=>ranked.slice(0,5).map(x=>x.id),hits=ids=>expected.filter(id=>ids.includes(id));
  const modelTop=top(result.ranked||[]),lexicalTop=top(lexical),candidateIds=lexical.filter(x=>x.score>0).slice(0,20).map(x=>x.id);
@@ -20,9 +21,9 @@ export function comparisons(query,cards,result,expected){
 function list(ranked,cards,semantic=false){const map=new Map(cards.map(c=>[c.id,c]));return `<ol>${(ranked||[]).slice(0,8).map(r=>{const c=map.get(r.id);return `<li>${c?`<a href="${cardPath(c)}">${escape(c.title)}</a>`:escape(r.id)} · score ${Number(r.score).toFixed(3)}${semantic?' · confidence '+Number(r.confidence).toFixed(3):''}</li>`;}).join('')}</ol>`;}
 function page(fixtures,rows,cards,notice=''){
  const byId=new Map(rows.map(r=>[r.id,r.result_json?JSON.parse(r.result_json):{status:'pending-or-interrupted'}]));
- const stopped=rows.length>=MAX_CASES||rows.some(r=>!r.result_json||JSON.parse(r.result_json).status!=='ok');
+ const oversized=cards.length>64,stopped=oversized||rows.length>=MAX_CASES||rows.some(r=>!r.result_json||JSON.parse(r.result_json).status!=='ok');
  const contents=fixtures.cases.map(c=>{const result=byId.get(PREFIX+c.id);return `<section><h2>${escape(c.id)}</h2><blockquote>${escape(c.query)}</blockquote>${result?`<p>Status: ${escape(result.status)}</p>${result.status==='ok'?`<div class="comparison"><div><h3>Jev</h3>${list(result.ranked,cards,true)}</div><div><h3>Lexical / phrase / typo baseline</h3>${list(result.comparison.lexical,cards)}</div></div>`:''}<details><summary>Actual receipt and comparison data</summary><pre>${escape(JSON.stringify(result,null,2))}</pre></details>`:`<form method="post"><input type="hidden" name="caseId" value="${escape(c.id)}"><button${fixtures.executionApproved===true&&!stopped?'':' disabled'}>Run this fixed case once</button></form>`}</section>`;}).join('');
- return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Private ranking comparison</title><style>body{font:16px/1.6 system-ui;max-width:1100px;margin:40px auto;padding:0 24px;background:#f1eee4;color:#243b34}section{margin:30px 0;padding:24px;border:1px solid #aab5aa;border-radius:14px}blockquote{font:24px/1.3 Georgia;margin:20px 0}button{font:inherit;min-height:44px;padding:8px 16px}.comparison{display:grid;grid-template-columns:1fr 1fr;gap:30px}a{color:inherit}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}@media(max-width:700px){.comparison{grid-template-columns:1fr}}</style><h1>Private ranking comparison</h1><p>Fixed synthetic visitor queries against the real eligible draft catalog. No visitor messages are collected. Each case can run once; reopening this page does not call Jev.</p><p>${escape(notice||(stopped?'A prior attempt needs review. Further execution is stopped.':'Existing credits only. Approval, current credit verification and prior attempts are checked again before every call.'))}</p>${contents}</html>`,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'private, no-store','X-Robots-Tag':'noindex','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"}});
+ return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Private ranking comparison</title><style>body{font:16px/1.6 system-ui;max-width:1100px;margin:40px auto;padding:0 24px;background:#f1eee4;color:#243b34}section{margin:30px 0;padding:24px;border:1px solid #aab5aa;border-radius:14px}blockquote{font:24px/1.3 Georgia;margin:20px 0}button{font:inherit;min-height:44px;padding:8px 16px}.comparison{display:grid;grid-template-columns:1fr 1fr;gap:30px}a{color:inherit}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}@media(max-width:700px){.comparison{grid-template-columns:1fr}}</style><h1>Private ranking comparison</h1><p>Fixed synthetic visitor queries against the real eligible draft catalog. No visitor messages are collected. Each case can run once; reopening this page does not call Jev.</p><p>${escape(notice||(stopped?'A prior attempt needs review. Further execution is stopped.':'Existing credits only. Approval, current credit verification and prior attempts are checked again before every call.'))}</p>${oversized?'<p>The current catalog exceeds the 64-card single-pass limit. Saved receipts remain available; new runs are disabled.</p>':''}${contents}</html>`,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'private, no-store','X-Robots-Tag':'noindex','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"}});
 }
 async function smallBody(request){if(!request.body)return '';const reader=request.body.getReader();let bytes=0,text='',decoder=new TextDecoder();try{while(true){const part=await reader.read();if(part.done)break;bytes+=part.value.byteLength;if(bytes>1024){await reader.cancel();throw Error('Body too large');}text+=decoder.decode(part.value,{stream:true});}return text+decoder.decode();}finally{reader.releaseLock();}}
 export async function handleRankingEvaluation(request,env,{fetchUpstream=fetch,now=Date.now}={}){
@@ -34,7 +35,7 @@ export async function handleRankingEvaluation(request,env,{fetchUpstream=fetch,n
   const readRows=async()=>{const r=await env.CONTENT_DB.prepare('SELECT id,result_json FROM content_checks WHERE id LIKE ? AND id<>?').bind(PREFIX+'%',LOCK).all();return r.results||[];};
   if(request.method==='GET'){
    const fixtures=await readFixtures();if(!validFixtures(fixtures))return json({status:'not-configured'},409);
-   return page(fixtures,await readRows(),await catalog(env));
+   return page(fixtures,await readRows(),await catalog(env,256));
   }
   // Consume the bounded body before taking any state snapshot or holding the mutex.
   const params=new URLSearchParams(await smallBody(request)),caseId=params.get('caseId');
@@ -47,12 +48,15 @@ export async function handleRankingEvaluation(request,env,{fetchUpstream=fetch,n
   // All spend decisions use authoritative current state while this request owns the lock.
   const fixtures=await readFixtures();if(!validFixtures(fixtures))return json({status:'not-configured'},409);
   const fixture=fixtures.cases.find(c=>c.id===caseId);if(!fixture)return json({error:'Unknown fixture'},400);
-  const rows=await readRows(),cards=await catalog(env);
-  if(rows.some(r=>r.id===PREFIX+caseId))return page(fixtures,rows,cards,'This fixed case was already claimed; no new provider request was sent.');
+  const rows=await readRows();
+  if(rows.some(r=>r.id===PREFIX+caseId))return page(fixtures,rows,await catalog(env,256),'This fixed case was already claimed; no new provider request was sent.');
+  // A larger catalog cannot mask or weaken the immutable failed-attempt stop.
+  if(rows.length>=MAX_CASES||rows.some(r=>!r.result_json||JSON.parse(r.result_json).status!=='ok'))return json({status:'prior-attempt-needs-review'},409);
   const approvedAt=Date.parse(fixtures.creditVerifiedAt),age=now()-approvedAt;
   if(fixtures.executionApproved!==true||!Number.isFinite(fixtures.remainingCreditsUsd)||fixtures.remainingCreditsUsd<.10||!Number.isFinite(age)||age<0||age>6*3600000)return json({status:'credit-verification-required'},409);
-  if(env.JEV_ENABLED!=='true'||!env.TYPESAFE_API_KEY||cards.length===0)return json({status:'unconfigured'},409);
-  if(rows.length>=MAX_CASES||rows.some(r=>!r.result_json||JSON.parse(r.result_json).status!=='ok'))return json({status:'prior-attempt-needs-review'},409);
+  if(env.JEV_ENABLED!=='true'||!env.TYPESAFE_API_KEY)return json({status:'unconfigured'},409);
+  let cards;try{cards=await catalog(env);}catch(error){if(error instanceof CatalogLimitError)return json({status:'catalog-exceeds-single-pass-limit',limit:64},409);throw error;}
+  if(cards.length===0)return json({status:'unconfigured'},409);
   const spent=rows.reduce((n,r)=>n+(JSON.parse(r.result_json).estimatedCostUsd||0),0);if(spent>=.10)return json({status:'experiment-budget-exhausted'},409);
   const claim=await env.CONTENT_DB.prepare('INSERT OR IGNORE INTO content_checks(id,created_at) VALUES(?,?)').bind(PREFIX+caseId,new Date(now()).toISOString()).run();
   if(claim.meta?.changes!==1)return page(fixtures,await readRows(),cards,'Already claimed.');

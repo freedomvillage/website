@@ -71,3 +71,23 @@ test('invalid provider data retains only fixed validation categories and bounded
  const result=await rankPublishedCards('query',cards,{JEV_ENABLED:'true',TYPESAFE_API_KEY:secret},{fetchUpstream:async()=>Response.json({model:'jev-1.14.0',usage:{input_tokens:18,output_tokens:4},answers:{card_0:{type:'score',confidence:.5,score:'PRIVATE_VALUE',probabilities:{0:0,1:1,2:0}}},message:'PRIVATE_PROVIDER_TEXT'})});
  assert.equal(result.status,'unavailable');assert.deepEqual(result.validation,{code:'score',questionIndex:0,answerCount:1,model:'jev-1.14.0'});assert(!JSON.stringify(result).includes('PRIVATE'));assert.equal(result.usage.inputTokens,18);assert.deepEqual(result.ranked,[]);
 });
+
+function growCatalog(db){for(let i=0;i<69;i++)db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run('sample-extra-'+String(i).padStart(2,'0'),'draft',JSON.stringify(content('Additional fixture '+i,'Synthetic source metadata for a cloud regression.')),null);}
+test('a 71-card catalog keeps saved failure receipts readable without enabling provider execution',async()=>{
+ const {db,env}=setup();try{
+  growCatalog(db);const failure=JSON.stringify({status:'unavailable',category:'invalid-response',receiptMarker:'IMMUTABLE_FAILED_FIXTURE'});
+  db.prepare('INSERT INTO content_checks VALUES(?,?,?)').run('ranking-eval-v1:sample-one',failure,new Date(instant).toISOString());
+  let calls=0;const options={now:()=>instant,fetchUpstream:async()=>{calls++;throw Error('Must not call');}};
+  const get=await handleRankingEvaluation(request(),env,options);assert.equal(get.status,200);const html=await get.text();assert(html.includes('IMMUTABLE_FAILED_FIXTURE'));assert(html.includes('64-card single-pass limit'));assert(html.includes('<button disabled>Run this fixed case once'));
+  const post=await handleRankingEvaluation(request('sample-two'),env,options);assert.equal(post.status,409);assert.equal((await post.json()).status,'prior-attempt-needs-review');
+  assert.equal(calls,0);assert.equal(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get('ranking-eval-v1:sample-one').result_json,failure);
+  assert.equal(db.prepare('SELECT count(*) AS count FROM content_checks WHERE id=?').get('ranking-eval-v1:sample-two').count,0);
+ }finally{db.close();}
+});
+test('oversized fresh single-pass evaluation is rejected before a claim or provider call',async()=>{
+ const {db,env}=setup();try{
+  growCatalog(db);let calls=0;const response=await handleRankingEvaluation(request('sample-one'),env,{now:()=>instant,fetchUpstream:async()=>{calls++;throw Error('Must not call');}});
+  assert.equal(response.status,409);assert.equal((await response.json()).status,'catalog-exceeds-single-pass-limit');assert.equal(calls,0);
+  assert.equal(db.prepare('SELECT count(*) AS count FROM content_checks WHERE id=?').get('ranking-eval-v1:sample-one').count,0);
+ }finally{db.close();}
+});
