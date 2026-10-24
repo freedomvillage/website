@@ -1,0 +1,20 @@
+dist/composer.js
+  h_9a6e2a87fc4a0d 32-36
+dist/style.css
+  h_9a6e2a87fc4a0d 162-163,168-170
+source-manifest.json
+  h_9a6e2a87fc4a0d 104-105
+tests/composer.cjs
+  h_9a6e2a87fc4a0d 4,11,49-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "920f45530d9710eb69d84a39bd248f3eef1782a8",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
