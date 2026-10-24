@@ -101,7 +101,7 @@
     "dist/scene-clock.js": "d2898bf2e4b94e9f78c8b9d046da6c472f2f90895f02d19b25dc2bcc72e3b3d3",
     "dist/content-view.js": "e36c773583238cd85ddf63a4ce203ec7e6b004550a2b1a6910211a0b2c118e4b",
     "dist/content-view.css": "ca445e26eb7c467d31717ef06a982d5f6187c0a0fded479a2c36f8ef6114db2a",
-    "dist/composer.js": "c82719c1b6ecede904b6fda7fce726aa70ada3658230858aab39845783e58701",
+    "dist/composer.js": "3cefa8d1345827e504bd182a532cdac45bf5a55717376c512feef4287c299dfe",
     "dist/style.css": "2cceef476881aa7e0beccdfe1a5d4b4dc96e3712118513d405a064f724cf0dbe",
     "dist/intent.js": "62e0e2de4786f57f1105da7b4f9d53bb9555157d2693f646b1d6ad0ec9488e84"
   },
