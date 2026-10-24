@@ -38,6 +38,22 @@
    try{root.history.back();returning=true;event.preventDefault();}catch{/* Normal anchor remains the safe in-site fallback. */}
   });
  }
+ function connectDraft(){
+  const picker=document.querySelector('[data-connect-draft]');if(!picker||picker.dataset.ready)return;
+  const email=picker.querySelector('[data-connect-email]'),status=picker.querySelector('[data-connect-status]'),choices=[...picker.querySelectorAll('input[name="connect-interest"]')];
+  if(!email||!status||choices.length!==5||email.getAttribute('href')!=='mailto:contact@freedomvillage.church')return;
+  picker.dataset.ready='true';
+  function update(){
+   const selected=choices.filter(c=>c.checked).map(c=>c.value);
+   // Only fixed public interest labels enter the draft. No personal fields,
+   // persistence, network call or send/success event is involved.
+   const body=selected.length?'Hello, I would like to ask about:\r\n\r\n'+selected.map(v=>'• '+v).join('\r\n')+'\r\n\r\nMy question:\r\n':'Hello, I have a question about Freedom Village.\r\n\r\n';
+   email.href='mailto:contact@freedomvillage.church?subject='+encodeURIComponent('My next step at Freedom Village')+'&body='+encodeURIComponent(body);
+   status.textContent=selected.length+ (selected.length===1?' interest':' interests')+' selected. Review and send in your email app.';
+  }
+  for(const choice of choices)choice.addEventListener('change',update);
+  update();picker.hidden=false;
+ }
  function pagination(){
   const more=document.querySelector('.load-more');if(!more||more.dataset.ready)return;more.dataset.ready='true';
   let autoFailed=false,ended=false;
@@ -63,5 +79,5 @@
  }
  reduced.addEventListener('change',motionState);
  document.addEventListener('visibilitychange',motionState);
- root.contentView={render(){if(legacyLink())return;if(!started){started=true;enhance();detailBack();pagination();}}};
+ root.contentView={render(){if(legacyLink())return;if(!started){started=true;enhance();detailBack();connectDraft();pagination();}}};
 })(globalThis);

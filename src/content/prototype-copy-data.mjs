@@ -1,6 +1,6 @@
 // Visitor-facing prototype copy only. Private source/approval records are not shipped.
 export const PROTOTYPE_COPY={
-  "version": "2026-10-24.2",
+  "version": "2026-10-24.3",
   "sunday": {
     "summary": "We gather to hear God’s Word, worship together and encourage one another.",
     "beforeFacts": [],
@@ -196,5 +196,47 @@ export const PROTOTYPE_COPY={
         }
       ]
     }
+  },
+  "connect": {
+    "before": {
+      "title": "Connect with us",
+      "summary": "Ask a question, find community or take a next step."
+    },
+    "emailAction": {
+      "label": "Email us",
+      "href": "mailto:contact@freedomvillage.church"
+    },
+    "options": [
+      {
+        "id": "fvc101",
+        "label": "Attending FVC101",
+        "description": "Get to know our story, beliefs and shared life.",
+        "targetId": "fvc101"
+      },
+      {
+        "id": "community",
+        "label": "Growing in Community",
+        "description": "Ask about sharing life in a Missional Family.",
+        "targetId": "missional-families"
+      },
+      {
+        "id": "serve",
+        "label": "Joining a Serve Team",
+        "description": "Explore using your gifts to serve others.",
+        "targetId": "serve"
+      },
+      {
+        "id": "gospel",
+        "label": "Knowing the Gospel",
+        "description": "Start a conversation about Jesus and your questions.",
+        "targetId": "knowing-the-gospel"
+      },
+      {
+        "id": "baptism",
+        "label": "Being Baptized",
+        "description": "Ask about baptism and following Jesus.",
+        "targetId": "baptism"
+      }
+    ]
   }
 };
