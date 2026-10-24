@@ -1,0 +1,24 @@
+dist/content-view.css
+  h_9a6e2a87fc4a0d 131-135
+dist/content-view.js
+  h_9a6e2a87fc4a0d 6-10
+docs/CARD-CRAFT.md
+  h_9a6e2a87fc4a0d 11,20-21
+source-manifest.json
+  h_9a6e2a87fc4a0d 102-103
+src/content/card-craft.mjs
+  h_9a6e2a87fc4a0d 29
+tests/card-craft.test.mjs
+  h_9a6e2a87fc4a0d 40-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6b1d7cd69c2e40f6dae9958e0ff2b32174a7764b",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
