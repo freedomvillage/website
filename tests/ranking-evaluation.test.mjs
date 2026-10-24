@@ -100,3 +100,57 @@ test('documented fractional Score shape with a rubric legend is accepted without
  const result=rankingResult(payload,request);assert.equal(result.status,'ok');assert.equal(result.ranked[0].score,1.43);assert.equal(result.ranked[0].confidence,.35);
  assert.deepEqual(result.ranked[0].probabilities,{0:0,1:.57,2:.43});assert(!JSON.stringify(result).includes('legend'));assert(!JSON.stringify(result).includes('Synthetic middle'));
 });
+
+const diagnosticCards=[{id:'sample-one',title:'Synthetic title',summary:'Synthetic description'}];
+const diagnosticEnv={JEV_ENABLED:'true',TYPESAFE_API_KEY:secret};
+const scorePayload=()=>({model:'jev-1.14.0',usage:{input_tokens:18,output_tokens:4},answers:{card_0:{type:'score',score:1,confidence:.5,probabilities:{0:0,1:1,2:0}}}});
+test('future schema failures retain the precise fixed branch but never provider values or answer names',async()=>{
+ const cases=[
+  ['model',p=>p.model='PRIVATE_MODEL'],
+  ['answer-count',p=>p.answers={}],
+  ['answer-keys',p=>p.answers={PRIVATE_ANSWER_NAME:p.answers.card_0}],
+  ['usage',p=>p.usage.input_tokens='PRIVATE_USAGE'],
+  ['answer-type',p=>p.answers.card_0.type='PRIVATE_TYPE'],
+  ['confidence',p=>p.answers.card_0.confidence='PRIVATE_CONFIDENCE'],
+  ['score',p=>p.answers.card_0.score='PRIVATE_SCORE'],
+  ['probability-shape',p=>p.answers.card_0.probabilities={PRIVATE_LEVEL:1}],
+  ['probability-range',p=>p.answers.card_0.probabilities[0]='PRIVATE_PROBABILITY'],
+  ['probability-sum',p=>p.answers.card_0.probabilities={0:.1,1:1,2:0}],
+  ['score-consistency',p=>p.answers.card_0.score=2]
+ ];
+ for(const [code,mutate] of cases){
+  const payload=scorePayload();mutate(payload);payload.message='PRIVATE_PROVIDER_TEXT';
+  const result=await rankPublishedCards('Synthetic query',diagnosticCards,diagnosticEnv,{fetchUpstream:async()=>Response.json(payload)});
+  assert.deepEqual(result.failure,{version:1,stage:'schema',code});assert.equal(result.validation.code,code);assert.equal(result.httpStatus,200);assert.deepEqual(result.ranked,[]);
+  assert(!JSON.stringify(result).includes('PRIVATE'));assert(!Object.hasOwn(result,'answers'));assert(!Object.hasOwn(result,'message'));
+ }
+});
+test('transport, HTTP and bounded-body failures retain fixed stages without messages, headers or body bytes',async()=>{
+ let canceled=false;
+ const cases=[
+  ['transport','request-failed',async()=>{throw Error('PRIVATE_TRANSPORT');}],
+  ['transport','request-timeout-or-abort',async()=>{throw new DOMException('PRIVATE_TIMEOUT','TimeoutError');}],
+  ['http','upstream-status',async()=>new Response('PRIVATE_HTTP',{status:429,headers:{'X-Private-Fixture':'PRIVATE_HEADER'}})],
+  ['body','body-missing',async()=>new Response(null)],
+  ['body','body-empty',async()=>new Response('')],
+  ['body','body-json',async()=>new Response('{PRIVATE_JSON')],
+  ['body','body-encoding',async()=>new Response(new Uint8Array([0xff]))],
+  ['body','body-read',async()=>new Response(new ReadableStream({start(c){c.error(Error('PRIVATE_STREAM'));}}))],
+  ['body','body-too-large',async()=>new Response(new ReadableStream({start(c){c.enqueue(new Uint8Array(65537));},cancel(){canceled=true;}}))]
+ ];
+ for(const [stage,code,fetchUpstream]of cases){
+  const result=await rankPublishedCards('Synthetic query',diagnosticCards,diagnosticEnv,{fetchUpstream});
+  assert.equal(result.status,'unavailable');assert.deepEqual(result.failure,{version:1,stage,code});assert.deepEqual(result.ranked,[]);assert(!JSON.stringify(result).includes('PRIVATE'));assert(!Object.hasOwn(result,'usage'));
+ }
+ assert(canceled);
+});
+test('a future malformed-body receipt retains safe classification and stays immutable while blocking more spend',async()=>{
+ const {db,env}=setup();try{
+  let calls=0;const options={now:()=>instant,fetchUpstream:async()=>{calls++;return new Response('{PRIVATE_RESPONSE');}};
+  const html=await(await handleRankingEvaluation(request('sample-one'),env,options)).text();
+  const original=db.prepare('SELECT result_json FROM content_checks WHERE id=?').get('ranking-eval-v1:sample-one').result_json,saved=JSON.parse(original);
+  assert.deepEqual(saved.failure,{version:1,stage:'body',code:'body-json'});assert.equal(saved.estimatedCostUsd,null);assert(!original.includes('PRIVATE_RESPONSE'));assert(!html.includes('PRIVATE_RESPONSE'));
+  assert.equal((await handleRankingEvaluation(request('sample-two'),env,options)).status,409);await handleRankingEvaluation(request(),env,options);
+  assert.equal(calls,1);assert.equal(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get('ranking-eval-v1:sample-one').result_json,original);
+ }finally{db.close();}
+});
