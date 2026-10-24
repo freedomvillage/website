@@ -19,7 +19,7 @@
   const path=sourcePath(root.location.href);if(!path||!root.history?.replaceState)return null;
   let saved;try{saved=root.history.state?.[KEY];}catch{}
   if(!valid(saved,path))saved=null;
-  let focus=null,cancelled=false,restoring=false,finished=false;
+  let focus=null,cancelled=false,restoring=false,finished=false,revealObserver=null;
   const navigation=root.performance?.getEntriesByType?.('navigation')?.[0]?.type;
   if(navigation&& !['back_forward','reload'].includes(navigation))saved=null;
   function write(){
@@ -34,13 +34,21 @@
    const link=event.target?.closest?.('main a[href]'),href=link&&destination(link.href);if(!href||link.target==='_blank'||link.hasAttribute('download'))return;
    const card=link.closest('article[id]');focus=card&&/^[a-zA-Z0-9_-]{1,180}$/.test(card.id)?{cardId:card.id,href}:null;write();
   });
-  root.addEventListener('pagehide',write);
-  const cancel=()=>{cancelled=true;};
+  root.addEventListener('pagehide',()=>{write();revealObserver?.disconnect();});
+  const cancel=()=>{cancelled=true;revealObserver?.disconnect();};
   for(const event of ['wheel','touchstart','pointerdown','keydown'])root.addEventListener(event,cancel,{passive:true});
   function place(){
    if(!saved||cancelled)return;
    const card=saved.focus&&root.document.getElementById(saved.focus.cardId),link=card&&[...card.querySelectorAll('a[href]')].find(a=>destination(a.href)===saved.focus.href);
-   link?.focus({preventScroll:true});root.scrollTo({top:saved.y,left:0,behavior:'instant'});
+   if(link&&root.getComputedStyle?.(link).visibility==='hidden'){
+    // The scene loader temporarily hides content; focus() cannot succeed yet.
+    // Retry after reveal, without caching content or stealing focus after input.
+    if(!revealObserver&&root.MutationObserver&&root.document.documentElement){
+     revealObserver=new root.MutationObserver(()=>{if(!cancelled)place();});
+     revealObserver.observe(root.document.documentElement,{attributes:true,attributeFilter:['data-site-revealed']});
+    }
+   }else{revealObserver?.disconnect();revealObserver=null;link?.focus({preventScroll:true});}
+   root.scrollTo({top:saved.y,left:0,behavior:'instant'});
   }
   // Native bfcache already has the full DOM. Only reconstructed documents need
   // this fallback; a late pageshow can otherwise apply a stale native offset.

@@ -60,3 +60,13 @@ test('single scroll reservation, fresh protected fetches and privacy headers rem
  assert(css.includes('scroll-padding-bottom:var(--composer-clearance,290px)'));assert(css.includes('scroll-margin-bottom:12px'));assert(!css.includes('scroll-margin-bottom:calc(var(--composer-height'));
  assert(view.includes('restoring&&!forRestore'));assert(view.includes("credentials:'same-origin',cache:'no-store',redirect:'error'"));assert(pages.includes("'Cache-Control':'private, no-store'"));assert(!/localStorage|sessionStorage|innerHTML/.test(script));
 });
+
+test('artwork-delayed reveal retries Back focus, unless the user has intervened',async()=>{
+ for(const cancel of [false,true]){
+  const h=harness({state:saved('/topics/families',1),navigation:'back_forward'});h.link();let callback,disconnected=false,visible=false;
+  h.context.document.documentElement={dataset:{siteRevealed:'false'}};h.context.getComputedStyle=()=>({visibility:visible?'visible':'hidden'});
+  h.context.MutationObserver=class{constructor(fn){callback=fn;}observe(){}disconnect(){disconnected=true;}};
+  const controller=h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore:async()=>false,measure(){}});await controller.restore();assert.equal(h.focused.length,0);assert.equal(h.scrolls.at(-1).top,9169);assert(callback);
+  if(cancel)h.emit('keydown');visible=true;h.context.document.documentElement.dataset.siteRevealed='true';callback();assert.equal(h.focused.length,cancel?0:1);assert(disconnected);assert.equal(h.scrolls.at(-1).top,9169);
+ }
+});
