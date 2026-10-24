@@ -1,5 +1,5 @@
 import {privateNextRequest,readCatalog,json} from './catalog.mjs';
-import {rankingRequest,rankPublishedCards} from './jev.mjs';
+import {rankingRequest,rankPublishedCards,RANKING_INPUT_VERSION} from './jev.mjs';
 import {renderCard,cardPath} from './pages.mjs';
 import {resolveIntentOwner} from './intent-owner.mjs';
 
@@ -47,7 +47,7 @@ async function body(request){
  finally{clearTimeout(timer);reader.releaseLock();}
 }
 function publicReceipt(r){return {requestId:r.requestId,status:r.status,model:r.model||null,requestedModel:r.requestedModel||null,candidateCount:r.candidateIds.length,candidateIds:r.candidateIds,batches:r.batches,
- candidateInputs:r.candidateInputs||null,candidateInputScope:r.batchPlan?'attempted-or-transport-uncertain':'legacy-delivery-not-established',batchPlan:r.batchPlan||null,rankedBeforeEligibility:r.rankedBeforeEligibility||null,selection:r.selection||null,
+ inputProjection:r.inputProjection||'summary-facts-v1',candidateInputs:r.candidateInputs||null,candidateInputScope:r.batchPlan?'attempted-or-transport-uncertain':'legacy-delivery-not-established',batchPlan:r.batchPlan||null,rankedBeforeEligibility:r.rankedBeforeEligibility||null,selection:r.selection||null,
  usage:r.usage,knownUsage:r.knownUsage||r.usage,usageComplete:r.usageComplete??Boolean(r.usage),estimatedCostUsd:r.estimatedCostUsd,ranked:r.ranked||[],failure:r.failure||null,completedAt:r.completedAt};}
 function selectionFor(receipt,cards,now){
  const byId=new Map(cards.map(c=>[c.id,c])),ranked=receipt.rankedBeforeEligibility||receipt.ranked||[];
@@ -61,7 +61,7 @@ async function inspectReceipt(receipt,db,now){
   const cards=await intentCatalog(db,now),scores=new Map((receipt.rankedBeforeEligibility||receipt.ranked||[]).map(r=>[r.id,r]));
   return {...value,currentInspection:{scope:'current-eligible-catalog-not-original-render',...selectionFor(receipt,cards,now),
    familyAndVisitInputs:cards.filter(c=>c.categories?.includes('families')||c.id==='visit-help').map(c=>({
-    projection:rankingRequest('Read-only input inspection',[c],MODEL).state.candidates[0],categoriesNotSentToModel:c.categories||[],inSavedSnapshot:receipt.candidateIds.includes(c.id),savedScore:scores.get(c.id)||null
+    projection:rankingRequest('Read-only input inspection',[c],MODEL).state.candidates[0],categories:c.categories||[],currentInputProjection:RANKING_INPUT_VERSION,inSavedSnapshot:receipt.candidateIds.includes(c.id),savedScore:scores.get(c.id)||null
    }))}};
  }catch{return {...value,currentInspection:{status:'unavailable',scope:'current-eligible-catalog-not-original-render'}};}
 }
@@ -144,7 +144,7 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    const candidateInputs=[],candidateIds=cards.map(c=>c.id),batchPlan=batches.map((batch,index)=>({index,candidateIds:batch.map(c=>c.id),dispatch:'not-attempted'}));
    for(const [index,batch] of batches.entries()){
     batchPlan[index].dispatch='pending-or-uncertain';
-    await save(db,requestId,{status:'pending',ownerScope,requestId,candidateIds,batches:receipts,batchPlan,candidateInputs});
+    await save(db,requestId,{status:'pending',ownerScope,requestId,inputProjection:RANKING_INPUT_VERSION,candidateIds,batches:receipts,batchPlan,candidateInputs});
     const result=await run(query,batch);account(result);
     const dispatch=result.dispatch||'transport-uncertain';batchPlan[index].dispatch=dispatch;
     if(dispatch!=='not-sent')candidateInputs.push(...rankingRequest(query,batch,MODEL).state.candidates);
@@ -161,7 +161,7 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    const current=failed?[]:await intentCatalog(db,now()),eligible=new Set(current.map(c=>c.id));
    ranked=ranked.filter(r=>eligible.has(r.id));
    const usageComplete=receipts.every(r=>r.usage);
-   const receipt={requestId,ownerScope,status:failed?'unavailable':'ok',model:failed?null:MODEL,requestedModel:MODEL,candidateIds,candidateInputs,batchPlan,batches:receipts,ranked,rankedBeforeEligibility,usage:usageComplete?usage:null,knownUsage:usage,usageComplete,
+   const receipt={requestId,ownerScope,status:failed?'unavailable':'ok',model:failed?null:MODEL,requestedModel:MODEL,inputProjection:RANKING_INPUT_VERSION,candidateIds,candidateInputs,batchPlan,batches:receipts,ranked,rankedBeforeEligibility,usage:usageComplete?usage:null,knownUsage:usage,usageComplete,
     estimatedCostUsd:receipts.every(r=>r.usage)?receipts.reduce((sum,r)=>sum+r.usage.inputTokens*.042/1000000,0):null,elapsedMs:Math.max(0,now()-started),completedAt:new Date(now()).toISOString(),...(failed?{failure:failed.failure||null}:{})};
    await save(db,requestId,receipt);
    if(!unknownUsage)state.spent=Math.max(0,state.spent-reservation+actualCost);

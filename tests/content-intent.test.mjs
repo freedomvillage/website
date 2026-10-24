@@ -34,7 +34,7 @@ function provider(seen,{failureAt=0,wait,onCall}={}){return async(url,options)=>
 test('71 candidates are all ranked, recovery is once, old failure immutable; returned IDs and HTML are actual validated records',async()=>{
  const {db,env,oldFailure}=setup();try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)};
  const response=await createWorker(options).fetch(request(),env);assert.equal(response.status,200);const value=await response.json();
- assert.equal(value.receipt.candidateCount,71);assert.equal(value.receipt.ranked.length,71);assert.equal(value.selectedIds.length,24);assert(value.html.includes('card-connect-card'));assert(!JSON.stringify(value).includes(secret));
+ assert.equal(value.receipt.inputProjection,'public-context-v2');assert.equal(value.receipt.candidateCount,71);assert.equal(value.receipt.ranked.length,71);assert.equal(value.selectedIds.length,24);assert(value.html.includes('card-connect-card'));assert(!JSON.stringify(value).includes(secret));
  assert.deepEqual(new Set(seen.slice(1).flatMap(b=>b.state.candidates.map(c=>c.id))),new Set(value.receipt.ranked.map(r=>r.id)));
  assert.equal(seen[0].state.candidates.length,2);assert.deepEqual(seen[0].state.candidates.map(c=>c.id),['freedom-kids','connect-card']);
  assert(seen.length>2);assert.equal(JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(RECOVERY).result_json).status,'ok');
