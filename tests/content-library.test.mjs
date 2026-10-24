@@ -40,7 +40,7 @@ test('clean generic detail and topic pages use canonical facts and finite relate
 test('media and motion are explicit, source-limited and have static accessible fallback',async()=>{
  const {db,add,adapter}=database();try{add('sample-motion',sample({design:{theme:'youth',layout:'brand',motif:'none',motion:'gradient',size:'feature'},media:{kind:'brand',src:'https://cdn.prod.website-files.com/60e0035471e8115799a8640b/sample.svg',alt:'Sample brand'}}));add('sample-video',sample({template:'sermon',media:{kind:'youtube',videoId:'abcdefghijk',title:'Sample video'}}));
  const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)}};
- const list=await(await handleContentPage(req('/'),env)).text();assert(list.includes('Pause background animation'));assert(list.includes('loading="lazy"'));assert(!list.includes('<iframe'));const motionDetail=await(await handleContentPage(req('/cards/sample-motion'),env)).text();assert(motionDetail.includes('Pause background animation'));assert(motionDetail.includes('#sidebar{position:static!important'));assert(motionDetail.includes('#menu-toggle,.drawer-close'));
+ const list=await(await handleContentPage(req('/'),env)).text();assert(!list.includes('Pause background animation'));assert(list.includes('loading="lazy"'));assert(!list.includes('<iframe'));const motionDetail=await(await handleContentPage(req('/cards/sample-motion'),env)).text();assert(!motionDetail.includes('Pause background animation'));assert(motionDetail.includes('has-brand'));assert(motionDetail.includes('detail-intro'));assert(motionDetail.includes('#sidebar{position:static!important'));assert(motionDetail.includes('#menu-toggle,.drawer-close'));
  const detail=await(await handleContentPage(req('/cards/sample-video'),env)).text();assert(detail.includes('Load video'));assert(detail.includes('Watch on YouTube'));assert(!detail.includes('<iframe'));
  }finally{db.close();}
 });
@@ -108,5 +108,19 @@ test('core journeys have internal canonical pages, legacy detail redirects and r
    const slash=await handleContentPage(req(path+'/'),env);assert.equal(slash.status,308);assert.equal(slash.headers.get('Location'),path);
    assert.equal((await handleContentPage(new Request('https://next.freedomvillage.church'+path),env)).status,404);
   }
+ }finally{db.close();}
+});
+
+test('ministry detail presents an introduction and local next step before long prose without a second summary',async()=>{
+ const {db,add,adapter}=database();try{
+  add('sample-ministry',sample({template:'ministry',summary:'A short invitation.',detail:['A short invitation.','Longer ministry information.'],actions:[{label:'Ask a question',targetId:'connect-card'}]}));
+  const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)}};
+  const html=await(await handleContentPage(req('/cards/sample-ministry'),env)).text();
+  assert(html.includes('<body class="content-detail">'));
+  const body=html.match(/<div class="detail-body">([\s\S]*?)<\/article>/)[1];
+  assert.equal(body.split('A short invitation.').length-1,1);
+  assert(body.indexOf('A short invitation.')<body.indexOf('href="/connect"'));
+  assert(body.indexOf('href="/connect"')<body.indexOf('Longer ministry information.'));
+  assert(!html.includes('Pause background animation'));
  }finally{db.close();}
 });

@@ -38,12 +38,11 @@
 .library-detail.has-image .library-detail-heading{display:flex;flex-direction:column-reverse;align-items:stretch}
 .library-detail.has-image .library-image{border-radius:8px;overflow:hidden;max-width:100%}
 .library-detail.has-image .library-image-frame{max-height:660px}.library-detail.has-image .library-detail-heading>div{max-width:720px}
-.card.library-card.layout-brand .library-card-link{flex-direction:column-reverse}.card.layout-brand .library-copy{padding-bottom:54px}
-.has-motion .library-brand-art{animation:brand-drift 18s ease-in-out infinite alternate;animation-play-state:paused}
-.has-motion.is-visible:not(.motion-paused) .library-brand-art{animation-play-state:running}
+.card.library-card.layout-brand .library-card-link{flex-direction:column-reverse}.card.layout-brand .library-copy{padding-bottom:30px}
+.has-motion .library-brand-art{animation:brand-drift 4s ease-out 1 both;animation-play-state:paused}
+.has-motion.is-visible .library-brand-art{animation-play-state:running}
 @keyframes brand-drift{from{background-position:0% 50%}to{background-position:100% 50%}}
-.motion-toggle{position:absolute;bottom:16px;right:18px;z-index:2;border:1px solid currentColor;border-radius:24px;min-height:44px;padding:8px 12px;background:transparent;color:inherit;font:11px Arial,sans-serif;cursor:pointer}
-.motion-toggle[hidden]{display:none}.library-card-link:focus-visible{outline:3px solid currentColor;outline-offset:-6px}
+.library-card-link:focus-visible{outline:3px solid currentColor;outline-offset:-6px}
 .library-sermon-art{position:relative;min-height:180px;display:flex;align-items:center;justify-content:center;background:#253e35;color:#efe4c9;overflow:hidden}.library-sermon-art>span{display:grid;place-content:center;width:70px;height:70px;border:1px solid currentColor;border-radius:50%;font-size:22px;position:relative;z-index:1}.library-sermon-art .library-motif{position:absolute;width:220px;height:220px;opacity:.35;left:50%;top:50%;transform:translate(-50%,-50%);margin:0}
 .library-detail{padding:34px clamp(24px,5vw,64px) 52px;border-radius:20px;background:#efebdf;color:#243b34;overflow:hidden;position:relative}
 .library-detail-heading{display:grid;grid-template-columns:minmax(0,1fr) minmax(100px,.48fr);gap:30px;align-items:center;margin:24px 0 34px}.library-detail h1{font:400 clamp(38px,5.5vw,74px)/1.06 Georgia,serif;letter-spacing:-1.8px;margin:0 0 26px;overflow-wrap:anywhere}.library-detail h1:focus{outline:none}.library-detail .library-motif{margin:0;width:100%;height:auto}.library-detail .library-brand-art{min-height:240px;padding:24px;border-radius:8px}.library-detail .library-brand-art img{max-height:220px}.library-detail .detail-body{color:inherit;max-width:650px}.library-detail .back{color:inherit;min-height:44px;display:inline-flex;align-items:center}.library-detail .library-facts{margin-top:22px}.library-detail .library-facts p{font-size:14px!important}
@@ -53,11 +52,10 @@
 #filters a{display:block;position:relative;min-height:36px;padding:8px 0;text-decoration:none;color:var(--ink);font-size:14px;line-height:1.4}#filters a[aria-current=page]{font-weight:700;text-decoration:underline;text-underline-offset:5px}
 @media(max-width:1100px){.library-copy{padding:25px}.card.library-card h2{font-size:32px}.library-card.size-feature .library-copy{max-width:85%;padding:30px}.related-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.library-card.size-feature{grid-column:auto}.library-card.size-feature .library-copy{max-width:100%;padding:30px}.card.library-card.size-feature h2{font-size:42px}.library-card.size-feature .library-card-link{min-height:350px}.size-feature .library-motif{opacity:.2}.library-detail{padding:24px 26px 40px}.library-detail-heading{grid-template-columns:minmax(0,1fr);gap:22px}.library-detail-heading>.library-motif{max-width:150px;justify-self:end;display:none}.library-detail h1{font-size:42px}.library-detail .library-brand-art{min-height:200px}.related-grid{grid-template-columns:minmax(0,1fr)}.related-grid .library-card-link{min-height:220px}.video-player{padding:15px}}
-@media(prefers-reduced-motion:reduce){.has-motion .library-brand-art{animation:none!important}.motion-toggle{display:none}}
+@media(prefers-reduced-motion:reduce){.has-motion .library-brand-art{animation:none!important}}
 
 .theme-youth .library-brand-art img{filter:brightness(0) invert(1)}.theme-paper .library-brand-art{background:#f0ecdf}
 
-.library-detail>.motion-toggle{position:relative;bottom:auto;right:auto;margin:0 0 18px;min-height:44px;padding:8px 14px;font-size:12px}
 
 .practical-card .library-copy{padding-bottom:20px}.practical-card h2 a{height:auto!important;color:inherit}.practical-actions{padding:0 30px 24px;display:flex;flex-direction:column;gap:0}.card .practical-actions a{height:auto;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid currentColor;padding:11px 0;color:inherit;font-size:13px}.practical-actions a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
 
@@ -67,8 +65,6 @@
 /* Finite private category alternatives: the canonical cards stay unchanged. */
 .study-heading{max-width:740px;margin-bottom:40px;color:var(--ink)}.study-heading>a{display:inline-flex;align-items:center;min-height:44px;color:inherit}.study-label{font:11px/1.5 Arial,sans-serif;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}.study-heading h1{font:clamp(36px,5vw,60px)/1.08 Georgia,serif;letter-spacing:-1.2px;margin:14px 0 20px}.study-heading>p:last-of-type{font-size:15px;line-height:1.65}.study-heading nav{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0}.study-heading nav a{display:flex;align-items:center;min-height:44px;padding:8px 16px;border:1px solid var(--line);border-radius:24px;color:inherit;text-decoration:none}.design-alternative{scroll-margin-top:100px;padding-top:28px;border-top:1px solid var(--line);margin:36px 0 70px}.design-alternative>header{max-width:720px;color:var(--ink)}.design-alternative>header h2{font:34px/1.15 Georgia,serif;letter-spacing:-.6px}.design-alternative>header p{font-size:14px;line-height:1.7}.study-group{margin:36px 0 46px}.study-group>h3{font:18px/1.4 Arial,sans-serif;color:var(--ink);margin:0 0 18px}.study-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.study-grid .library-card{grid-row-end:auto}.study-grid .library-card-link{min-height:260px}@media(max-width:700px){.study-grid{grid-template-columns:minmax(0,1fr)}.study-heading nav{flex-direction:column;align-items:flex-start}}
 
-/* Reserve the full 44px control plus its offset/gap, including finite related sets. */
-.card.library-card.has-motion .library-copy{padding-bottom:76px}.related-grid .card.library-card.has-motion .library-copy{padding-bottom:76px!important}
 
 /* Let original series covers lead without competing with a second poster-sized title. */
 .library-detail.has-source-artwork h1{font-size:clamp(28px,3vw,42px);letter-spacing:-.8px}
@@ -78,3 +74,39 @@
 .authored-section{margin:34px 0}.reference-links{padding-left:22px;margin:16px 0}.reference-links a{display:inline-flex;align-items:center;min-height:44px;color:inherit;text-underline-offset:4px;overflow-wrap:anywhere}
 .authored-card-set{grid-template-columns:repeat(2,minmax(0,1fr));margin:24px 0}.authored-card-set .library-card{margin-bottom:0}.authored-card-set .size-feature{grid-column:auto}.authored-card-set .library-copy>h3{font:400 28px/1.08 Georgia,serif;letter-spacing:-.8px;margin:0;overflow-wrap:anywhere}.authored-card-set .layout-date .library-copy>h3{font-family:Arial,sans-serif;font-weight:800;text-transform:uppercase}.authored-card-set .library-copy>h3 a{height:auto!important}.authored-card-set .library-card .library-excerpt{max-width:none}
 @media(max-width:700px){.authored-card-set{grid-template-columns:minmax(0,1fr)}}
+
+/* Details put the invitation before decorative scale, with a compact authentic ministry mark. */
+.library-detail .back{margin:0 0 12px;padding:8px 0;min-height:44px}
+.library-detail-heading{margin:0 0 22px;gap:24px}
+.library-detail h1{font:600 clamp(30px,3.6vw,48px)/1.08 Arial,sans-serif;letter-spacing:-1.4px;margin:0}
+.library-detail.has-brand .library-detail-heading{grid-template-columns:minmax(0,1fr) 140px}
+.library-detail.has-brand .library-brand-art{min-height:0;height:114px;padding:18px}
+.library-detail.has-brand .library-brand-art img{max-height:78px}
+.detail-body .detail-intro{font-size:20px;line-height:1.5;margin:0 0 20px;max-width:48ch}
+.detail-actions{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px 22px;margin:0 0 28px}
+.detail-actions a{margin:0;padding:10px 0;font-size:14px}
+.library-detail.has-image .library-detail-heading{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.8fr);align-items:center}
+.library-detail.has-image .library-image-frame{max-height:340px}
+.library-detail.has-community-photo .library-image{position:relative;background:#28453a}
+.has-community-photo .library-image img,.library-card:has(img[src="/media/missional-families.jpg"]) .library-image img{filter:grayscale(1) sepia(.25) contrast(1.08);mix-blend-mode:luminosity}
+.library-detail.has-community-photo .library-image-frame{aspect-ratio:4/3!important}
+@media(max-width:700px){
+ .content-detail main{padding:14px 16px 30px!important}
+ .library-detail{padding:14px 20px 28px;border-radius:14px}
+ .library-detail .back{margin-bottom:6px}
+ .library-detail h1{font-size:32px;letter-spacing:-1px}
+ .library-detail-heading{gap:16px;margin-bottom:18px}
+ .library-detail.has-brand .library-detail-heading{grid-template-columns:minmax(0,1fr) 86px;gap:12px}
+ .library-detail.has-brand .library-brand-art{height:82px;padding:12px;border-radius:8px}
+ .library-detail.has-brand .library-brand-art img{max-height:58px}
+ .library-detail .library-facts{margin-top:12px}
+ .detail-body{font-size:15px;line-height:1.7}
+ .detail-body .detail-intro{font-size:18px;line-height:1.5;margin-bottom:14px}
+ .detail-body h2{font:600 22px/1.2 Arial,sans-serif;letter-spacing:-.4px}
+ .authored-section{margin:26px 0}
+ .library-detail.has-image .library-detail-heading{display:flex;flex-direction:column;align-items:stretch}
+ .library-detail.has-image .library-image-frame{max-height:240px}
+ .library-detail.has-source-artwork .library-image{max-width:200px;align-self:flex-start}
+ .library-detail.has-source-artwork .library-image-frame{max-height:200px}
+ .detail-actions{margin-bottom:20px}
+}

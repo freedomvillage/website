@@ -19,7 +19,7 @@ export async function renderPageShell(request,env,catalog,card,status,message,re
  if(!asset.ok)throw new Error('Shell unavailable');
  let html=await asset.text();
  const title=message?.title||card?.title||TOPICS[catalog.topic]||'Freedom Village',description=card?.summary||'Private website draft for The Church at Freedom Village.';
- html=html.replace('href="#main"',()=>`href="${escape(new URL(request.url).pathname)}#main"`).replace(/<title>[\s\S]*?<\/title>/,`<title>${escape(title)} — The Church at Freedom Village</title>`)
+ html=html.replace('<body>',card?'<body class="content-detail">':'<body>').replace('href="#main"',()=>`href="${escape(new URL(request.url).pathname)}#main"`).replace(/<title>[\s\S]*?<\/title>/,`<title>${escape(title)} — The Church at Freedom Village</title>`)
  .replace(/<meta name="description" content="[^"]*">/,`<meta name="description" content="${escape(description)}">`)
  .replace('<head>','<head><base href="/"><meta name="robots" content="noindex,nofollow"><meta property="og:type" content="website"><meta property="og:title" content="'+escape(title)+'"><meta property="og:description" content="'+escape(description)+'">')
  .replace(/<nav aria-label="Explore the community" id="filters"><\/nav>/,()=>`<nav aria-label="Explore the community" id="filters">${Object.entries(TOPICS).map(([id,label])=>`<a href="/topics/${id}"${catalog.topic===id?' aria-current="page"':''}>${escape(label)}</a>`).join('')}</nav>`)

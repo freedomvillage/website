@@ -18,14 +18,13 @@ function genericArt(c,detail=false){
  return motif(c.design.motif);
 }
 const genericFacts=c=>c.facts.length?`<div class="library-facts">${c.facts.map(v=>`<p>${escape(v)}</p>`).join('')}</div>`:'';
-const motionControl=c=>c.design.motion==='gradient'?'<button class="motion-toggle" type="button" aria-pressed="false" aria-label="Pause background animation" hidden>Pause animation</button>':'';
 export function renderLibraryCard(c,namespace='',headingLevel=2){
  const heading=headingLevel===3?'h3':'h2';
  namespace=typeof namespace==='string'?namespace:'';
  const domId=escape((namespace?namespace+'-':'')+'card-'+c.id);
  if(['actions','utility'].includes(c.template))return `<article class="card library-card practical-card theme-${c.design.theme}" id="${domId}"><div class="library-copy"><${heading}><a href="${cardPath(c)}">${escape(c.title)}</a></${heading}><p class="library-excerpt">${escape(c.summary)}</p></div><div class="practical-actions">${c.actions.map(a=>`<a ${actionAttrs(a)}>${escape(a.label)} <span aria-hidden="true">↗</span></a>`).join('')}</div></article>`;
  const motion=c.design.motion==='gradient',art=genericArt(c);
- return `<article class="card library-card theme-${c.design.theme} layout-${c.design.layout} size-${c.design.size}${motion?' has-motion':''}" id="${domId}"><a class="library-card-link" href="${cardPath(c)}"><div class="library-copy"><${heading}>${escape(c.title)}</${heading}>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div>${art}</a>${motionControl(c)}</article>`;
+ return `<article class="card library-card theme-${c.design.theme} layout-${c.design.layout} size-${c.design.size}${motion?' has-motion':''}" id="${domId}"><a class="library-card-link" href="${cardPath(c)}"><div class="library-copy"><${heading}>${escape(c.title)}</${heading}>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div>${art}</a></article>`;
 }
 function authoredSections(c,embedded){
  const cards=new Map(embedded.map(card=>[card.id,card]));
@@ -37,5 +36,5 @@ function authoredSections(c,embedded){
 }
 export function renderLibraryDetail(c,related=[],embedded=[]){
  const video=c.media?.kind==='youtube'?`<div class="video-player" data-video="${c.media.videoId}"><button type="button" class="video-load" data-video-title="${escape(c.media.title)}">▶ Load video</button><p>Video loads from YouTube when selected.</p><a href="https://www.youtube.com/watch?v=${c.media.videoId}" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a></div>`:'';
- return `<article class="detail-shell library-detail theme-${c.design.theme}${c.design.motion==='gradient'?' has-motion':''}${c.media?.kind==='image'?' has-image':''}${c.media?.disclosure==='source-artwork'?' has-source-artwork':''}"><a class="back" href="/">← Back</a><header class="library-detail-heading"><div><h1 tabindex="-1">${escape(c.title)}</h1>${genericFacts(c)}</div>${genericArt(c,true)}</header>${motionControl(c)}<div class="detail-body">${c.detail.map(p=>`<p>${escape(p)}</p>`).join('')}${authoredSections(c,embedded)}${video}${c.actions.map(a=>`<a class="pilot-action" ${actionAttrs(a)}>${escape(a.label)} ↗</a>`).join('')}</div></article>${related.length?`<section class="related-content" aria-labelledby="related-title"><h2 id="related-title">Related</h2><div class="related-grid">${related.map(renderLibraryCard).join('')}</div></section>`:''}`;
+ return `<article class="detail-shell library-detail theme-${c.design.theme}${c.design.motion==='gradient'?' has-motion':''}${c.media?.kind==='image'?' has-image':''}${c.media?.kind==='brand'?' has-brand':''}${c.id==='missional-families'?' has-community-photo':''}${c.media?.disclosure==='source-artwork'?' has-source-artwork':''}"><a class="back" href="/">← Back</a><header class="library-detail-heading"><div><h1 tabindex="-1">${escape(c.title)}</h1>${genericFacts(c)}</div>${genericArt(c,true)}</header><div class="detail-body"><p class="detail-intro">${escape(c.summary)}</p>${c.actions.length?`<nav class="detail-actions" aria-label="Next steps">${c.actions.map(a=>`<a class="pilot-action" ${actionAttrs(a)}>${escape(a.label)} ↗</a>`).join('')}</nav>`:''}${c.detail.filter(p=>p!==c.summary).map(p=>`<p>${escape(p)}</p>`).join('')}${authoredSections(c,embedded)}${video}</div></article>${related.length?`<section class="related-content" aria-labelledby="related-title"><h2 id="related-title">Related</h2><div class="related-grid">${related.map(renderLibraryCard).join('')}</div></section>`:''}`;
 }
