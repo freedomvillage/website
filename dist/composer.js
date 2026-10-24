@@ -2,9 +2,10 @@ const settingsDialog=document.getElementById('scene-settings-dialog'),advancedDi
 let settingsReturnFocus=null,airSummaryExpiry=null,switchingSettings=false;
 function updateActualAirSummary(){
  const valid=typeof globalThis.validateCachedAirReading==='function'&&typeof liveAirReading!=='undefined'?globalThis.validateCachedAirReading(liveAirReading,Date.now()):null;
- document.getElementById('actual-air-value').textContent=valid?valid.pm25+' µg/m³':'Unknown';
+ document.getElementById('actual-air-summary').hidden=!valid;
+ document.getElementById('actual-air-value').textContent=valid?valid.pm25+' µg/m³':'';
  const detail=document.getElementById('actual-air-detail');
- detail.textContent=valid?((valid.station?valid.station+' · ':'')+'Observed '+new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Seoul',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(valid.observedAt))+' KST · '+Math.floor((Date.now()-Date.parse(valid.observedAt))/60000)+' min ago. Less than one hour old.'):'No valid cached measurement less than one hour old. Preview sliders are not measured data.';
+ detail.textContent=valid?((valid.station?valid.station+' · ':'')+'Observed '+new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Seoul',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(valid.observedAt))+' KST · '+Math.floor((Date.now()-Date.parse(valid.observedAt))/60000)+' min ago. Less than one hour old.'):'';
  if(airSummaryExpiry!==null)clearTimeout(airSummaryExpiry);airSummaryExpiry=valid?setTimeout(updateActualAirSummary,Math.max(1,Date.parse(valid.validUntil)-Date.now())):null;
 }
 globalThis.updateActualAirSummary=updateActualAirSummary;
