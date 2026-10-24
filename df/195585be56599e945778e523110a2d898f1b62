@@ -1,0 +1,36 @@
+dist/intent.js
+  h_9a6e2a87fc4a0d 6
+docs/JEV-DIAGNOSTIC-OWNERSHIP.md
+  h_9a6e2a87fc4a0d 1-46
+docs/JEV-FIRST-LIVE-RECEIPT.md
+  h_9a6e2a87fc4a0d 9,30-33,44-45,83-86
+docs/JEV-VISITOR-INTENT.md
+  h_9a6e2a87fc4a0d 37-39
+package.json
+  h_9a6e2a87fc4a0d 7
+source-manifest.json
+  h_9a6e2a87fc4a0d 106
+src/content/intent-owner.mjs
+  h_9a6e2a87fc4a0d 1-23
+src/content/intent.mjs
+  h_9a6e2a87fc4a0d 4,16,50,78,81-83,90-95,99-101,106,130,136,138,142,144-147,149-151,164
+src/content/jev.mjs
+  h_9a6e2a87fc4a0d 95,97,100,106-107,110-112
+src/worker.mjs
+  h_9a6e2a87fc4a0d 44,49
+tests/content-intent.test.mjs
+  h_9a6e2a87fc4a0d 3-4,6-9,136,139-164
+tests/intent-owner.test.mjs
+  h_9a6e2a87fc4a0d 1-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "df195585be56599e945778e523110a2d898f1b62",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
