@@ -1,3 +1,5 @@
+-- Before import validate complete target records with the application schema and check draft/expiry state.
+-- SQL predicates check selected eligibility flags and copy baselines, not the entire schema.
 -- Prepared public-field import; never executed automatically by the Worker.
 -- Same checked baselines as prototype-copy.mjs. Preserve other fields and newer authored copy.
 UPDATE content_cards SET content_json=json_set(content_json,'$.facts',json('["Sunday · 2:10 PM"]')) WHERE id='sunday-gatherings' AND status='draft' AND COALESCE(json_extract(content_json,'$.hold'),0)=0 AND json_extract(content_json,'$.isSynthetic')=0 AND json_extract(content_json,'$.sourceStatus')='draft' AND json_extract(content_json,'$.schemaVersion')=2 AND json_extract(content_json,'$.summary')='We gather to hear God’s Word, worship together and encourage one another.' AND json(json_extract(content_json,'$.facts'))=json('[]');
