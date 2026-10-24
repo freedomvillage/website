@@ -64,8 +64,10 @@ try{
   await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='71 ranked resources loaded');
   assert.equal(await page.locator('#intent-more').count(),0);assert.equal(providerCalls,calls);
   const ids=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));assert.equal(new Set(ids).size,71);assert.equal(ids[0],'card-connect-card');assert.equal(ids[1],'card-freedom-kids');
+  await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
   await page.screenshot({path:resolve(output,name+'-ranked-tail.png')});
   const composer=await page.locator('#prompt-composer').boundingBox();assert(composer&&composer.y>=0&&composer.y+composer.height<=height+1);
+  const last=await page.locator('#grid > article.card').last().boundingBox();assert(last&&last.y+last.height<=composer.y,'final resource clears the bottom composer');
   // A fresh synthetic database state enables one new all-zero fixture query.
   // This is not a runtime recovery or spend reset mechanism.
   db.prepare("UPDATE content_checks SET result_json=json_set(result_json,'$.lastStartedAt',0) WHERE id='jev-intent-runtime-v1'").run();zero=true;
