@@ -1,0 +1,18 @@
+dist/content-view.js
+  h_9a6e2a87fc4a0d 32-34
+source-manifest.json
+  h_9a6e2a87fc4a0d 102
+tests/content-back.test.mjs
+  h_9a6e2a87fc4a0d 42-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1940667e9dd2aa39dc3378cf2e4f6b131142a62f",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
