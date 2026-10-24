@@ -63,3 +63,31 @@ test('prepared SQL import matches the projection, preserves private fields and s
   }finally{db.close();}
  }
 });
+
+const visit=()=>base({...structuredClone(PROTOTYPE_COPY.visit.before),related:['sunday-gatherings','children-in-worship']});
+test('temporary visitor copy supplies scoped directions and preserves both existing contact actions',()=>{
+ const input=visit();input.editorial='PRIVATE_VISIT_SOURCE';const stored=JSON.stringify(input),c=publicCard(row('visit-help',input));
+ assert.deepEqual(c.facts,[...PROTOTYPE_COPY.sunday.facts,'Youngil Church · Yangjae']);assert.equal(c.sections.length,3);
+ assert.deepEqual(c.actions.slice(2),input.actions);assert.deepEqual(c.actions.slice(0,2).map(a=>a.href),['https://kko.kakao.com/htkOT9NBZ8','https://naver.me/5v3PGy4s']);
+ assert(c.sections[0].paragraphs.join(' ').includes('서울 서초구 바우뫼로41길67'));assert(c.sections[0].paragraphs.join(' ').includes('Exit 8'));
+ assert(c.sections[1].paragraphs.join(' ').includes('no on-site parking at Youngil Church'));assert(c.sections[1].paragraphs.join(' ').includes('서울 강남구 남부순환로363길19'));
+ assert.equal(c.sections[1].links[0].href,'https://naver.me/FoENy9MF');assert(c.sections[2].paragraphs.join(' ').includes('office is separate from our Sunday venue'));assert(c.sections[2].paragraphs.join(' ').includes('서울 용산구 신흥로21 B1층'));
+ assert.deepEqual(c.related,input.related);assert(!JSON.stringify(c).includes('PRIVATE_VISIT_SOURCE'));assert.equal(JSON.stringify(input),stored);
+});
+test('visitor layer preserves later title, copy, facts, contact actions and authored sections',()=>{
+ const changes=[{title:'New owner title'},{summary:'New owner summary'},{detail:['New owner detail']},{facts:['New owner directions']},{actions:[{label:'New owner contact',href:'https://example.org/contact'}]},{sections:[{heading:'New owner section',paragraphs:['New owner text'],links:[],cardIds:[]}]}];
+ for(const change of changes){const input={...visit(),...change},c=publicCard(row('visit-help',input));for(const [key,value]of Object.entries(change))assert.deepEqual(c[key],value);assert.equal(c.summary,input.summary);}
+ for(const change of [{hold:true},{isSynthetic:true},{sourceStatus:'pending'}])assert.equal(publicCard(row('visit-help',{...visit(),...change})),null);
+});
+test('visitor detail and prepared import agree without changing stored rows on a normal read',async()=>{
+ const db=new DatabaseSync(':memory:');try{
+  db.exec('CREATE TABLE content_cards(id TEXT PRIMARY KEY,status TEXT,content_json TEXT,expires_at TEXT)');const original=visit();original.editorial='PRIVATE_STAYS_IN_DB';const stored=JSON.stringify(original);db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run('visit-help','draft',stored,null);
+  const adapter={prepare(sql){assert(/^SELECT/.test(sql));const st=db.prepare(sql);return {bind(...args){return {all:async()=>({results:st.all(...args)}),first:async()=>st.get(...args)};}};}};
+  const shell='<!doctype html><html><head><title>Fixture</title><meta name="description" content="Fixture"></head><body><main id="main"></main><script src="content-view.js"></script></body></html>';
+  const response=await handleContentPage(new Request('https://next.freedomvillage.church/cards/visit-help',{headers:{'Cf-Access-Jwt-Assertion':'LOCAL_FIXTURE'}}),{CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(shell)}}),html=await response.text();
+  assert.equal(response.status,200);assert(html.includes('Where we gather'));assert(html.includes('Parking and arrival'));assert(html.includes('Church office · Haebangchon'));assert(!html.includes('PRIVATE_STAYS_IN_DB'));assert.equal(db.prepare('SELECT content_json FROM content_cards').get().content_json,stored);
+  const target=db.prepare('SELECT id,content_json FROM content_cards').get(),expected=publicCard(target);assert(expected,'fixture target validated by application before import');
+  db.exec(fs.readFileSync(new URL('../docs/imports/temporary-visit-2026-10-24.sql',import.meta.url),'utf8'));
+  const imported=db.prepare('SELECT id,content_json FROM content_cards').get(),raw=JSON.parse(imported.content_json);assert.deepEqual(publicCard(imported),expected);assert.deepEqual(raw.sections,expected.sections);assert.deepEqual(raw.actions,expected.actions);assert.equal(raw.editorial,'PRIVATE_STAYS_IN_DB');
+ }finally{db.close();}
+});

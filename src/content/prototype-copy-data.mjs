@@ -1,6 +1,6 @@
 // Visitor-facing prototype copy only. Private source/approval records are not shipped.
 export const PROTOTYPE_COPY={
-  "version": "2026-10-24.1",
+  "version": "2026-10-24.2",
   "sunday": {
     "summary": "We gather to hear God’s Word, worship together and encourage one another.",
     "beforeFacts": [],
@@ -123,5 +123,78 @@ export const PROTOTYPE_COPY={
         ]
       }
     ]
+  },
+  "visit": {
+    "before": {
+      "title": "Planning your first Sunday?",
+      "summary": "Have a question before you visit? Ask about gathering times, directions or coming with children.",
+      "detail": [
+        "Get in touch with questions about your visit, including travel, access or coming with children."
+      ],
+      "facts": [],
+      "actions": [
+        {
+          "label": "Ask about visiting",
+          "href": "mailto:contact@freedomvillage.church"
+        },
+        {
+          "label": "Open our Kakao channel",
+          "href": "https://pf.kakao.com/_nEAVn"
+        }
+      ]
+    },
+    "after": {
+      "summary": "Join us at our temporary Sunday venue in Yangjae while we renovate in Haebangchon.",
+      "detail": [
+        "Get in touch with a question about your visit, including travel, access or coming with children."
+      ],
+      "facts": [
+        "Youngil Church · Yangjae"
+      ],
+      "mapActions": [
+        {
+          "label": "Youngil Church on Kakao Map",
+          "href": "https://kko.kakao.com/htkOT9NBZ8"
+        },
+        {
+          "label": "Youngil Church on Naver Map",
+          "href": "https://naver.me/5v3PGy4s"
+        }
+      ],
+      "sections": [
+        {
+          "heading": "Where we gather",
+          "paragraphs": [
+            "Our temporary Sunday venue is Youngil Church in Yangjae, at 서울 서초구 바우뫼로41길67.",
+            "From Yangjae Station, use Exit 8."
+          ],
+          "links": [],
+          "cardIds": []
+        },
+        {
+          "heading": "Parking and arrival",
+          "paragraphs": [
+            "There is no on-site parking at Youngil Church. A nearby paid option is the Eonju Elementary School lot at 서울 강남구 남부순환로363길19.",
+            "Youngil Church has an elevator. Contact us with a question about access or dropping off your family."
+          ],
+          "links": [
+            {
+              "label": "Eonju parking on Naver Map",
+              "href": "https://naver.me/FoENy9MF"
+            }
+          ],
+          "cardIds": []
+        },
+        {
+          "heading": "Church office · Haebangchon",
+          "paragraphs": [
+            "During our time gathering in Yangjae, the church office is in B1 of the Mango Real Estate building: 서울 용산구 신흥로21 B1층.",
+            "The office is separate from our Sunday venue. Please get in touch before coming to the office."
+          ],
+          "links": [],
+          "cardIds": []
+        }
+      ]
+    }
   }
 };
