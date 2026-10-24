@@ -101,8 +101,8 @@
     "dist/scene-clock.js": "d2898bf2e4b94e9f78c8b9d046da6c472f2f90895f02d19b25dc2bcc72e3b3d3",
     "dist/content-view.js": "6e3c7f05a3647f1f2d292aa5d7a19bf395229895cdd278fcb546dbac5af44ce2",
     "dist/content-view.css": "ca445e26eb7c467d31717ef06a982d5f6187c0a0fded479a2c36f8ef6114db2a",
-    "dist/composer.js": "da68a00e8748d8b917f9e0b71345a95049e6b8e7778ffa971fd73fa273865d96",
-    "dist/style.css": "dc6604ff08a97da530ba878a229254280b6c402b84983f660b6aba3ed8358bb0"
+    "dist/composer.js": "c82719c1b6ecede904b6fda7fce726aa70ada3658230858aab39845783e58701",
+    "dist/style.css": "2cceef476881aa7e0beccdfe1a5d4b4dc96e3712118513d405a064f724cf0dbe"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
   "adaptation": "Shared night-only air-quality cache and one-hour observation limit, reconciled with approved UI runtime and artwork overlays; original paintings unchanged.",
