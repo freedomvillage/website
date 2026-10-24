@@ -32,9 +32,9 @@ test('opening and closing a native disclosure remeasures the masonry once per to
 });
 
 test('teaching series stays in the content unit and loads only after an explicit media choice',()=>{
- let click,frame;const box={dataset:{series:'PLsynthetic1234'}},button={dataset:{seriesTitle:'Synthetic teaching'},hidden:true,addEventListener(type,fn){assert.equal(type,'click');click=fn;},closest(){return box;},replaceWith(value){frame=value;}};
- const context={Set,URL,URLSearchParams,location:{hash:''},requestAnimationFrame(fn){fn();},matchMedia(){return {matches:false,addEventListener(){}};},document:{querySelectorAll(s){return s==='.series-load'?[button]:[];},querySelector(){return null;},createElement(tag){assert.equal(tag,'iframe');return {focus(){this.focused=true;}};},addEventListener(){}},addEventListener(){}};
- vm.createContext(context);vm.runInContext(fs.readFileSync(new URL('../dist/content-view.js',import.meta.url),'utf8'),context);context.contentView.render();assert.equal(frame,undefined);assert.equal(button.hidden,false);click();assert.equal(frame.src,'https://www.youtube-nocookie.com/embed/videoseries?list=PLsynthetic1234');assert.equal(frame.title,'Synthetic teaching');assert.equal(frame.focused,true);assert(!frame.src.includes('autoplay'));
+ let click,frame,remeasures=0;const box={dataset:{series:'PLsynthetic1234'}},button={dataset:{seriesTitle:'Synthetic teaching'},hidden:true,addEventListener(type,fn){assert.equal(type,'click');click=fn;},closest(){return box;},replaceWith(value){frame=value;}};
+ const context={Set,URL,URLSearchParams,location:{hash:''},sizeCards(){remeasures++;},requestAnimationFrame(fn){fn();},matchMedia(){return {matches:false,addEventListener(){}};},document:{querySelectorAll(s){return s==='.series-load'?[button]:[];},querySelector(){return null;},createElement(tag){assert.equal(tag,'iframe');return {focus(){this.focused=true;}};},addEventListener(){}},addEventListener(){}};
+ vm.createContext(context);vm.runInContext(fs.readFileSync(new URL('../dist/content-view.js',import.meta.url),'utf8'),context);context.contentView.render();assert.equal(frame,undefined);assert.equal(button.hidden,false);const beforePlayer=remeasures;click();assert.equal(remeasures,beforePlayer+1,'the replacement player must remeasure the masonry without another disclosure/resize');assert.equal(frame.src,'https://www.youtube-nocookie.com/embed/videoseries?list=PLsynthetic1234');assert.equal(frame.title,'Synthetic teaching');assert.equal(frame.focused,true);assert(!frame.src.includes('autoplay'));
  frame=undefined;box.dataset.series='https://outside.invalid';click();assert.equal(frame,undefined);
 });
 
@@ -47,4 +47,14 @@ test('only the teaching illustration receives one finite in-view entrance, with 
   classes.delete('art-entered');observerCallback([{target:el,isIntersecting:false}]);observerCallback([{target:el,isIntersecting:true}]);assert.equal(classes.has('art-entered'),false,'re-entry never starts another entrance');
  }
  assert(renderLibraryCard(teaching()).includes('data-art-entrance="true"'));assert(!renderLibraryCard(visit()).includes('data-art-entrance'));assert(!renderLibraryCard(community()).includes('data-art-entrance'));
+});
+
+test('transparent presentations inherit their surface foreground, including pale detail pages at night',()=>{
+ const css=fs.readFileSync(new URL('../dist/content-view.css',import.meta.url),'utf8');
+ const declarations=[...css.matchAll(/\.card\.content-presentation\{([^}]+)\}/g)].flatMap(m=>[...m[1].matchAll(/(?:^|;)color:([^;]+)/g)].map(x=>x[1]));
+ assert.equal(declarations.at(-1),'inherit','root night ink must not override a fixed detail surface');
+ const detail=css.match(/\.library-detail\{[^}]*background:(#[a-f0-9]+);color:(#[a-f0-9]+)/);assert(detail,'fixed detail surface is part of this source contract');
+ const luminance=hex=>{const rgb=hex.slice(1).match(/../g).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;};
+ const contrast=(a,b)=>{const [light,dark]=[luminance(a),luminance(b)].sort((a,b)=>b-a);return (light+.05)/(dark+.05);};
+ assert(contrast(detail[1],detail[2])>7);assert(contrast(detail[1],'#ffffff')<1.5,'the prior night-root foreground is unsuitable for this pale surface');
 });
