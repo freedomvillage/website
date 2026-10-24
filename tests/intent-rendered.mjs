@@ -44,8 +44,9 @@ try{
   await context.route('**/*',async route=>{
    const r=route.request(),url=new URL(r.url());if(url.origin!==origin)return route.abort();
    if(failPage&&url.pathname==='/api/content/intent'&&url.searchParams.has('after')){failPage=false;return route.fulfill({status:503,contentType:'application/json',body:'{"status":"unavailable"}'});}
-   const headers={...r.headers(),'Cf-Access-Jwt-Assertion':'SYNTHETIC_FIXTURE',...(r.method()==='POST'?{Origin:origin}:{})};
+   const headers=new Headers(r.headers());headers.set('Cf-Access-Jwt-Assertion','SYNTHETIC_FIXTURE');if(r.method()==='POST')headers.set('Origin',origin);
    const response=await worker.fetch(new Request(r.url(),{method:r.method(),headers,...(r.postData()?{body:r.postData()}: {})}),env);
+   if(url.pathname==='/api/content/intent'){const value=await response.clone().json();console.log(JSON.stringify({viewport:name,method:r.method(),httpStatus:response.status,status:value.status,selected:value.selectedIds?.length,nextCursor:value.renderSelection?.nextCursor}));}
    await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});
   });
   const page=await context.newPage();await page.clock.install({time:new Date(at)});
