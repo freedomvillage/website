@@ -84,3 +84,26 @@ test('rate/budget stop before provider and receipt reads contain no query or sec
  const receiptRequest=new Request('https://next.freedomvillage.church/api/content/intent?receipt='+encodeURIComponent(first.receipt.requestId),{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS'}});const text=await(await handleIntent(receiptRequest,env,options)).text();assert(text.includes('"status":"ok"'));assert(!text.includes('I would like community.'));assert(!text.includes(secret));assert.equal(seen.length,count);
  }finally{db.close();}
 });
+
+function failCatalogReads(env,failAt){const original=env.CONTENT_DB;let reads=0;env.CONTENT_DB={prepare(sql){const prepared=original.prepare(sql);return {bind(...args){const bound=prepared.bind(...args);return {...bound,all:async()=>{if(sql.includes('FROM content_cards')&&++reads===failAt)throw Error('SYNTHETIC_CATALOG_FAILURE');return bound.all();}};}};}};}
+test('saved-receipt catalog rejection returns JSON503 without provider spend or an escaping rejection',async()=>{
+ const {db,env}=setup(2);try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)};assert.equal((await handleIntent(request(),env,options)).status,200);const calls=seen.length;failCatalogReads(env,1);const response=await handleIntent(request(),env,options);assert.equal(response.status,503);assert.equal((await response.json()).status,'unavailable');assert.equal(seen.length,calls);}finally{db.close();}
+});
+test('fresh result rendering stays inside the lock/catch and a catalog failure stops new requests',async()=>{
+ const {db,env}=setup(2);try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)};failCatalogReads(env,3);const response=await handleIntent(request(),env,options);assert.equal(response.status,503);assert.equal((await response.json()).status,'request-interrupted');const state=JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(INTENT_STATE).result_json);assert.equal(state.stopped,true);assert.equal(state.busy,false);assert.equal(seen.length,2);}finally{db.close();}
+});
+test('aggregate usage includes known failed-batch tokens and never labels unknown usage zero',async()=>{
+ for(const unknown of [false,true]){const {db,env}=setup(2);try{const seen=[],upstream=provider(seen,{failureAt:unknown?0:2});const fetchUpstream=unknown?async(...args)=>{if(seen.length===1){seen.push(null);return new Response('',{status:503});}return upstream(...args);}:upstream;
+ const response=await handleIntent(request(),env,{now:()=>instant,fetchUpstream});const value=await response.json();assert.equal(response.status,503);assert.equal(value.receipt.model,null);assert.equal(value.receipt.requestedModel,'jev-1.14.0');assert.equal(value.receipt.usageComplete,!unknown);
+ if(unknown){assert.equal(value.receipt.usage,null);assert.equal(value.receipt.estimatedCostUsd,null);assert.equal(value.receipt.knownUsage.inputTokens,0);}else{assert.equal(value.receipt.usage.inputTokens,10);assert.equal(value.receipt.usage.outputTokens,4);assert.equal(value.receipt.estimatedCostUsd,10*.042/1000000);}
+ }finally{db.close();}}
+});
+
+test('historical successful receipts with an unexpected model cannot bypass the new pin guard',async()=>{
+ const {db,env}=setup(2);try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)};const first=await(await handleIntent(request(),env,options)).json();const count=seen.length;
+ const row=JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(first.receipt.requestId).result_json);row.batches[0].model='jev-other-model';db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').run(JSON.stringify(row),first.receipt.requestId);
+ const replay=await handleIntent(request(),env,options);assert.equal(replay.status,409);assert.equal((await replay.json()).status,'model-receipt-needs-review');assert.equal(seen.length,count);
+ const recovery=JSON.parse(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(RECOVERY).result_json);recovery.model='jev-other-model';db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').run(JSON.stringify(recovery),RECOVERY);
+ const fresh=await handleIntent(request({query:'Another question',requestId:'jev-intent-request:22222222-2222-4222-8222-222222222222'}),env,{...options,now:()=>instant+11000});assert.equal(fresh.status,409);assert.equal((await fresh.json()).status,'recovery-needs-review');assert.equal(seen.length,count);
+ }finally{db.close();}
+});

@@ -48,5 +48,7 @@ const composerCss=fs.readFileSync('dist/style.css','utf8');assert(!composerCss.i
 console.log('PASS: visible intent entry before catalog; original no-send draft interaction and Appearance retained');
 
 nodes['prompt-composer'].getBoundingClientRect=()=>({height:220.2});vm.runInContext('updateComposerClearance()',c);assert.equal(styleProps['--composer-height'],'221px');nodes['prompt-composer'].getBoundingClientRect=()=>({height:310});vm.runInContext('updateComposerClearance()',c);assert.equal(styleProps['--composer-height'],'310px');
-assert(composerCss.includes('.prompt-composer{position:fixed;'));assert(!composerCss.includes('.prompt-composer{position:relative;'));assert(composerCss.includes('env(safe-area-inset-bottom,0px) + var(--keyboard-offset,0px)'));assert(composerCss.includes('body.content-detail main{padding-bottom:calc(var(--composer-height,250px)'));assert(composerCss.includes('scroll-margin-bottom:calc(var(--composer-height,250px)'));
+assert(composerCss.includes('.prompt-composer{position:fixed;'));assert(!composerCss.includes('.prompt-composer{position:relative;'));assert(composerCss.includes('env(safe-area-inset-bottom,0px) + var(--keyboard-offset,0px)'));assert(composerCss.includes('body.content-detail main{padding-bottom:calc(var(--composer-height,250px)'));assert(composerCss.includes('scroll-margin-bottom:12px'));assert(composerCss.includes('scroll-padding-bottom:var(--composer-clearance,290px)'));
 console.log('PASS: original fixed-bottom geometry retained with measured expanded-height/content-focus clearance');
+
+nodes['prompt-composer'].getBoundingClientRect=()=>({height:250,top:500});vm.runInContext('updateComposerClearance()',c);assert.equal(styleProps['--composer-clearance'],'312px');

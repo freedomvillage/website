@@ -154,3 +154,10 @@ test('a future malformed-body receipt retains safe classification and stays immu
   assert.equal(calls,1);assert.equal(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get('ranking-eval-v1:sample-one').result_json,original);
  }finally{db.close();}
 });
+
+test('an unexpected response model cannot satisfy the explicitly pinned request',()=>{
+ const request=rankingRequest('A question',[{id:'sample',title:'Sample',summary:'Public content'}],'jev-1.14.0');
+ const payload={model:'jev-other-model',usage:{input_tokens:100,output_tokens:20},answers:{card_0:{type:'score',score:2,confidence:1,probabilities:{0:0,1:0,2:1}}}};
+ assert.throws(()=>rankingResult(payload,request),error=>error.validationCode==='model');
+ assert.equal(rankingResult({...payload,model:'jev-1.14.0'},request).model,'jev-1.14.0');
+});
