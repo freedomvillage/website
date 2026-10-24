@@ -6,7 +6,7 @@ Loading either receipt URL below is read-only and cannot invoke Jev.
 
 For an operator without DevTools, open
 `https://next.freedomvillage.church/api/content/intent?receipt=latest` in the
-existing legitimate session. This returns the most recent request, including
+existing legitimate session. This returns only the authenticated user's most recent owned request, including
 a pending outcome; its UUID/timestamp must still be matched to the intended
 attempt. It does not establish which question was asked, since questions are
 never stored. It never reruns recovery or ranking.
@@ -27,6 +27,10 @@ Before/after the first submission, `GET /api/content/intent` exposes:
 The composer exposes its random ID in
 `document.getElementById('prompt-composer').dataset.requestId` **before** sending.
 This contains no question. After success, `dataset.receipt` confirms the saved ID.
+Another user receives404 for that UUID and cannot discover it through latest.
+Legacy rows lacking a verified owner remain intact but are not exposed by this
+endpoint and cannot be retroactively claimed. Authorized D1 administration is
+separate; no query, cookie, raw identity or ownership reassignment is added.
 Read `GET /api/content/intent?receipt=<URL-encoded request ID>` to verify:
 
 | Field | Meaning |
@@ -37,7 +41,8 @@ Read `GET /api/content/intent?receipt=<URL-encoded request ID>` to verify:
 | `batches[].candidateIds` | Their union must equal the candidate snapshot exactly once. No candidates may be silently dropped at the 64-card/byte boundary. |
 | `batches[].status`, `model`, `usage`, `failure`, `validation` | Actual validated outcome or safe diagnosis for each attempted batch. |
 | `ranked` | Canonical IDs and typed relevance scores, rechecked for eligibility at completion. A partial failure yields no successful ranking or substitute results. |
-| `candidateInputs` | Exact allowlisted public title/description/facts sent for each candidate on new requests. No visitor question or private source fields. Older receipts show null. |
+| `candidateInputs`, `candidateInputScope` | Allowlisted inputs for invocation-attempted/transport-uncertain batches only. This is not proof of provider receipt. No question or private fields. Legacy delivery is explicitly unestablished. |
+| `batchPlan[].dispatch`, `batches[].dispatch` | `not-attempted` for untouched planned batches; `pending-or-uncertain` while a request may be in flight; `not-sent` for local rejection/deadline; `transport-uncertain` for an attempted call without an HTTP response; `http-response` when a response was received. |
 | `rankedBeforeEligibility` | Complete typed scores before the final eligibility filter on new requests. Older receipts show null. |
 | `selection` | Original rendering decision on new requests: score range0–2, cutoff1, cap24, timestamp, selected IDs/canonical paths, below-threshold/unavailable/over-limit IDs. Older receipts show null, not an inferred original decision. |
 | `usage`, `knownUsage`, `usageComplete`, `estimatedCostUsd` | Visitor batches only, including known failed-batch tokens. `usage`/cost are null when incomplete; `knownUsage` is only the known subtotal. Recovery has its separate receipt. |
@@ -75,3 +80,7 @@ the historical failed evaluation and its seven unrun cases.
 Record only the fields above, the source revision/Workers version, and rendered
 card/link evidence. Real provider success and actual rendering remain separate
 from cloud fixtures and build receipts.
+
+Older receipts without `batchPlan` may have included planned inputs after a
+failed batch. Do not equate those inputs with sent requests. Existing successful
+full-batch receipts and the historical failure are preserved without rewriting.

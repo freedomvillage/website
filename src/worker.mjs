@@ -41,12 +41,12 @@ export function publicReading(record,station,now){
  if(observed>now+5*60000||observed<window.start||now>=observed+MAX_AGE_MS)return unknown('stale-or-not-this-evening',station);
  return {status:'ok',pm25:record.pm25,unit:'µg/m³',station,observedAt:new Date(observed).toISOString(),validUntil:new Date(Math.min(observed+MAX_AGE_MS,window.end)).toISOString(),source:SOURCE,attribution:'AirKorea / Korea Environment Corporation',kind:'station observation',note:'Local station measurement; not actual N Seoul Tower lighting status.'};
 }
-export function createWorker({fetchUpstream=fetch,now=Date.now}={}){
+export function createWorker({fetchUpstream=fetch,now=Date.now,resolveIntentOwner}={}){
  return {
   async fetch(request,env){
    const url=new URL(request.url);
    if(url.pathname==='/api/content')return handleCatalogRequest(request,env,{now:now()});
-   if(url.pathname==='/api/content/intent')return handleIntent(request,env,{fetchUpstream,now});
+   if(url.pathname==='/api/content/intent')return handleIntent(request,env,{fetchUpstream,now,...(resolveIntentOwner?{resolveOwner:resolveIntentOwner}:{})});
    if(url.pathname==='/api/content/jev-check')return handleJevCheck(request,env);
    if(url.pathname==='/api/content/evaluation')return handleRankingEvaluation(request,env);
    if(url.pathname.startsWith('/media/'))return handleMediaRequest(request,env,{now:now()});

@@ -92,24 +92,24 @@ export function rankingResult(payload, request) {
 }
 
 export async function rankPublishedCards(query, publishedCards, env, {fetchUpstream = fetch, model='jev-latest',signal} = {}) {
-  if (env.JEV_ENABLED !== 'true') return {status:'disabled', ranked:[]};
+  if (env.JEV_ENABLED !== 'true') return {status:'disabled',dispatch:'not-sent',ranked:[]};
   if (typeof env.TYPESAFE_API_KEY !== 'string' || !env.TYPESAFE_API_KEY.trim())
-    return {status:'unconfigured', ranked:[]};
+    return {status:'unconfigured',dispatch:'not-sent',ranked:[]};
   let request;
   try { request = rankingRequest(query, publishedCards,model); }
-  catch { return {status:'invalid-input', ranked:[]}; }
+  catch { return {status:'invalid-input',dispatch:'not-sent',ranked:[]}; }
   let response;
   try {
     response = await fetchUpstream(ENDPOINT, {method:'POST', redirect:'manual',
       headers:{Authorization:`Bearer ${env.TYPESAFE_API_KEY}`, 'Content-Type':'application/json', Accept:'application/json'},
       body:JSON.stringify(request), signal:signal?AbortSignal.any([signal,AbortSignal.timeout(8000)]):AbortSignal.timeout(8000)});
-  } catch(error) { return {status:'unavailable',category:'transport-or-body',ranked:[],failure:failure('transport',['TimeoutError','AbortError'].includes(error?.name)?'request-timeout-or-abort':'request-failed')}; }
-  if (!response.ok) return {status:'unavailable', category:'http', httpStatus:response.status, ranked:[],failure:failure('http','upstream-status')};
+  } catch(error) { return {status:'unavailable',dispatch:'transport-uncertain',category:'transport-or-body',ranked:[],failure:failure('transport',['TimeoutError','AbortError'].includes(error?.name)?'request-timeout-or-abort':'request-failed')}; }
+  if (!response.ok) return {status:'unavailable',dispatch:'http-response',category:'http',httpStatus:response.status,ranked:[],failure:failure('http','upstream-status')};
   let payload;
   try { payload=await boundedJson(response); }
-  catch(error) { return {status:'unavailable',category:'transport-or-body',httpStatus:response.status,ranked:[],failure:failure('body',error instanceof BodyFailure?error.code:'body-read')}; }
-  try { return rankingResult(payload, request); }
-  catch(error) { return {status:'unavailable',category:'invalid-response',httpStatus:response.status,ranked:[],
+  catch(error) { return {status:'unavailable',dispatch:'http-response',category:'transport-or-body',httpStatus:response.status,ranked:[],failure:failure('body',error instanceof BodyFailure?error.code:'body-read')}; }
+  try { return {...rankingResult(payload,request),dispatch:'http-response'}; }
+  catch(error) { return {status:'unavailable',dispatch:'http-response',category:'invalid-response',httpStatus:response.status,ranked:[],
       failure:failure('schema',VALIDATION_CODES.has(error?.validationCode)?error.validationCode:'unknown'),
       validation:{code:VALIDATION_CODES.has(error?.validationCode)?error.validationCode:'unknown',questionIndex:Number.isSafeInteger(error?.questionIndex)&&error.questionIndex>=0&&error.questionIndex<publishedCards.length?error.questionIndex:null,answerCount:payload?.answers&&typeof payload.answers==='object'&&Object.keys(payload.answers).length<=1000?Object.keys(payload.answers).length:null,model:typeof payload?.model==='string'&&MODEL.test(payload.model)?payload.model:null},
       ...(integer(payload?.usage?.input_tokens)&&integer(payload?.usage?.output_tokens)?

@@ -103,7 +103,7 @@
     "dist/content-view.css": "ca445e26eb7c467d31717ef06a982d5f6187c0a0fded479a2c36f8ef6114db2a",
     "dist/composer.js": "73dece20e4fc508902b814691ae2f2519da4c0f07e2a9ebc268f524166ff3507",
     "dist/style.css": "192f405da142f8d9f0437d4c3f5e1a6da525b6487eef1521b071c7e8d234d7ea",
-    "dist/intent.js": "2fadd0f1d82a267cb5063648bc7ce706ef4cd25bedc8fa6156fd78cc2cdd0a63",
+    "dist/intent.js": "2dd820d7b0dc5d5977d23659a172cb9c09bf98e4984e52fe049caa9d4bbb716c",
     "dist/feed-history.js": "15ecb8273519d8bfe00b27479c02fb3a644d14ed6ef1dea6be8889b1950cec7a"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
