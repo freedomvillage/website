@@ -3,6 +3,7 @@ import {DIAGNOSTIC_KEY,diagnostic,xmlCode,boundedBody,payloadCategory} from './a
 import {handleCatalogRequest,handleMediaRequest} from './content/catalog.mjs';
 import {handleJevCheck} from './content/check.mjs';
 import {handleRankingEvaluation} from './content/evaluation.mjs';
+import {handleIntent} from './content/intent.mjs';
 import {handleContentPage} from './content/pages.mjs';
 import {handleStudyRequest} from './content/studies.mjs';
 // Provider schema remains fixture-tested until an authorized real response is verified.
@@ -45,6 +46,7 @@ export function createWorker({fetchUpstream=fetch,now=Date.now}={}){
   async fetch(request,env){
    const url=new URL(request.url);
    if(url.pathname==='/api/content')return handleCatalogRequest(request,env,{now:now()});
+   if(url.pathname==='/api/content/intent')return handleIntent(request,env,{fetchUpstream,now});
    if(url.pathname==='/api/content/jev-check')return handleJevCheck(request,env);
    if(url.pathname==='/api/content/evaluation')return handleRankingEvaluation(request,env);
    if(url.pathname.startsWith('/media/'))return handleMediaRequest(request,env,{now:now()});

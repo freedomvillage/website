@@ -1,5 +1,5 @@
-// Server-side adapter. Only the protected, atomically bounded check invokes it.
-// No visitor-query endpoint, automatic call, retries or logging.
+// Server-side adapter. Callers enforce protected access and atomic spend bounds.
+// No retries, query logging or client-side secrets.
 // Contract checked against https://docs.typesafe.ai/api/system-one and /primitives/score.
 const ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 const LEVELS = [
@@ -90,7 +90,7 @@ export function rankingResult(payload, request) {
     policy:'uncalibrated-experiment'};
 }
 
-export async function rankPublishedCards(query, publishedCards, env, {fetchUpstream = fetch, model='jev-latest'} = {}) {
+export async function rankPublishedCards(query, publishedCards, env, {fetchUpstream = fetch, model='jev-latest',signal} = {}) {
   if (env.JEV_ENABLED !== 'true') return {status:'disabled', ranked:[]};
   if (typeof env.TYPESAFE_API_KEY !== 'string' || !env.TYPESAFE_API_KEY.trim())
     return {status:'unconfigured', ranked:[]};
@@ -101,7 +101,7 @@ export async function rankPublishedCards(query, publishedCards, env, {fetchUpstr
   try {
     response = await fetchUpstream(ENDPOINT, {method:'POST', redirect:'manual',
       headers:{Authorization:`Bearer ${env.TYPESAFE_API_KEY}`, 'Content-Type':'application/json', Accept:'application/json'},
-      body:JSON.stringify(request), signal:AbortSignal.timeout(8000)});
+      body:JSON.stringify(request), signal:signal?AbortSignal.any([signal,AbortSignal.timeout(8000)]):AbortSignal.timeout(8000)});
   } catch(error) { return {status:'unavailable',category:'transport-or-body',ranked:[],failure:failure('transport',['TimeoutError','AbortError'].includes(error?.name)?'request-timeout-or-abort':'request-failed')}; }
   if (!response.ok) return {status:'unavailable', category:'http', httpStatus:response.status, ranked:[],failure:failure('http','upstream-status')};
   let payload;
