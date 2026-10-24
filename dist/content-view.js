@@ -98,17 +98,20 @@
   const history=root.createFeedHistory?.({pageCount:()=>pagesLoaded,isIntent:()=>intentActive,loadMore:signal=>paging?.load(false,true,signal)||false,measure:()=>{if(typeof sizeCards==='function')sizeCards();}});
   restoring=history?.willRestore()||false;paging=pagination();
   if(history)void history.restore().finally(()=>{restoring=false;paging?.observe();});
- }},showIntent(html){
+ }},showIntent(html,{append=false,selection}={}){
   const grid=document.getElementById('grid'),collection=document.getElementById('collection'),detail=document.getElementById('detail');if(!grid||!collection||!detail)throw Error('Results view unavailable');
-  intentActive=true;document.querySelector('.load-more')?.remove();
   const parsed=new DOMParser().parseFromString('<div>'+html+'</div>','text/html'),articles=[...parsed.body.firstElementChild.children];
   if(articles.some(el=>!el.matches('article.card')))throw Error('Invalid results');
+  if(append&&!intentActive)throw Error('Results view changed');
+  intentActive=true;document.querySelector('.load-more:not(#intent-more)')?.remove();
   // Keep the original grid node used by masonry sizing; no generated JS executes.
-  grid.replaceChildren(...articles.map(el=>document.importNode(el,true)));collection.hidden=false;detail.hidden=true;document.body.classList.remove('content-detail');
+  const copies=articles.filter(el=>!append||!document.getElementById(el.id)).map(el=>document.importNode(el,true));
+  if(append)grid.append(...copies);else grid.replaceChildren(...copies);
+  collection.hidden=false;detail.hidden=true;document.body.classList.remove('content-detail');
   const heading=collection.querySelector('h1');if(heading){heading.className='topic-title';heading.textContent='For your question';heading.tabIndex=-1;}
-  document.getElementById('collection-label').textContent=articles.length?'Relevant church content':'No clear matches. Try a more specific question or browse the collections.';
-  document.getElementById('count').textContent=articles.length+' matches';
+  document.getElementById('collection-label').textContent=selection.totalCount?(selection.closeMatchCount?'Church resources ranked for your question':'No close matches. You can still browse all ranked church resources.'):'No eligible church resources are available right now.';
+  document.getElementById('count').textContent=grid.children.length+' of '+selection.totalCount+' ranked resources';
   if(!document.getElementById('intent-return')){const back=document.createElement('a');back.id='intent-return';back.href=location.pathname+location.search;back.textContent='Return to browsing';collection.insertBefore(back,grid);}
-  enhance(grid);heading?.focus();
+  enhance(grid);if(append)copies[0]?.querySelector('a')?.focus({preventScroll:true});else heading?.focus();
  }};
 })(globalThis);

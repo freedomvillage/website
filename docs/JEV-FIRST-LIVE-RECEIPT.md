@@ -38,38 +38,48 @@ Read `GET /api/content/intent?receipt=<URL-encoded request ID>` to verify:
 | `requestId`, `status`, `completedAt` | Identity, final saved outcome and timestamp. A pending row returns 409; 404 alone does not establish that no recovery call occurred. |
 | `requestedModel`, `model` | Requested pin and actual validated aggregate model. Failed ranking has `model:null`, not an invented attribution. |
 | `candidateCount`, `candidateIds` | Complete eligible snapshot used for ranking; 71 is historical/fixture coverage, never an assumed current live count. |
-| `batches[].candidateIds` | Their union must equal the candidate snapshot exactly once. No candidates may be silently dropped at the 64-card/byte boundary. |
+| `batchPlan[].candidateIds`, `batches[].candidateIds` | The plan covers the full candidate snapshot exactly once. On full success, attempted batches cover that same set. After a failure, attempted batches may be only a prefix: untouched planned batches remain `not-attempted`, never reported as sent. |
 | `batches[].status`, `model`, `usage`, `failure`, `validation` | Actual validated outcome or safe diagnosis for each attempted batch. |
 | `ranked` | Canonical IDs and typed relevance scores, rechecked for eligibility at completion. A partial failure yields no successful ranking or substitute results. |
 | `candidateInputs`, `candidateInputScope` | Allowlisted inputs for invocation-attempted/transport-uncertain batches only. This is not proof of provider receipt. No question or private fields. Legacy delivery is explicitly unestablished. |
 | `batchPlan[].dispatch`, `batches[].dispatch` | `not-attempted` for untouched planned batches; `pending-or-uncertain` while a request may be in flight; `not-sent` for local rejection/deadline; `transport-uncertain` for an attempted call without an HTTP response; `http-response` when a response was received. |
 | `rankedBeforeEligibility` | Complete typed scores before the final eligibility filter on new requests. Older receipts show null. |
-| `selection` | Original rendering decision on new requests: score range0–2, cutoff1, cap24, timestamp, selected IDs/canonical paths, below-threshold/unavailable/over-limit IDs. Older receipts show null, not an inferred original decision. |
+| `selection` | Original rendering decision. Version 2 retains every eligible score and records a 24-resource page, `noticeMinimumScore:1`, `totalCount`, `closeMatchCount`, `after`, `nextCursor`, IDs/paths, below-threshold/unavailable/remaining IDs. Historical version 1 decisions retain their old cutoff semantics; missing originals remain null. |
 | `usage`, `knownUsage`, `usageComplete`, `estimatedCostUsd` | Visitor batches only, including known failed-batch tokens. `usage`/cost are null when incomplete; `knownUsage` is only the known subtotal. Recovery has its separate receipt. |
 
 The successful POST also returns `selectedIds` and server-rendered `html`. Verify
 the shown card IDs and canonical links match `selectedIds`, not merely that the
-request returned HTTP 200. Selection uses the provisional descriptive middle
-score level (>=1), capped at 24; it is not a calibrated certainty claim. Eligible
-content can change after a snapshot, so a replay rechecks current records again.
-An `ok` ranking with no clear matches is valid and must not manufacture an answer.
+request returned HTTP 200. The current `renderSelection` returns up to 24 resources from the full saved
+ranking, with weak scores last. `closeMatchCount` uses the descriptive middle
+score level (>=1) solely for the no-close-matches notice, never for exclusion.
+An all-zero ranking still offers every eligible resource.
+
+Follow `renderSelection.nextCursor` with an owned receipt ID and `after` to read
+the next page. This GET cannot rank again or write any receipt/spend state.
+Verify all pages preserve score order with no duplicates or omissions, and that
+held, expired, removed or otherwise ineligible records are absent. A cursor can
+name a record that has since disappeared; it still marks its saved rank position.
+The returned `renderSelection` describes this page; `receipt.selection` remains
+the original first rendering decision.
 
 Receipt GETs also expose `currentInspection`, explicitly scoped to the **current
-eligible catalog, not the original render**. It recomputes the unchanged selection
-policy from saved scores and shows current public family/visit candidate inputs,
+eligible catalog, not the original render**. It applies the current ranking/page
+policy to saved scores and shows current public family/visit candidate inputs,
 whether each was included in the saved snapshot, and its saved score if present.
-Categories are shown separately as `categoriesNotSentToModel`; detail, sections,
-actions and related content were not part of the ranking input. GET inspection
-does not alter the saved receipt. A current catalog read failure leaves the saved
+The saved `inputProjection` distinguishes legacy `summary-facts-v1` from
+`public-context-v2`. V2 sends categories, record type, bounded public detail/section
+excerpts and action labels; it excludes URLs, related records, media metadata and
+private/provenance fields. `currentInputProjection` describes the current preview,
+not a retroactive change to the saved input. GET inspection does not alter the saved
+receipt. A current catalog read failure leaves the saved
 receipt readable with `currentInspection.status:unavailable`.
 
 For a reported one-card result, compare all of: original `selection` when present,
 actual returned `selectedIds`/DOM, candidate snapshot inclusion, per-ID score and
 probability distribution, and current eligibility. There is no top-one cap or
-lexical fallback. The threshold is a provisional product decision, not a scale
-conversion: three criteria mean score0–2. A score below1 can still assign high
-probability to partial help. Do not change the policy, blame a typo, or assert
-missing family content without the actual evidence.
+lexical fallback. Three criteria mean score0–2. A score below1 can still assign
+high probability to partial help, so it remains in the ranking. Do not blame a
+typo or assert missing family content without the actual evidence.
 
 If the browser times out or redirects to sign-in, label the outcome **uncertain**.
 Read readiness and the same ID's receipt before retrying; the same draft reuses

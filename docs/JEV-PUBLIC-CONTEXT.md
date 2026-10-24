@@ -21,8 +21,9 @@ excerpts, not a claim that the full document was sent.
 
 The relevance question now explicitly permits a useful answer to one meaningful
 part of a multi-part intent. It still rejects incidental shared words and invented
-schedules, availability or capabilities. The three descriptive criteria,0–2 score
-contract, minimum1 selection threshold and maximum24 results are unchanged.
+schedules, availability or capabilities. The three descriptive criteria and 0–2 score contract remain. The full eligible
+ranking is shown in pages of 24 resources; the middle score level controls only
+the no-close-matches notice.
 
 All eligible candidates are still covered by byte/card-bounded batches. There is
 no lexical shortlist, hardcoded query boost or silent truncation of the catalog.
@@ -35,6 +36,7 @@ Cloud fixtures cover public-only projection, late-section/paragraph coverage,
 privacy sentinels, whole71-card coverage, request bounds and invalid-context refusal.
 They prove input and execution mechanics, not relevance quality. Representative
 live before/after queries are required to assess useful coverage, score distribution
-and complementary selected cards. No cutoff change is justified by fixture passes.
+and complementary resources. Fixture passes establish mechanics, not model
+relevance quality; ranking errors can still put unrelated resources near the top.
 
 Official Score contract: https://docs.typesafe.ai/primitives/score

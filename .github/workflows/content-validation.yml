@@ -31,3 +31,15 @@ jobs:
         run: |
           node --version
           npm test
+      - name: Render ranked resources in cloud Chromium
+        run: |
+          npm install --prefix "$RUNNER_TEMP/fvc-render" --no-save --ignore-scripts playwright@1.64.1
+          "$RUNNER_TEMP/fvc-render/node_modules/.bin/playwright" install chromium
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/fvc-render/node_modules/playwright/index.mjs" node tests/intent-rendered.mjs
+      - name: Save rendered review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rendered-review
+          path: rendered-review/
+          if-no-files-found: ignore
