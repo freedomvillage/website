@@ -29,7 +29,9 @@
   if(from.origin!==location.origin||from.username||from.password||from.href.length>512||(!listing&&!detail)||
    (from.search&&(!listing||from.searchParams.getAll('after').length!==1||[...from.searchParams.keys()].some(k=>k!=='after')||!cursor||Number(cursor[1])>100)))return;
   back.href=from.pathname+from.search+from.hash;
-  let returning=false;root.addEventListener('pageshow',()=>{returning=false;});
+  let returning=false;
+  // Fragment/state traversal can finish in this document without pageshow.
+  for(const type of ['pageshow','popstate','hashchange'])root.addEventListener(type,()=>{returning=false;});
   back.addEventListener('click',event=>{
    if(event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||(event.button!==undefined&&event.button!==0))return;
    if(returning){event.preventDefault();return;}
