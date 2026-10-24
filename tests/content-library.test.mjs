@@ -11,7 +11,7 @@ function database(){
  const adapter={prepare(sql){const statement=db.prepare(sql);return {bind(...args){return {all:async()=>({results:statement.all(...args)}),first:async()=>statement.get(...args)}}}}};return {db,add,adapter};
 }
 const req=path=>new Request('https://next.freedomvillage.church'+path,{headers:{'Cf-Access-Jwt-Assertion':'TEST_FIXTURE'}});
-const asset='<!doctype html><html><head><title>Old</title><meta name="description" content="Old"></head><body><nav aria-label="Explore the community" id="filters"></nav><main id="main"></main><script src="content-view.js"></script></body></html>';
+const asset='<!doctype html><html><head><title>Old</title><meta name="description" content="Old"></head><body><a href="#main">Skip to content</a><nav aria-label="Explore the community" id="filters"></nav><main id="main"></main><script src="content-view.js"></script></body></html>';
 test('structured projection rejects held/synthetic/untrusted content and never exposes editorial fields',()=>{
  const row=c=>({id:'sample-story',content_json:JSON.stringify(c)}),c=publicCard(row({...sample(),editorial:'PRIVATE_FIXTURE',sourceUrl:'PRIVATE_SOURCE'}));assert(c);assert(!JSON.stringify(c).includes('PRIVATE'));
  for(const extra of [{isSynthetic:true},{isSynthetic:undefined},{hold:true},{sourceStatus:'pending'},{actions:[{label:'Unsafe',href:'javascript:alert(1)'}]},{categories:['unknown']},{media:{kind:'brand',src:'https://evil.invalid/logo.svg',alt:'Bad'}},{related:['../bad']},{homePriority:1000}])assert.equal(publicCard(row(sample(extra))),null);
