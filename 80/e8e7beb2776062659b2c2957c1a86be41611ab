@@ -1,0 +1,14 @@
+source-manifest.json
+  h_9a6e2a87fc4a0d 103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "80e8e7beb2776062659b2c2957c1a86be41611ab",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
