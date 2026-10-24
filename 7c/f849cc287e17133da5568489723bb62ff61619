@@ -1,0 +1,24 @@
+docs/JEV-PUBLIC-CONTEXT.md
+  h_9a6e2a87fc4a0d 1-40
+package.json
+  h_9a6e2a87fc4a0d 7
+src/content/intent.mjs
+  h_9a6e2a87fc4a0d 2,50,64,147,164
+src/content/jev.mjs
+  h_9a6e2a87fc4a0d 4,17-47,62,66,69
+tests/content-intent.test.mjs
+  h_9a6e2a87fc4a0d 37
+tests/jev-public-context.test.mjs
+  h_9a6e2a87fc4a0d 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7cf849cc287e17133da5568489723bb62ff61619",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
