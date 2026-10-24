@@ -11,7 +11,7 @@ function database(){
  const adapter={prepare(sql){const statement=db.prepare(sql);return {bind(...args){return {all:async()=>({results:statement.all(...args)}),first:async()=>statement.get(...args)}}}}};return {db,add,adapter};
 }
 const req=path=>new Request('https://next.freedomvillage.church'+path,{headers:{'Cf-Access-Jwt-Assertion':'TEST_FIXTURE'}});
-const asset='<!doctype html><html><head><title>Old</title><meta name="description" content="Old"></head><body><nav aria-label="Explore the community" id="filters"></nav><main id="main"></main><script src="content-view.js"></script></body></html>';
+const asset='<!doctype html><html><head><title>Old</title><meta name="description" content="Old"></head><body><a href="#main">Skip to content</a><nav aria-label="Explore the community" id="filters"></nav><main id="main"></main><script src="content-view.js"></script></body></html>';
 test('structured projection rejects held/synthetic/untrusted content and never exposes editorial fields',()=>{
  const row=c=>({id:'sample-story',content_json:JSON.stringify(c)}),c=publicCard(row({...sample(),editorial:'PRIVATE_FIXTURE',sourceUrl:'PRIVATE_SOURCE'}));assert(c);assert(!JSON.stringify(c).includes('PRIVATE'));
  for(const extra of [{isSynthetic:true},{isSynthetic:undefined},{hold:true},{sourceStatus:'pending'},{actions:[{label:'Unsafe',href:'javascript:alert(1)'}]},{categories:['unknown']},{media:{kind:'brand',src:'https://evil.invalid/logo.svg',alt:'Bad'}},{related:['../bad']},{homePriority:1000}])assert.equal(publicCard(row(sample(extra))),null);
@@ -40,7 +40,7 @@ test('clean generic detail and topic pages use canonical facts and finite relate
 test('media and motion are explicit, source-limited and have static accessible fallback',async()=>{
  const {db,add,adapter}=database();try{add('sample-motion',sample({design:{theme:'youth',layout:'brand',motif:'none',motion:'gradient',size:'feature'},media:{kind:'brand',src:'https://cdn.prod.website-files.com/60e0035471e8115799a8640b/sample.svg',alt:'Sample brand'}}));add('sample-video',sample({template:'sermon',media:{kind:'youtube',videoId:'abcdefghijk',title:'Sample video'}}));
  const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)}};
- const list=await(await handleContentPage(req('/'),env)).text();assert(list.includes('Pause background animation'));assert(list.includes('loading="lazy"'));assert(!list.includes('<iframe'));const motionDetail=await(await handleContentPage(req('/cards/sample-motion'),env)).text();assert(motionDetail.includes('Pause background animation'));assert(motionDetail.includes('#sidebar{position:static!important'));assert(motionDetail.includes('#menu-toggle,.drawer-close'));
+ const list=await(await handleContentPage(req('/'),env)).text();assert(!list.includes('Pause background animation'));assert(list.includes('loading="lazy"'));assert(!list.includes('<iframe'));const motionDetail=await(await handleContentPage(req('/cards/sample-motion'),env)).text();assert(!motionDetail.includes('Pause background animation'));assert(motionDetail.includes('has-brand'));assert(motionDetail.includes('detail-intro'));assert(motionDetail.includes('#sidebar{position:static!important'));assert(motionDetail.includes('#menu-toggle,.drawer-close'));
  const detail=await(await handleContentPage(req('/cards/sample-video'),env)).text();assert(detail.includes('Load video'));assert(detail.includes('Watch on YouTube'));assert(!detail.includes('<iframe'));
  }finally{db.close();}
 });
@@ -95,4 +95,40 @@ test('embedded finite sets reuse eligible cards inside prose with unique IDs and
   assert.equal((main.match(/<h3>Visible canonical card<\/h3>/g)||[]).length,2);assert(!main.includes('load-more'));
   const ids=[...main.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);assert(main.indexOf('Text before the cards.')<main.indexOf('embedded-sample-parent-0-card-sample-visible'));
  }finally{db.close();}
+});
+
+test('core journeys have internal canonical pages, legacy detail redirects and real local actions',async()=>{
+ const {db,add,adapter}=database();try{
+  const paths={'connect-card':'/connect','giving-overview':'/give','prayer-and-praise':'/prayer','church-resources':'/resources'};
+  for(const [id,path]of Object.entries(paths))add(id,sample({title:'Core '+id,actions:[{label:'Connect',targetId:'connect-card'}]}));
+  const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)}};
+  for(const [id,path]of Object.entries(paths)){
+   const response=await handleContentPage(req(path),env),html=await response.text();assert.equal(response.status,200);assert(html.includes('Core '+id));assert(html.includes('href="/connect"'));assert(html.includes(path+'#main'));
+   const legacy=await handleContentPage(req('/cards/'+id),env);assert.equal(legacy.status,308);assert.equal(legacy.headers.get('Location'),path);
+   const slash=await handleContentPage(req(path+'/'),env);assert.equal(slash.status,308);assert.equal(slash.headers.get('Location'),path);
+   assert.equal((await handleContentPage(new Request('https://next.freedomvillage.church'+path),env)).status,404);
+  }
+ }finally{db.close();}
+});
+
+test('ministry detail presents an introduction and local next step before long prose without a second summary',async()=>{
+ const {db,add,adapter}=database();try{
+  add('sample-ministry',sample({template:'ministry',summary:'A short invitation.',detail:['A short invitation.','Longer ministry information.'],actions:[{label:'Ask a question',targetId:'connect-card'}]}));
+  const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)}};
+  const html=await(await handleContentPage(req('/cards/sample-ministry'),env)).text();
+  assert(html.includes('<body class="content-detail">'));
+  const body=html.match(/<div class="detail-body">([\s\S]*?)<\/article>/)[1];
+  assert.equal(body.split('A short invitation.').length-1,1);
+  assert(body.indexOf('A short invitation.')<body.indexOf('href="/connect"'));
+  assert(body.indexOf('href="/connect"')<body.indexOf('Longer ministry information.'));
+  assert(!html.includes('Pause background animation'));
+ }finally{db.close();}
+});
+
+test('persistent Connect and Give actions remain same-tab internal navigation',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const html=readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
+ const links=[...html.matchAll(/<a\b[^>]*href="\/(?:connect|give)"[^>]*>[^<]*<\/a>/g)].map(m=>m[0]);
+ assert.equal(links.length,4);
+ for(const link of links){assert(!link.includes('target="_blank"'));assert(!link.includes('↗'));}
 });

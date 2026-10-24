@@ -1,5 +1,5 @@
 import {privateNextRequest,publicCard,readCatalog,json,TOPICS,validCursor} from './catalog.mjs';
-import {escape,cardPath,renderLibraryCard,renderLibraryDetail} from './render.mjs';
+import {escape,cardPath,CORE_PAGES,renderLibraryCard,renderLibraryDetail} from './render.mjs';
 export {cardPath} from './render.mjs';
 const ID=/^[a-z][a-z0-9-]{0,79}$/;
 export function serializeBoot(value){return JSON.stringify(value).replaceAll('<','\\u003c').replaceAll('>','\\u003e').replaceAll('&','\\u0026').replaceAll('\u2028','\\u2028').replaceAll('\u2029','\\u2029');}
@@ -19,7 +19,7 @@ export async function renderPageShell(request,env,catalog,card,status,message,re
  if(!asset.ok)throw new Error('Shell unavailable');
  let html=await asset.text();
  const title=message?.title||card?.title||TOPICS[catalog.topic]||'Freedom Village',description=card?.summary||'Private website draft for The Church at Freedom Village.';
- html=html.replace('href="#main"',()=>`href="${escape(new URL(request.url).pathname)}#main"`).replace(/<title>[\s\S]*?<\/title>/,`<title>${escape(title)} — The Church at Freedom Village</title>`)
+ html=html.replace('<body>',card?'<body class="content-detail">':'<body>').replace('href="#main"',()=>`href="${escape(new URL(request.url).pathname)}#main"`).replace(/<title>[\s\S]*?<\/title>/,`<title>${escape(title)} — The Church at Freedom Village</title>`)
  .replace(/<meta name="description" content="[^"]*">/,`<meta name="description" content="${escape(description)}">`)
  .replace('<head>','<head><base href="/"><meta name="robots" content="noindex,nofollow"><meta property="og:type" content="website"><meta property="og:title" content="'+escape(title)+'"><meta property="og:description" content="'+escape(description)+'">')
  .replace(/<nav aria-label="Explore the community" id="filters"><\/nav>/,()=>`<nav aria-label="Explore the community" id="filters">${Object.entries(TOPICS).map(([id,label])=>`<a href="/topics/${id}"${catalog.topic===id?' aria-current="page"':''}>${escape(label)}</a>`).join('')}</nav>`)
@@ -34,7 +34,7 @@ export async function handleContentPage(request,env,{now=Date.now()}={}){
  if(!['GET','HEAD'].includes(request.method))return json({error:'Method not allowed'},405,{Allow:'GET, HEAD'});
  const url=new URL(request.url),path=url.pathname;
  if(path==='/robots.txt')return new Response(request.method==='HEAD'?null:'User-agent: *\nDisallow: /\n',{headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});
- if(path==='/index.html'||(/^\/(events|cards)\/[a-z][a-z0-9-]{0,79}\/$/.test(path))){
+ if(path==='/index.html'||(path.endsWith('/')&&Object.hasOwn(CORE_PAGES,path.slice(0,-1)))||(/^\/(events|cards)\/[a-z][a-z0-9-]{0,79}\/$/.test(path))){
   const to=path==='/index.html'?'/':path.slice(0,-1);return new Response(null,{status:308,headers:{Location:to,'Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});
  }
  try{
@@ -42,8 +42,8 @@ export async function handleContentPage(request,env,{now=Date.now()}={}){
   const after=url.searchParams.get('after')||'',topic=path.startsWith('/topics/')?path.slice(8):'';
   if(!validCursor(after)||[...url.searchParams.keys()].some(k=>k!=='after')||url.searchParams.getAll('after').length>1)return json({error:'Invalid query'},400);
   if(path==='/'||(topic&&Object.hasOwn(TOPICS,topic)))catalog=await readCatalog(env.CONTENT_DB,{now,after,topic});
-  else if(/^\/(events|cards)\/[a-z][a-z0-9-]{0,79}$/.test(path)){
-   const row=await env.CONTENT_DB.prepare(`SELECT id,content_json FROM content_cards WHERE id=? AND status='draft' AND (expires_at IS NULL OR expires_at>?)`).bind(path.split('/')[2],new Date(now).toISOString()).first();
+  else if(Object.hasOwn(CORE_PAGES,path)||/^\/(events|cards)\/[a-z][a-z0-9-]{0,79}$/.test(path)){
+   const row=await env.CONTENT_DB.prepare(`SELECT id,content_json FROM content_cards WHERE id=? AND status='draft' AND (expires_at IS NULL OR expires_at>?)`).bind(CORE_PAGES[path]||path.split('/')[2],new Date(now).toISOString()).first();
    card=row&&publicCard(row);if(card){
     if(path!==cardPath(card))return new Response(null,{status:308,headers:{Location:cardPath(card),'Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});
     catalog.items=[card];

@@ -158,3 +158,13 @@ html[data-site-revealed="true"] #site-loading{display:none}
 /* Practical actions remain separate from the draft category navigation. */
 .persistent-actions{display:flex;gap:8px;align-items:center;margin:22px 0 18px;flex-wrap:wrap}.persistent-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 15px;border:1px solid var(--line);border-radius:24px;color:var(--ink);font:12px Arial,sans-serif;text-decoration:none}.persistent-actions .connect-action{background:var(--ink);color:var(--paper);border-color:var(--ink)}.persistent-actions .give-action{background:transparent}.mobile-actions{display:none}
 @media(max-width:700px){.mobile-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 16px}.mobile-actions{display:flex;grid-column:1/-1;margin:0}.mobile-actions a{min-height:40px;padding:8px 16px}.sidebar-inner>.persistent-actions{display:none}}
+
+/* Inactive search stays an honest in-flow preview; Appearance remains available without covering copy. */
+.prompt-composer{position:relative;left:auto;right:auto;bottom:auto;max-width:900px;margin:16px 38px 24px calc(var(--left-gutter) + 38px);padding:12px 16px;box-shadow:none;border-radius:12px}
+.prompt-composer textarea,#prompt-submit{display:none}
+.composer-bottom{justify-content:space-between}
+.composer-bottom p{font-size:12px;line-height:1.5}
+.composer-actions #scene-settings{width:auto;flex-basis:auto;gap:8px;border-radius:22px;font-size:12px;padding:8px 12px}
+main{padding-bottom:36px!important}html{scroll-padding-bottom:24px}
+@media(max-width:1100px){.prompt-composer{left:auto;right:auto;margin-left:calc(var(--left-gutter) + 26px);margin-right:26px}}
+@media(max-width:700px){.prompt-composer{left:auto;right:auto;bottom:auto;margin:12px 16px 24px;padding:10px 12px}.composer-bottom p{font-size:11px}}
