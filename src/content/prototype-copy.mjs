@@ -6,6 +6,12 @@ export function prototypeCopy(card){
  if(card.id==='sunday-gatherings'&&card.summary===PROTOTYPE_COPY.sunday.summary&&same(card.facts,PROTOTYPE_COPY.sunday.beforeFacts)){
   return {...card,facts:[...PROTOTYPE_COPY.sunday.facts]};
  }
+ const connect=PROTOTYPE_COPY.connect;
+ // An additive local email-draft helper, not a submission or enrollment flow.
+ // Changed identity/intro/contact destination disables this checked prototype.
+ if(card.id==='connect-card'&&Object.entries(connect.before).every(([key,value])=>same(card[key],value))&&card.actions.some(a=>same(a,connect.emailAction))){
+  return {...card,connectDraft:{version:1,email:connect.emailAction.href,options:connect.options.map(o=>({...o}))}};
+ }
  const visit=PROTOTYPE_COPY.visit;
  if(card.id==='visit-help'&&!card.sections&&Object.entries(visit.before).every(([key,value])=>same(card[key],value))){
   return {...card,summary:visit.after.summary,detail:[...visit.after.detail],facts:[...PROTOTYPE_COPY.sunday.facts,...visit.after.facts],

@@ -110,3 +110,11 @@ html[data-site-revealed="true"] .has-motion.is-visible .library-brand-art{animat
  .library-detail.has-source-artwork .library-image-frame{max-height:200px}
  .detail-actions{margin-bottom:20px}
 }
+
+/* Local Connect email draft: concise choices, no submission UI or personal fields. */
+.connect-draft{margin:24px 0 28px;padding:22px;border:1px solid currentColor;border-radius:12px}
+.connect-draft[hidden]{display:none}.connect-draft>h2{margin:0 0 8px}.connect-draft>p{margin:0 0 18px;font-size:14px}
+.connect-draft fieldset{border:0;padding:0;margin:0;min-width:0}.connect-interest{display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid currentColor;padding:12px 0}
+.connect-interest label{display:flex;align-items:center;gap:10px;min-height:44px;font-weight:600;cursor:pointer}.connect-interest input{width:20px;height:20px;flex:none;accent-color:currentColor}.connect-interest p{margin:0 0 4px 30px;font-size:14px;line-height:1.5}.connect-interest>a{flex:none;font-size:13px;min-height:44px;display:inline-flex;align-items:center;color:inherit}
+.connect-draft-action{display:flex;align-items:center;gap:12px 24px;flex-wrap:wrap;margin-top:18px}.connect-draft-action .pilot-action{border:1px solid currentColor;border-radius:6px;padding:12px 16px;min-height:44px;color:inherit}.connect-draft-action p{font-size:13px;margin:0;max-width:34ch}
+@media(max-width:700px){.connect-draft{padding:16px}.connect-interest{display:block}.connect-interest>a{margin-left:30px}.connect-draft-action{display:block}.connect-draft-action p{margin-top:12px}}
