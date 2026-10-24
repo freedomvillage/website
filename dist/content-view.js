@@ -11,6 +11,10 @@
   for(const el of scope.querySelectorAll('.has-motion'))if(!motionItems.has(el)){
    motionItems.add(el);observer?.observe(el);
   }
+  for(const button of scope.querySelectorAll('.series-load'))if(!button.dataset.ready){button.dataset.ready='true';button.hidden=false;button.addEventListener('click',()=>{
+   const box=button.closest('[data-series]'),id=box?.dataset.series;if(!/^PL[A-Za-z0-9_-]{8,78}$/.test(id||''))return;
+   const frame=document.createElement('iframe');frame.src='https://www.youtube-nocookie.com/embed/videoseries?list='+id;frame.title=button.dataset.seriesTitle||'Teaching series';frame.allow='encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='no-referrer';frame.loading='lazy';frame.tabIndex=0;button.replaceWith(frame);frame.focus({preventScroll:true});
+  });}
   for(const button of scope.querySelectorAll('.video-load'))if(!button.dataset.ready){button.dataset.ready='true';button.addEventListener('click',()=>{
    const box=button.closest('[data-video]'),id=box?.dataset.video;if(!/^[A-Za-z0-9_-]{11}$/.test(id||''))return;
    const frame=document.createElement('iframe');frame.src='https://www.youtube-nocookie.com/embed/'+id;frame.title=button.dataset.videoTitle||'Sermon video';frame.allow='encrypted-media; picture-in-picture';frame.allowFullscreen=true;frame.referrerPolicy='no-referrer';frame.loading='lazy';button.replaceWith(frame);
