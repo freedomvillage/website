@@ -15,6 +15,27 @@
   });}
   document.querySelector('#grid')?.classList.remove('server-content');requestAnimationFrame(()=>{if(typeof sizeCards==='function')sizeCards();});
  }
+ // Let native history restore the previous document, study hash, appended feed
+ // cards, scroll and focus. A new fetch of "/" loses that context. Never send a
+ // direct/external arrival back into an unrelated tab history.
+ function detailBack(){
+  const back=document.querySelector('#detail .detail-shell > a.back');
+  if(!back||back.dataset.backReady)return;back.dataset.backReady='true';
+  if(!document.referrer||root.history?.length<2||root.navigation?.canGoBack===false)return;
+  let from;try{from=new URL(document.referrer);}catch{return;}
+  const listing=from.pathname==='/'||/^\/topics\/[a-z][a-z0-9-]{0,79}$/.test(from.pathname);
+  const detail=/^\/(?:cards|events|studies)\/[a-z][a-z0-9-]{0,79}$/.test(from.pathname)||['/connect','/give','/prayer','/resources'].includes(from.pathname);
+  const after=from.searchParams.get('after')||'',cursor=/^(\d{1,3}):[a-z][a-z0-9-]{0,79}$/.exec(after);
+  if(from.origin!==location.origin||from.username||from.password||from.href.length>512||(!listing&&!detail)||
+   (from.search&&(!listing||from.searchParams.getAll('after').length!==1||[...from.searchParams.keys()].some(k=>k!=='after')||!cursor||Number(cursor[1])>100)))return;
+  back.href=from.pathname+from.search+from.hash;
+  let returning=false;root.addEventListener('pageshow',()=>{returning=false;});
+  back.addEventListener('click',event=>{
+   if(event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||(event.button!==undefined&&event.button!==0))return;
+   if(returning){event.preventDefault();return;}
+   try{root.history.back();returning=true;event.preventDefault();}catch{/* Normal anchor remains the safe in-site fallback. */}
+  });
+ }
  function pagination(){
   const more=document.querySelector('.load-more');if(!more||more.dataset.ready)return;more.dataset.ready='true';
   let autoFailed=false,ended=false;
@@ -40,5 +61,5 @@
  }
  reduced.addEventListener('change',motionState);
  document.addEventListener('visibilitychange',motionState);
- root.contentView={render(){if(legacyLink())return;if(!started){started=true;enhance();pagination();}}};
+ root.contentView={render(){if(legacyLink())return;if(!started){started=true;enhance();detailBack();pagination();}}};
 })(globalThis);
