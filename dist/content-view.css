@@ -40,7 +40,7 @@
 .library-detail.has-image .library-image-frame{max-height:660px}.library-detail.has-image .library-detail-heading>div{max-width:720px}
 .card.library-card.layout-brand .library-card-link{flex-direction:column-reverse}.card.layout-brand .library-copy{padding-bottom:30px}
 .has-motion .library-brand-art{animation:brand-drift 4s ease-out 1 both;animation-play-state:paused}
-.has-motion.is-visible .library-brand-art{animation-play-state:running}
+html[data-site-revealed="true"] .has-motion.is-visible .library-brand-art{animation-play-state:running}
 @keyframes brand-drift{from{background-position:0% 50%}to{background-position:100% 50%}}
 .library-card-link:focus-visible{outline:3px solid currentColor;outline-offset:-6px}
 .library-sermon-art{position:relative;min-height:180px;display:flex;align-items:center;justify-content:center;background:#253e35;color:#efe4c9;overflow:hidden}.library-sermon-art>span{display:grid;place-content:center;width:70px;height:70px;border:1px solid currentColor;border-radius:50%;font-size:22px;position:relative;z-index:1}.library-sermon-art .library-motif{position:absolute;width:220px;height:220px;opacity:.35;left:50%;top:50%;transform:translate(-50%,-50%);margin:0}
