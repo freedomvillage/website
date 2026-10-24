@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 const config=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8'));
-const privateWorkerRoutes=['/','/index.html','/events/*','/cards/*','/topics/*','/studies/*','/api/*','/media/*','/robots.txt','/sitemap.xml','/llms.txt'];
+const privateWorkerRoutes=['/','/index.html','/connect','/connect/','/give','/give/','/prayer','/prayer/','/resources','/resources/','/events/*','/cards/*','/topics/*','/studies/*','/api/*','/media/*','/robots.txt','/sitemap.xml','/llms.txt'];
 assert.deepEqual([...config.assets.run_worker_first].sort(),privateWorkerRoutes.sort());
 assert.equal(config.assets.not_found_handling,'none');
 assert.equal(config.workers_dev,false);assert.equal(config.preview_urls,false);

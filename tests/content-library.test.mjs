@@ -96,3 +96,17 @@ test('embedded finite sets reuse eligible cards inside prose with unique IDs and
   const ids=[...main.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);assert(main.indexOf('Text before the cards.')<main.indexOf('embedded-sample-parent-0-card-sample-visible'));
  }finally{db.close();}
 });
+
+test('core journeys have internal canonical pages, legacy detail redirects and real local actions',async()=>{
+ const {db,add,adapter}=database();try{
+  const paths={'connect-card':'/connect','giving-overview':'/give','prayer-and-praise':'/prayer','church-resources':'/resources'};
+  for(const [id,path]of Object.entries(paths))add(id,sample({title:'Core '+id,actions:[{label:'Connect',targetId:'connect-card'}]}));
+  const env={CONTENT_PILOT_ENABLED:'true',CONTENT_DB:adapter,ASSETS:{fetch:async()=>new Response(asset)}};
+  for(const [id,path]of Object.entries(paths)){
+   const response=await handleContentPage(req(path),env),html=await response.text();assert.equal(response.status,200);assert(html.includes('Core '+id));assert(html.includes('href="/connect"'));assert(html.includes(path+'#main'));
+   const legacy=await handleContentPage(req('/cards/'+id),env);assert.equal(legacy.status,308);assert.equal(legacy.headers.get('Location'),path);
+   const slash=await handleContentPage(req(path+'/'),env);assert.equal(slash.status,308);assert.equal(slash.headers.get('Location'),path);
+   assert.equal((await handleContentPage(new Request('https://next.freedomvillage.church'+path),env)).status,404);
+  }
+ }finally{db.close();}
+});

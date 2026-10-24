@@ -1,7 +1,8 @@
 // Structured source content only: no stored HTML, script or arbitrary styling is rendered.
 export const escape=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
-export const cardPath=c=>(c.template==='event'?'/events/':'/cards/')+c.id;
-const actionHref=a=>a.targetId?'/cards/'+a.targetId:a.href;
+export const CORE_PAGES=Object.freeze({'/connect':'connect-card','/give':'giving-overview','/prayer':'prayer-and-praise','/resources':'church-resources'});
+export const cardPath=c=>Object.entries(CORE_PAGES).find(([,id])=>id===c.id)?.[0]||(c.template==='event'?'/events/':'/cards/')+c.id;
+const actionHref=a=>a.targetId?cardPath({id:a.targetId}):a.href;
 const actionAttrs=a=>`href="${escape(actionHref(a))}"${!a.targetId&&a.href.startsWith('https:')?' target="_blank" rel="noopener noreferrer"':''}`;
 function motif(name){
  const shapes={star:'<path d="M100 6c6 57 31 82 88 88-57 6-82 31-88 88-6-57-31-82-88-88C69 88 94 63 100 6Z"/>',hills:'<path d="M-30 180Q40 30 110 130T250 100V230H-30Z"/><path d="M-20 210Q80 95 170 185T260 130V240H-20Z" opacity=".35"/>',rings:'<circle cx="100" cy="100" r="76" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="100" cy="100" r="52" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="100" cy="100" r="28" fill="none" stroke="currentColor" stroke-width="2"/>'};
