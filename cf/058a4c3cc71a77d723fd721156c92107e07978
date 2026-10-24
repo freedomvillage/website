@@ -1,0 +1,24 @@
+dist/air-quality.js
+  h_9a6e2a87fc4a0d 25-26,38-39
+dist/composer.js
+  h_9a6e2a87fc4a0d 5-6,8
+dist/index.html
+  h_9a6e2a87fc4a0d 6
+source-manifest.json
+  h_9a6e2a87fc4a0d 98-99,103-104
+tests/air-client.test.mjs
+  h_9a6e2a87fc4a0d 16,31-42
+tests/composer.cjs
+  h_9a6e2a87fc4a0d 6,15-18,30-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cf058a4c3cc71a77d723fd721156c92107e07978",
+  "prompts": {},
+  "humans": {
+    "h_9a6e2a87fc4a0d": {
+      "author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
