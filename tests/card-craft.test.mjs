@@ -40,7 +40,7 @@ test('teaching series stays in the content unit and loads only after an explicit
 
 test('only the teaching illustration receives one finite in-view entrance, with static reduced-motion fallback',()=>{
  for(const reducedMotion of [false,true]){
-  let observerCallback;const classes=new Set(),el={dataset:{artEntrance:'true'},classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name);},add(name){classes.add(name);}};
+  let observerCallback;const classes=new Set(),el={dataset:{artEntrance:'true'},classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name);},add(name){classes.add(name);}}};
   const context={Set,URL,URLSearchParams,location:{hash:''},requestAnimationFrame(fn){fn();},matchMedia(){return {matches:reducedMotion,addEventListener(){}};},IntersectionObserver:class{constructor(fn){observerCallback=fn;}observe(){}},document:{hidden:false,querySelectorAll(s){return s==='.has-motion'?[el]:[];},querySelector(){return null;},addEventListener(){}},addEventListener(){}};
   vm.createContext(context);vm.runInContext(fs.readFileSync(new URL('../dist/content-view.js',import.meta.url),'utf8'),context);context.contentView.render();
   observerCallback([{target:el,isIntersecting:true}]);assert.equal(el.dataset.artSeen,'true');assert.equal(classes.has('art-entered'),!reducedMotion);
