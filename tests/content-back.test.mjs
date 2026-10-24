@@ -39,3 +39,16 @@ test('modified/auxiliary/prevented clicks keep native link behavior and a throwi
  assert.equal(h.historyCalls.length,0);assert.equal(h.back.href,'/topics/families');
  const unsupported=harness({backThrows:true});assert.equal(unsupported.click(),false);assert.equal(unsupported.back.href,'/topics/families');
 });
+
+// Skip to content adds #main to the same detail document. Traversing that entry
+// must unlock the next Back even when no document pageshow event occurs.
+test('same-document fragment/state completion releases the pending Back guard without pageshow',()=>{
+ for(const completion of ['hashchange','popstate']){
+  const h=harness();h.context.location.hash='#main';
+  assert(h.click());assert.deepEqual(h.historyCalls,['back']);
+  assert(h.click());assert.equal(h.historyCalls.length,1,'pending traversal still coalesces repeated clicks');
+  h.context.location.hash='';h.pageHandlers[completion]({state:null});
+  assert(h.click());assert.equal(h.historyCalls.length,2,'completed same-document traversal permits the next Back');
+  assert(h.click());assert.equal(h.historyCalls.length,2,'new traversal is guarded until its own completion');
+ }
+});
