@@ -18,7 +18,14 @@ try{
    const card={schemaVersion:2,template:'story',title:'Review resource '+(i+1),summary:'Synthetic review content for ranked resource continuation.',detail:['Synthetic public prose for browser acceptance.'],facts:[],categories:['community'],actions:[],related:[],media:null,design:{theme:themes[i%themes.length],layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false};
    db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
   }
-  const adapter={prepare(sql){const s=db.prepare(sql);return {bind(...args){return {first:async()=>s.get(...args),all:async()=>({results:s.all(...args)}),run:async()=>({meta:{changes:Number(s.run(...args).changes)}})}};}};
+  const adapter={prepare(sql){
+   const s=db.prepare(sql);
+   return {bind(...args){return {
+    first:async()=>s.get(...args),
+    all:async()=>({results:s.all(...args)}),
+    run:async()=>({meta:{changes:Number(s.run(...args).changes)}})
+   };}};
+  }};
   let providerCalls=0,zero=false,failPage=false;
   const worker=createWorker({now:()=>at,resolveIntentOwner:async()=> 'a'.repeat(64),fetchUpstream:async(_,options)=>{
    providerCalls++;const body=JSON.parse(options.body);
