@@ -49,6 +49,13 @@ test('reconstructed Kids return reopens only the departed native question before
  let measured=false;await h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('No reader paging');},measure(){assert(disclosure.open);measured=true;}}).restore();
  assert(measured);assert.deepEqual(h.focused,['kids-reader']);assert.equal(h.scrolls.at(-1).top,9169);assert.equal(state.fvcFeedRestore.pages,1);assert.deepEqual(Object.keys(state.fvcFeedRestore).sort(),['at','focus','pages','path','version','y']);
 });
+test('a departed native question restores its exact occurrence when an earlier source link shares the destination',async()=>{
+ const path='/cards/freedom-kids',h=harness({path});h.link('kids-reader','/cards/godly-play');const departure=h.link('kids-question-godly-play','/cards/godly-play');
+ departure.closest=selector=>selector==='main a[href]'?departure:selector==='details[data-history-anchor][id]'?h.cards.get('kids-question-godly-play'):selector==='article[id]'?h.cards.get('kids-reader'):null;
+ h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('No reader paging');},measure(){}});h.click(departure);h.emit('pagehide');const state=JSON.parse(JSON.stringify(h.context.history.state));assert.deepEqual(state.fvcFeedRestore.focus,{cardId:'kids-question-godly-play',href:'/cards/godly-play'});
+ const returned=harness({path,state,navigation:'back_forward'});returned.link('kids-reader','/cards/godly-play');const expected=returned.link('kids-question-godly-play','/cards/godly-play'),disclosure={open:false};expected.closest=selector=>selector==='details.kids-question'?disclosure:null;
+ await returned.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('No reader paging');},measure(){assert(disclosure.open);}}).restore();assert.deepEqual(returned.focused,['kids-question-godly-play']);
+});
 test('a marked inquiry restores the exact link occurrence when an earlier link has the same destination',async()=>{
  const path='/cards/village-youth',h=harness({path});h.link('youth-reader','/connect');const ending=h.link('youth-inquiry','/connect');
  ending.closest=selector=>selector==='main a[href]'?ending:selector==='section[data-history-anchor][id]'?h.cards.get('youth-inquiry'):selector==='article[id]'?h.cards.get('youth-reader'):null;
