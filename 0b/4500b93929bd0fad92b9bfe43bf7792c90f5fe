@@ -1,0 +1,25 @@
+dist/content-view.js
+  s_e2bf1542692bef::t_24399857455631 103-105
+docs/KIDS-READING-STAGE.md
+  s_e2bf1542692bef::t_1fdbc2ebde626c 5
+source-manifest.json
+  s_e2bf1542692bef::t_06d1e4c5894fdf 102
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_7dc1aa6680e4ca 341
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0b4500b93929bd0fad92b9bfe43bf7792c90f5fe",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
