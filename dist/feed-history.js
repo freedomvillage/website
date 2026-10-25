@@ -5,7 +5,7 @@
  const number=(n,max)=>Number.isFinite(n)&&n>=0&&n<=max;
  function sourcePath(value){
   try{
-   const u=new URL(value,root.location.href),listing=u.pathname==='/'||/^\/topics\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),study=/^\/studies\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),reader=u.pathname==='/cards/godly-play';
+   const u=new URL(value,root.location.href),listing=u.pathname==='/'||/^\/topics\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),study=/^\/studies\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),reader=['/cards/godly-play','/cards/village-youth'].includes(u.pathname);
    if(u.origin!==root.location.origin||u.username||u.password||(!listing&&!study&&!reader)||u.href.length>512)return null;
    if(u.search){const after=u.searchParams.get('after')||'',m=/^(\d{1,3}):[a-z][a-z0-9-]{0,79}$/.exec(after);if(!listing||[...u.searchParams.keys()].some(k=>k!=='after')||u.searchParams.getAll('after').length!==1||!m||Number(m[1])>100)return null;}
    if(u.hash&&!/^#(?:main|study-[a-z0-9_-]{1,120}|card-[a-z][a-z0-9-]{0,79})$/.test(u.hash))return null;
