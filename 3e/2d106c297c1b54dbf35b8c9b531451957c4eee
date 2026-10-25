@@ -1,0 +1,34 @@
+dist/content-view.js
+  s_e2bf1542692bef::t_23a4ffb25bc9bb 73-74,76
+src/content/families.mjs
+  s_e2bf1542692bef::t_23a4ffb25bc9bb 8,12
+  s_e2bf1542692bef::t_6538cd0b074eb7 24
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_c8bf40f535a614 84,91-93,96-101,106-109
+dist/content-view.css
+  s_e2bf1542692bef::t_b8e707caa75eb4 160
+docs/FAMILIES-JOURNEY.md
+  s_e2bf1542692bef::t_b6c8f562a529fe 23-25
+source-manifest.json
+  s_e2bf1542692bef::t_83fec4141cbefd 102-103
+src/content/pages.mjs
+  s_e2bf1542692bef::t_127d926f5e3913 14,16,27
+tests/families.test.mjs
+  s_e2bf1542692bef::t_22bd0f45dd4f71 12,18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3e2d106c297c1b54dbf35b8c9b531451957c4eee",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
