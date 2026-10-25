@@ -23,6 +23,8 @@ the drawer; Forward can reopen it. Repeated close requests cannot traverse twice
 A route selected in the drawer first consumes its overlay entry, then follows the
 canonical URL. Pagehide cleans up the modal so a native Back return is usable.
 Reload and native page restoration reconcile the marker with modal ownership.
+Automatic restoration waits for the scene loader to reveal the page before
+focusing Close, and cancels that focus retry after user input.
 No content, question draft, response or credential is stored in the overlay hint.
 
 The source social strip and icon-only settings gear follow COMPOSER-CONTROLS.md.

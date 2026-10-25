@@ -4,8 +4,15 @@
  const sidebar=document.getElementById('sidebar'),toggle=document.getElementById('menu-toggle'),dialog=document.getElementById('site-menu-dialog'),body=dialog.querySelector('.menu-drawer-body'),close=document.getElementById('drawer-close'),main=document.getElementById('main');
  const breakpoint=matchMedia('(max-width:700px)'),motion=matchMedia('(prefers-reduced-motion:reduce)'),slot=document.createComment('desktop navigation');
  sidebar.before(slot);
- let phase='closed',animation=null,epoch=0,returnTo=null,lock=null,owned=false,moving=false,pendingRoute=null,reopen=false,deferredRestoration=null;
+ let phase='closed',animation=null,epoch=0,returnTo=null,lock=null,owned=false,moving=false,pendingRoute=null,reopen=false,deferredRestoration=null,revealFocus=null;
  dialog.dataset.phase=phase;
+ function clearFocusWait(){revealFocus?.disconnect();revealFocus=null;}
+ function focusClose(){
+  if(!dialog.open||phase==='closing'||phase==='closed'){clearFocusWait();return;}
+  if(getComputedStyle(close).visibility==='hidden'){
+   if(!revealFocus){revealFocus=new MutationObserver(focusClose);revealFocus.observe(document.documentElement,{attributes:true,attributeFilter:['data-site-revealed']});}
+  }else{clearFocusWait();close.focus({preventScroll:true});}
+ }
  function cancelAnimation(){epoch++;animation?.cancel();animation=null;}
  const hint=()=>{const value=history.state?.fvcMenu;return value?.version===1&&Number.isFinite(value.y)&&value.y>=0&&value.y<=10000000&&['auto','manual'].includes(value.restoration)?value:null;};
  function flushRestoration(){if(deferredRestoration!==null){history.scrollRestoration=deferredRestoration;deferredRestoration=null;}}
@@ -33,10 +40,10 @@
   if(phase==='open'||phase==='opening')return;
   const transform=dialog.open?getComputedStyle(dialog).transform:'translateX(-101%)';
   cancelAnimation();
-  if(!dialog.open){returnTo=document.activeElement;lockPage(sourceY,restoration);sidebar.inert=false;dialog.showModal();sidebar.scrollTop=0;}
+  if(!dialog.open){returnTo=document.activeElement?.matches('body,html')?toggle:document.activeElement;lockPage(sourceY,restoration);sidebar.inert=false;dialog.showModal();sidebar.scrollTop=0;}
   phase='opening';dialog.dataset.phase=phase;toggle.setAttribute('aria-expanded','true');
   if(!fromHistory&&!owned){history.pushState({...history.state,fvcMenu:{version:1,y:Math.max(0,Math.min(10000000,lock.y)),restoration:lock.restoration}},'',location.href);owned=true;}else if(fromHistory)owned=true;
-  close.focus({preventScroll:true});
+  focusClose();
   if(motion.matches){phase='open';dialog.dataset.phase=phase;return;}
   const version=epoch;
   animation=dialog.animate([{transform},{transform:'translateX(0)'}],{duration:180,easing:'cubic-bezier(.2,.8,.2,1)'});
@@ -46,7 +53,7 @@
   if(moving&&!fromHistory&&!skipHistory)return;
   if(owned&&!fromHistory&&!skipHistory){owned=false;moving=true;history.back();return;}
   if(phase==='closed'&&!dialog.open)return;
-  const transform=getComputedStyle(dialog).transform;
+  const transform=getComputedStyle(dialog).transform;clearFocusWait();
   cancelAnimation();const version=epoch;phase='closing';dialog.dataset.phase=phase;toggle.setAttribute('aria-expanded','false');
   const finish=()=>{
    if(version!==epoch)return;
@@ -103,5 +110,6 @@
  motion.addEventListener('change',()=>{if(!motion.matches||!dialog.open)return;if(phase==='closing')closeMenu({immediate:true,skipHistory:true});else{cancelAnimation();phase='open';dialog.dataset.phase=phase;}});
  root.addEventListener('pagehide',()=>{pendingRoute=null;reopen=false;closeMenu({immediate:true,returnFocus:false,skipHistory:true});flushRestoration();owned=false;moving=false;});
  root.addEventListener('pageshow',reconcile);
+ for(const event of ['pointerdown','keydown','wheel','touchstart'])root.addEventListener(event,clearFocusWait,{passive:true});
  reconcile();
 })(globalThis);

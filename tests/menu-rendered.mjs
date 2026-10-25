@@ -50,8 +50,8 @@ try{
  for(const [name,width,height] of [['desktop',1440,1024],['intermediate',900,900],['rail-boundary',701,900],['drawer-boundary',700,900],['mobile',390,844],['narrow',320,800],['short',390,500]]){
   if(['desktop','intermediate','mobile'].includes(name)){
    const before=await browser.newContext({viewport:{width,height},reducedMotion:'reduce'});await before.route('**/*',serve(baselineWorker,baselineEnv));
-   const page=await before.newPage();await page.clock.install({time:new Date('2026-10-25T03:00:00Z')});await page.goto(origin+'/topics/families');await ready(page);await page.screenshot({path:resolve(output,name+'-before-opening.png')});
-   if(width<=700)await page.getByRole('button',{name:'Menu',exact:false}).click();await page.locator('#filters a[href="/topics/families"]').focus();await page.screenshot({path:resolve(output,name+'-before-menu-focus.png')});await before.close();
+   const page=await before.newPage();activePage=page;activeName=name+'-before';await page.clock.install({time:new Date('2026-10-25T03:00:00Z')});await page.goto(origin+'/topics/families');await ready(page);await page.screenshot({path:resolve(output,name+'-before-opening.png')});
+   if(width<=700)await page.locator('#menu-toggle').click();await page.locator('#filters a[href="/topics/families"]').focus();await page.screenshot({path:resolve(output,name+'-before-menu-focus.png')});await before.close();
   }
   const context=await browser.newContext({viewport:{width,height},hasTouch:width<=700,reducedMotion:'no-preference',recordVideo:{dir:resolve(output,'recordings'),size:{width,height}}});
   await context.route('**/*',serve(worker,env));
@@ -90,7 +90,7 @@ try{
    await menu.tap();await opened(page);await page.setViewportSize({width:900,height});await page.waitForFunction(()=>document.documentElement.dataset.menuMode==='rail');await closed(page);assert.equal(await page.locator('#sidebar').getAttribute('inert'),null);assert.equal(await page.evaluate(()=>document.activeElement.closest('#sidebar')!==null),true,'Drawer-to-rail retains visible navigation focus');
    await page.setViewportSize({width,height});await page.waitForFunction(()=>document.documentElement.dataset.menuMode==='drawer');await page.waitForFunction(value=>history.scrollRestoration===value,restoration);assert.equal(await page.evaluate(()=>document.activeElement.id),'menu-toggle','Rail-to-drawer moves focus before sidebar becomes inert');
    if(name==='mobile'){
-    await menu.tap();await opened(page);await page.reload();await ready(page);await opened(page);await page.keyboard.press('Escape');await closed(page);await page.waitForFunction(value=>history.scrollRestoration===value,restoration);
+    await menu.tap();await opened(page);await page.reload();await ready(page);await opened(page);assert.equal(await page.evaluate(()=>document.activeElement.id),'drawer-close','Reload focuses the visible modal control after scene reveal');await page.screenshot({path:resolve(output,name+'-reloaded-menu-focus.png')});await page.keyboard.press('Escape');await closed(page);await page.waitForFunction(value=>history.scrollRestoration===value,restoration);
     await menu.tap();await opened(page);await page.goto(origin+'/connect');await ready(page);await page.goBack();await ready(page);await opened(page);await page.keyboard.press('Escape');await closed(page);
     await menu.tap();await opened(page);await page.evaluate(()=>{closeMenu();openMenu();});await opened(page);await page.keyboard.press('Escape');await closed(page);await page.waitForFunction(value=>history.scrollRestoration===value,restoration);
    }
