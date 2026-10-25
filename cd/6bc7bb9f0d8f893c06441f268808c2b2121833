@@ -1,0 +1,33 @@
+dist/index.html
+  s_e2bf1542692bef::t_62fb902131b4f5 6
+dist/intent.js
+  s_e2bf1542692bef::t_f7d2bedc80e58e 40,55
+docs/COMPOSER-CONTROLS.md
+  s_e2bf1542692bef::t_17c94c8b7c252e 11-12
+docs/JEV-VISITOR-INTENT.md
+  s_e2bf1542692bef::t_9913dfcf3533cc 7-9
+docs/SOCIAL-FOOTER.md
+  s_e2bf1542692bef::t_7994e0e1a2c49e 19-21
+source-manifest.json
+  s_e2bf1542692bef::t_d3e86e50c6a9f9 22,102,109-110
+tests/intent-client.test.mjs
+  s_e2bf1542692bef::t_70197fdbb7dff2 41,44-53
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_215ae10a48a840 65-72,92,112,135-136,147,182,214,309,328,330-334
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cd6bc7bb9f0d8f893c06441f268808c2b2121833",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
