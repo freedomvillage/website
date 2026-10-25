@@ -90,7 +90,7 @@
   const frames=arts.map((art,i)=>{const frame=art.cloneNode(true);frame.className='kids-scene-frame';frame.hidden=i!==0;stage.append(frame);return frame;});
   chapters[0].before(sequence);sequence.append(stage,prose);prose.append(...chapters);
   const links=headings.map(h=>[...contents.querySelectorAll('a')].find(a=>new URL(a.href).hash==='#'+h.id));
-  let queued=false,needsLayout=true,active=-1,located=-1;
+  let queued=false,needsLayout=true,active=-1,located=-1,requested=-1,jumpY=0;
   function update(){
    queued=false;
    if(needsLayout){
@@ -105,12 +105,15 @@
     if(wide){const fitted=Math.min(height,...chapters.map(el=>el.getBoundingClientRect().height));if(fitted<200||prose.getBoundingClientRect().height<fitted)reading.removeAttribute('data-scene-stage');else reading.style.setProperty('--kids-stage-height',fitted+'px');}
    }
    if(!reading.hasAttribute('data-scene-stage')){if(located>=0)links[located]?.removeAttribute('aria-current');located=-1;return;}
-   const boundary=Math.max(contents.getBoundingClientRect().bottom+40,160),top=parseFloat(reading.style.getPropertyValue('--kids-stage-top'));
+   const navBottom=contents.getBoundingClientRect().bottom,composerTop=document.getElementById('prompt-composer')?.getBoundingClientRect().top||innerHeight;
+   const boundary=navBottom+(composerTop-navBottom)/2,top=parseFloat(reading.style.getPropertyValue('--kids-stage-top'));
    let current=0;for(let i=1;i<headings.length;i++)if(headings[i].getBoundingClientRect().top<=boundary)current=i;
+   if(requested>=0){if(Math.abs(root.scrollY-jumpY)<2)current=requested;else requested=-1;}
    const bounds=sequence.getBoundingClientRect(),location=bounds.top<innerHeight&&bounds.bottom>top?current:-1;
    if(active!==current){for(let i=0;i<frames.length;i++)frames[i].hidden=i!==current;stage.dataset.chapter=String(current);active=current;}
    if(located!==location){if(located>=0)links[located]?.removeAttribute('aria-current');if(location>=0)links[location]?.setAttribute('aria-current','location');located=location;}
   }
+  for(let i=0;i<links.length;i++)links[i]?.addEventListener('click',()=>{if(document.activeElement===headings[i]&&location.hash==='#'+headings[i].id){requested=i;jumpY=root.scrollY;schedule();}});
   function schedule(){if(!queued){queued=true;requestAnimationFrame(update);}}
   function layout(){needsLayout=true;schedule();}
   root.addEventListener('scroll',schedule,{passive:true});root.addEventListener('resize',layout,{passive:true});
