@@ -81,23 +81,32 @@ try{
    assert.equal(new URL(page.url()).pathname,'/topics/families');assert.equal(await page.locator('.family-context nav a').count(),3);
    assert.equal(await page.locator('.family-entry-route').isVisible(),false);
    await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});
-   await page.locator('.family-context a[href="#card-freedom-kids"]').click();await page.locator('.kids-brand-link').focus();
+   await page.locator('.family-context a[href$="#card-freedom-kids"]').click();assert.equal(new URL(page.url()).pathname,'/topics/families');await page.locator('.kids-brand-link').focus();
    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
    const departureY=await page.evaluate(()=>scrollY);
    await page.locator('.kids-brand-link').click();await page.locator('html[data-site-revealed="true"]').waitFor();
    assert.equal(new URL(page.url()).pathname,'/cards/freedom-kids');assert.equal(await page.locator('.kids-chapter').count(),3);assert.equal(await page.locator('.kids-question').count(),2);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    await page.screenshot({path:resolve(output,name+'-kids-detail-full.png'),fullPage:true});
+   await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="dark"]').click();await page.locator('#settings-close').click();
+   await page.locator('.kids-contents a').first().hover();await page.screenshot({path:resolve(output,name+'-kids-dark-hover-full.png'),fullPage:true});
+   await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
    await page.locator('.kids-question').first().locator('summary').click();assert.equal(await page.locator('.kids-question').first().getAttribute('open'),'');
    await page.screenshot({path:resolve(output,name+'-kids-question-open-full.png'),fullPage:true});
-   await page.locator('.kids-contents a').nth(1).click();assert.equal(new URL(page.url()).hash,'#kids-freedom-kids-1');
-   await page.locator('.kids-detail > .back').click();await page.waitForFunction(y=>Math.abs(scrollY-y)<3&&document.activeElement?.closest('.kids-card'),departureY);
-   await page.screenshot({path:resolve(output,name+'-families-return.png')});assert.equal(providerCalls,0);
+   await page.locator('.kids-next a').last().focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+   const ending=await page.locator('.kids-next a').last().boundingBox(),overlay=await page.locator('#prompt-composer').boundingBox();assert(ending&&overlay&&ending.y+ending.height<=overlay.y,'Kids closing action clears the composer');
+   await page.screenshot({path:resolve(output,name+'-kids-ending-focus.png')});
+   await page.locator('.kids-contents a').nth(1).click();assert.equal(new URL(page.url()).hash,'#kids-freedom-kids-1');assert.equal(new URL(page.url()).pathname,'/cards/freedom-kids');
+   await page.locator('.kids-detail > .back').click();await page.waitForFunction(y=>location.pathname==='/topics/families'&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('.kids-card'),departureY);
+   assert.equal(await page.locator('#filters a[href="/topics/families"]').getAttribute('aria-current'),'page');assert.equal(await page.locator('.family-context').count(),1);await page.screenshot({path:resolve(output,name+'-families-return.png')});assert.equal(providerCalls,0);
    console.log(JSON.stringify({viewport:name,familiesJourney:'passed',backScrollRestored:true,backFocusRestored:true,providerCallsBeforeSubmit:providerCalls}));
    if(name==='mobile'){
     const noJs=await browser.newContext({viewport:{width,height},javaScriptEnabled:false});await noJs.route('**/*',serve);const plain=await noJs.newPage();await plain.goto(origin+'/cards/freedom-kids');
     assert.equal(await plain.locator('.kids-chapter').count(),3);await plain.locator('.kids-question').first().locator('summary').click();assert.equal(await plain.locator('.kids-question').first().getAttribute('open'),'');
-    await plain.screenshot({path:resolve(output,'mobile-kids-no-js-full.png'),fullPage:true});await noJs.close();assert.equal(providerCalls,0);
+    await plain.locator('.kids-contents a').nth(1).click();assert.equal(new URL(plain.url()).pathname,'/cards/freedom-kids');assert.equal(new URL(plain.url()).hash,'#kids-freedom-kids-1');
+    await plain.screenshot({path:resolve(output,'mobile-kids-no-js-full.png'),fullPage:true});
+    await plain.goto(origin+'/topics/families');await plain.locator('.family-context a[href$="#card-freedom-kids"]').click();assert.equal(new URL(plain.url()).pathname,'/topics/families');
+    await noJs.close();assert.equal(providerCalls,0);
    }
   }
   await page.locator('#prompt-text').fill('Synthetic review question');await page.locator('#prompt-submit').click();

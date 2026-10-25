@@ -20,7 +20,9 @@ not produce invented replacement copy. All source text is escaped.
 
 Native disclosures and anchors provide useful reading and navigation without
 JavaScript. Enhanced Kids contents links replace the current fragment and focus
-the real section, preserving a single return step to the originating category. Existing masonry remeasurement enhances the card disclosure. The
+the real section, preserving a single return step to the originating category.
+Fragment links retain the current route (and collection cursor), independently
+of the shell’s base URL; native no-JavaScript links remain in the correct page. Existing masonry remeasurement enhances the card disclosure. The
 canonical card hash is now an allowed navigation hint so Back can retain the
 category jump's position and card focus. No question, content or response is
 cached. Intent rendering removes the category introduction before displaying the

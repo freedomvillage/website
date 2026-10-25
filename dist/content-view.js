@@ -70,9 +70,10 @@
   for(const link of document.querySelectorAll('.kids-contents a'))if(!link.dataset.ready){
    link.dataset.ready='true';link.addEventListener('click',event=>{
     if(event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||(event.button!==undefined&&event.button!==0))return;
-    const hash=link.getAttribute('href');if(!/^#kids-freedom-kids-\d{1,2}$/.test(hash||''))return;
+    const destination=new URL(link.getAttribute('href'),location.href),hash=destination.hash;
+    if(destination.origin!==location.origin||destination.pathname!==location.pathname||destination.search!==location.search||!/^#kids-freedom-kids-\d{1,2}$/.test(hash))return;
     const target=document.getElementById(hash.slice(1));if(!target)return;
-    try{root.history.replaceState(root.history.state,'',hash);}catch{return;}
+    try{root.history.replaceState(root.history.state,'',location.pathname+location.search+hash);}catch{return;}
     event.preventDefault();target.scrollIntoView({block:'start',behavior:'auto'});target.focus({preventScroll:true});
    });
   }
