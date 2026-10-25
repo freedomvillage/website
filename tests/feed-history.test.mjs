@@ -34,12 +34,20 @@ test('no-store Back reconstructs appended pages before restoring exact scroll an
 test('study hash changes are saved for the actual departing history entry',()=>{
  const h=harness({path:'/studies/families'});h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore:async()=>false,measure(){}});h.context.location.hash='#study-ministry-first';h.click(h.link());assert.equal(h.context.history.state.fvcFeedRestore.path,'/studies/families#study-ministry-first');
 });
-test('the Godly reader restores only bounded single-page navigation hints without enabling other detail or query state',async()=>{
- const path='/cards/godly-play',h=harness({path,state:null});h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('Reader has no pagination');},measure(){}});h.click(h.link('godly-play-reader','/cards/freedom-kids'));h.emit('pagehide');
- const state=JSON.parse(JSON.stringify(h.context.history.state));assert.equal(state.fvcFeedRestore.path,path);assert.equal(state.fvcFeedRestore.pages,1);assert.deepEqual(state.fvcFeedRestore.focus,{cardId:'godly-play-reader',href:'/cards/freedom-kids'});
- const returned=harness({path,state,navigation:'back_forward'});returned.link('godly-play-reader','/cards/freedom-kids');const controller=returned.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('Reader must not re-fetch pages');},measure(){}});assert(controller.willRestore());await controller.restore();assert.deepEqual(returned.focused,['godly-play-reader']);assert.equal(returned.scrolls.at(-1).top,9169);
- for(const unsupported of ['/cards/freedom-kids','/cards/other-reader','/cards/godly-play?query=PRIVATE','/cards/godly-play?after=50%3Ax'])assert.equal(harness({path:unsupported}).context.createFeedHistory({}),null);
- state.fvcFeedRestore.pages=2;assert(!harness({path,state,navigation:'back_forward'}).context.createFeedHistory({}).willRestore());
+test('the two authored readers restore bounded single-page hints without enabling other detail or query state',async()=>{
+ for(const [path,id,href] of [['/cards/godly-play','godly-play-reader','/cards/freedom-kids'],['/cards/village-youth','youth-reader','/connect']]){
+  const h=harness({path,state:null});h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('Reader has no pagination');},measure(){}});h.click(h.link(id,href));h.emit('pagehide');
+  const state=JSON.parse(JSON.stringify(h.context.history.state));assert.equal(state.fvcFeedRestore.path,path);assert.equal(state.fvcFeedRestore.pages,1);assert.deepEqual(state.fvcFeedRestore.focus,{cardId:id,href});
+  const returned=harness({path,state,navigation:'back_forward'});returned.link(id,href);const controller=returned.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('Reader must not re-fetch pages');},measure(){}});assert(controller.willRestore());await controller.restore();assert.deepEqual(returned.focused,[id]);assert.equal(returned.scrolls.at(-1).top,9169);
+  state.fvcFeedRestore.pages=2;assert(!harness({path,state,navigation:'back_forward'}).context.createFeedHistory({}).willRestore());
+ }
+ for(const unsupported of ['/cards/freedom-kids','/cards/other-reader','/cards/godly-play?query=PRIVATE','/cards/godly-play?after=50%3Ax','/cards/village-youth?question=PRIVATE','/cards/village-youth?after=50%3Ax'])assert.equal(harness({path:unsupported}).context.createFeedHistory({}),null);
+});
+test('a marked inquiry restores the exact link occurrence when an earlier link has the same destination',async()=>{
+ const path='/cards/village-youth',h=harness({path});h.link('youth-reader','/connect');const ending=h.link('youth-inquiry','/connect');
+ ending.closest=selector=>selector==='main a[href]'?ending:selector==='section[data-history-anchor][id]'?h.cards.get('youth-inquiry'):selector==='article[id]'?h.cards.get('youth-reader'):null;
+ h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('No reader pagination');},measure(){}});h.click(ending);h.emit('pagehide');const state=JSON.parse(JSON.stringify(h.context.history.state));assert.deepEqual(state.fvcFeedRestore.focus,{cardId:'youth-inquiry',href:'/connect'});
+ const returned=harness({path,state,navigation:'back_forward'});returned.link('youth-reader','/connect');returned.link('youth-inquiry','/connect');await returned.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('No reader pagination');},measure(){}}).restore();assert.deepEqual(returned.focused,['youth-inquiry']);
 });
 test('user input cancels restoration without stealing scroll/focus; failed paging remains usable',async()=>{
  for(const cancellation of [true,false]){

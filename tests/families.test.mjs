@@ -46,6 +46,21 @@ test('Godly source changes retain the complete generic contract, including new s
  godly.title='<script>BAD()</script>';godly.detail[0]='<img src=x onerror=BAD()>';godly.editorial='PRIVATE_SENTINEL';const html=renderLibraryDetail(godly);assert(!html.includes('<script>BAD()'));assert(!html.includes('<img src=x'));assert(!html.includes('PRIVATE_SENTINEL'));assert(html.includes('&lt;img'));
 });
 
+test('Youth preserves its branded entry with reserved geometry and complete source detail with inquiry near both ends',()=>{
+ const all=cards(),youth=all.find(c=>c.id==='village-youth'),related=all.filter(c=>youth.related.includes(c.id));youth.facts.push('FUTURE_CANONICAL_FACT');youth.detail.push('Another complete canonical paragraph remains available.');youth.actions.push({label:'Another source destination',href:'https://example.org/source'});
+ const snapshot=JSON.stringify(youth),html=renderLibraryDetail(youth,related),entry=renderLibraryCard(youth);
+ assert(entry.includes('library-card theme-youth layout-brand'));assert(entry.includes(youth.media.src));assert(entry.includes('class="youth-source-mark" width="2200" height="2200"'));assert(!renderLibraryCard({...youth,media:{...youth.media,src:'https://example.org/changed.svg'}}).includes('youth-source-mark'));assert(!entry.includes('youth-detail'));assert(html.includes('youth-detail'));assert(html.includes('id="youth-reader"'));assert(html.includes('/village-youth-source.svg'));assert(html.includes('width="2200" height="2200"'));
+ for(const value of [youth.summary,...youth.detail,...youth.facts])assert.equal(html.split(value).length-1,1);assert(html.indexOf(youth.detail[0])<html.indexOf(youth.detail[1]));for(const a of youth.actions)assert.equal(html.split(a.label).length-1,2);assert(html.includes('href="/connect"'));for(const c of related)assert(html.includes('href="/cards/'+c.id+'"'));assert.equal(JSON.stringify(youth),snapshot);
+});
+
+test('Youth source drift retains the full generic contract, and source strings stay escaped',()=>{
+ const all=cards(),youth=all.find(c=>c.id==='village-youth'),kids=all.find(c=>c.id==='freedom-kids');
+ for(const changed of [{...youth,media:null},{...youth,actions:[]},{...youth,sections:[{heading:'New source section',paragraphs:['New source paragraph.'],links:[{label:'New source link',href:'https://example.org/new'}],cardIds:['freedom-kids']}]}]){
+  const html=renderLibraryDetail(changed,[],[kids]);assert(!html.includes('youth-detail'));for(const p of changed.detail)assert(html.includes(p));for(const f of changed.facts)assert(html.includes(f));if(changed.sections){assert(html.includes('New source paragraph.'));assert(html.includes('href="https://example.org/new"'));assert(html.includes('embedded-village-youth-0-card-freedom-kids'));}
+ }
+ youth.title='<script>BAD()</script>';youth.detail[0]='<img src=x onerror=BAD()>';youth.editorial='PRIVATE_SENTINEL';const html=renderLibraryDetail(youth);assert(!html.includes('<script>BAD()'));assert(!html.includes('<img src=x'));assert(!html.includes('PRIVATE_SENTINEL'));assert(html.includes('&lt;img'));
+});
+
 test('Families presentation leads with current ministries and keeps arrival supporting without changing membership, source order or other contexts',()=>{
  const items=[{id:'sunday-gatherings'},{id:'visit-help'},{id:'village-youth'},{id:'other-family-a'},{id:'freedom-kids'},{id:'families-growing-together'},{id:'junior-village'},{id:'other-family-b'}],original=items.map(c=>c.id);
  assert.deepEqual(familyCollectionItems({topic:'families',items}).map(c=>c.id),['families-growing-together','freedom-kids','junior-village','village-youth','other-family-a','other-family-b','sunday-gatherings','visit-help']);assert.deepEqual(items.map(c=>c.id),original);assert.equal(familyCollectionItems({topic:'',items}),items);assert.equal(familyCollectionItems({topic:'community',items}),items);

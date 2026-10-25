@@ -20,13 +20,26 @@ const familySupportBounds=async page=>{
  const copy=await page.locator('#collection .sunday-scene-copy').boundingBox(),caption=await page.locator('#collection .sunday-venue figcaption').boundingBox(),tail=await page.locator('#collection .sunday-entry-tail').boundingBox();
  assert(copy&&caption&&tail&&copy.y>=caption.y+caption.height&&copy.y+copy.height<=tail.y+.5,'Families support text flows intrinsically between source caption and actions');
 };
+const completeFamilies=async page=>{
+ if(new URL(page.url()).pathname!=='/topics/families'||new URL(page.url()).search)await page.goto(origin+'/topics/families');
+ await page.locator('html[data-site-revealed="true"]').waitFor();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
+ await page.waitForFunction(()=>document.querySelectorAll('#grid > article.card').length===40);assert.deepEqual((await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id))).sort(),expectedFamilyIds);
+};
+const youthEntryClearance=async(page,phase)=>{
+ const bounds=await page.evaluate(()=>{
+  const card=document.getElementById('card-village-youth'),content=card.querySelector('a[href="/cards/village-youth"]').getBoundingClientRect();
+  const next=[...document.querySelectorAll('#grid > article.card')].filter(e=>e!==card).map(e=>({id:e.id,r:e.getBoundingClientRect()})).filter(({r})=>r.top>content.top+1&&r.left<content.right-1&&r.right>content.left+1).sort((a,b)=>a.r.top-b.r.top)[0];
+  return {contentBottom:content.bottom,nextTop:next?.r.top,nextId:next?.id};
+ });
+ console.log(JSON.stringify({viewport:page.viewportSize().width,youthEntryClearance:phase,...bounds}));assert(bounds.nextTop>=bounds.contentBottom-.5,'the next same-column card clears the complete Youth entry and its padding');
+};
 const browser=await chromium.launch();
 try{
  for(const [name,width,height] of [['desktop',1440,1000],['intermediate',900,900],['breakpoint',720,900],['mobile',390,844],['narrow',320,800]]){
   const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE content_cards(id TEXT PRIMARY KEY,status TEXT,content_json TEXT,expires_at TEXT);CREATE TABLE content_checks(id TEXT PRIMARY KEY,result_json TEXT,created_at TEXT)');
   const themes=['paper','ink','forest','clay','youth','outline'];
   for(let i=0;i<71;i++){
-   const id=['freedom-kids','connect-card','families-growing-together','village-youth','junior-village','godly-play','children-in-worship','sunday-gatherings','visit-help'][i]||'sample-'+String(i).padStart(3,'0');
+   const id=['freedom-kids','connect-card','families-growing-together','village-youth','junior-village','godly-play','children-in-worship','sunday-gatherings','visit-help','serve'][i]||'sample-'+String(i).padStart(3,'0');
    const card={schemaVersion:2,template:'story',title:'Review resource '+(i+1),summary:'Synthetic review content for ranked resource continuation.',detail:['Synthetic public prose for browser acceptance.'],facts:[],categories:i>=20&&i<52?['families']:['community'],actions:[],related:[],media:null,design:{theme:themes[i%themes.length],layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false};
    db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
   }
@@ -56,7 +69,9 @@ try{
   const context=await browser.newContext({viewport:{width,height},hasTouch:['mobile','narrow'].includes(name),reducedMotion:'reduce',recordVideo:{dir:resolve(output,'journey-recordings'),size:{width,height}}});
   const activate=locator=>name==='mobile'?locator.tap():locator.click();
   const serve=async route=>{
-   const r=route.request(),url=new URL(r.url());if(url.origin!==origin)return route.abort();
+   const r=route.request(),url=new URL(r.url());
+   if(url.href==='https://cdn.prod.website-files.com/60e0035471e8115799a8640b/64e0f1446e4ab5692426f843_Village-Youth-Logo.svg'){await new Promise(resolve=>setTimeout(resolve,250));return route.fulfill({status:200,contentType:'image/svg+xml',body:await readFile(resolve('dist/village-youth-source.svg'))});}
+   if(url.origin!==origin)return route.abort();
    if(failPage&&url.pathname==='/api/content/intent'&&url.searchParams.has('after')){failPage=false;return route.fulfill({status:503,contentType:'application/json',body:'{"status":"unavailable"}'});}
    const headers=new Headers(r.headers());headers.set('Cf-Access-Jwt-Assertion','SYNTHETIC_FIXTURE');if(r.method()==='POST')headers.set('Origin',origin);
    const response=await worker.fetch(new Request(r.url(),{method:r.method(),headers,...(r.postData()?{body:r.postData()}: {})}),env);
@@ -125,7 +140,7 @@ try{
   }
   {
    const startSeconds=Number(((performance.now()-recordingStarted)/1000).toFixed(2));
-   await page.goto(origin+'/topics/families');await page.locator('html[data-site-revealed="true"]').waitFor();await page.locator('.load-more').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelectorAll('#grid > article.card').length===40);
+   await completeFamilies(page);
    const entry=page.locator('#card-godly-play .godly-card-link');await entry.focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert.equal(await entry.evaluate(el=>parseFloat(getComputedStyle(el).outlineOffset)>=2&&parseFloat(getComputedStyle(el).outlineWidth)>=2),true,'question card focus ring stays outside its text');const departureY=await page.evaluate(()=>scrollY);
    await page.screenshot({path:resolve(output,name+'-godly-entry-focus.png')});if(name==='desktop')await page.keyboard.press('Enter');else await activate(entry);
    await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/godly-play');assert.equal(await page.locator('.godly-reading p').count(),2);
@@ -146,6 +161,30 @@ try{
     }
     await page.screenshot({path:resolve(output,'mobile-godly-ineligible-parent.png'),fullPage:true});db.prepare("UPDATE content_cards SET status='draft',expires_at=NULL WHERE id='freedom-kids'").run();
     const noJs=await browser.newContext({viewport:{width,height},javaScriptEnabled:false});await noJs.route('**/*',serve);const plain=await noJs.newPage();await plain.goto(origin+'/cards/godly-play');assert.equal(await plain.locator('.godly-reading p').count(),2);assert.equal(await plain.locator('.godly-parent a').getAttribute('href'),'/cards/freedom-kids');await plain.screenshot({path:resolve(output,'mobile-godly-no-js-full.png'),fullPage:true});await plain.locator('.godly-parent a').click();assert.equal(new URL(plain.url()).pathname,'/cards/freedom-kids');await noJs.close();
+   }
+  }
+  {
+   const startSeconds=Number(((performance.now()-recordingStarted)/1000).toFixed(2));await completeFamilies(page);
+   const entry=page.locator('#card-village-youth a[href="/cards/village-youth"]');await entry.focus();await page.waitForFunction(()=>{const e=document.querySelector('#card-village-youth .library-brand-art img');return e?.complete&&e.naturalWidth>0&&e.naturalWidth===e.naturalHeight;});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const departureY=await page.evaluate(()=>scrollY);await youthEntryClearance(page,'initial-after-delayed-image');await page.screenshot({path:resolve(output,name+'-youth-entry-preserved.png')});
+   if(name==='desktop')await page.keyboard.press('Enter');else await activate(entry);await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/village-youth');assert.equal(await page.locator('.youth-detail').count(),1);
+   const source=familyFixtures().find(([id])=>id==='village-youth')[1];assert.deepEqual(await page.locator('.youth-reading p,.youth-inquiry p').allTextContents(),source.detail);assert.deepEqual(await page.locator('.youth-hero .library-facts p').allTextContents(),source.facts);assert.equal(await page.locator('.youth-identity img').evaluate(e=>e.complete&&e.naturalWidth>0&&e.naturalWidth===e.naturalHeight&&getComputedStyle(e).objectFit==='contain'),true);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+   assert.deepEqual(await page.locator('.youth-detail nav a').evaluateAll(a=>a.map(e=>e.getAttribute('href'))),['/connect','/connect']);assert.deepEqual(await page.locator('#detail .related-grid > article').evaluateAll(a=>a.map(e=>e.id)),['card-children-in-worship','card-serve']);
+   if(width<=1100){const copy=await page.locator('.youth-hero-copy').boundingBox(),art=await page.locator('.youth-identity').boundingBox();assert(copy&&art&&copy.y+copy.height<=art.y+.5,'useful Youth introduction and inquiry precede artwork at narrow widths');}
+   await page.screenshot({path:resolve(output,name+'-youth-detail-full.png'),fullPage:true});
+   await page.locator('.youth-detail > .back').focus();await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>!!document.activeElement?.closest('.youth-hero-actions')),true);await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const early=await page.locator('.youth-hero-actions a').boundingBox(),earlyComposer=await page.locator('#prompt-composer').boundingBox();assert(early&&earlyComposer&&early.y+early.height<=earlyComposer.y);assert(await contrast(page.locator('.youth-hero-actions a'))>=4.5);await page.screenshot({path:resolve(output,name+'-youth-intro-inquiry-focus.png')});const earlyDepartureY=await page.evaluate(()=>scrollY);
+   if(name==='desktop')await page.keyboard.press('Enter');else await activate(page.locator('.youth-hero-actions a'));await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/connect');await activate(page.locator('#detail .back'));await page.waitForFunction(y=>location.pathname==='/cards/village-youth'&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('.youth-hero-actions'),earlyDepartureY);await page.screenshot({path:resolve(output,name+'-youth-intro-return.png')});
+   await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="dark"]').click();await page.locator('#settings-close').click();await page.locator('.youth-inquiry a').hover();assert(await contrast(page.locator('.youth-inquiry a'))>=4.5);assert(await contrast(page.locator('.youth-hero-actions a'))>=4.5);await page.screenshot({path:resolve(output,name+'-youth-dark-full.png'),fullPage:true});
+   await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
+   const inquiry=page.locator('.youth-inquiry a');await page.locator('.youth-hero-actions a').focus();await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>!!document.activeElement?.closest('.youth-inquiry')),true);await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const readerDepartureY=await page.evaluate(()=>scrollY),last=await inquiry.boundingBox(),composer=await page.locator('#prompt-composer').boundingBox();assert(last&&composer&&last.y+last.height<=composer.y,'Youth ending inquiry clears composer');assert.equal(await inquiry.evaluate(e=>parseFloat(getComputedStyle(e).outlineOffset)>=2),true);await page.screenshot({path:resolve(output,name+'-youth-ending-focus.png')});
+   if(name==='desktop')await page.keyboard.press('Enter');else await activate(inquiry);await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/connect');await page.screenshot({path:resolve(output,name+'-youth-connect-destination.png')});
+   await activate(page.locator('#detail .back'));await page.waitForFunction(y=>location.pathname==='/cards/village-youth'&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('.youth-inquiry'),readerDepartureY);await page.screenshot({path:resolve(output,name+'-youth-connect-return.png')});
+   if(name==='mobile'){
+    await page.emulateMedia({reducedMotion:'no-preference'});await page.locator('.youth-hero').scrollIntoViewIfNeeded();const motionStart=Number(((performance.now()-recordingStarted)/1000).toFixed(2));await page.waitForFunction(()=>getComputedStyle(document.querySelector('.youth-identity')).animationName==='brand-drift');await page.screenshot({path:resolve(output,'mobile-youth-motion-start.png')});await page.waitForTimeout(4300);await page.screenshot({path:resolve(output,'mobile-youth-motion-end.png')});assert.equal(await page.locator('.youth-identity').evaluate(e=>getComputedStyle(e).animationIterationCount),'1');console.log(JSON.stringify({viewport:name,youthMotion:'existing-finite-brand-gradient',recording:(await page.video().path()).split('/').at(-1),startSeconds:motionStart,endSeconds:Number(((performance.now()-recordingStarted)/1000).toFixed(2))}));await page.emulateMedia({reducedMotion:'reduce'});
+   }
+   await activate(page.locator('.youth-detail > .back'));await page.waitForFunction(y=>location.pathname==='/topics/families'&&document.querySelectorAll('#grid > article.card').length===40&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('#card-village-youth'),departureY);await page.waitForFunction(()=>{const e=document.querySelector('#card-village-youth .library-brand-art img');return e?.complete&&e.naturalWidth>0;});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));await youthEntryClearance(page,'back-after-delayed-image');await page.screenshot({path:resolve(output,name+'-youth-families-return.png')});assert.equal(providerCalls,0);
+   console.log(JSON.stringify({viewport:name,youthJourney:'passed',sourceParagraphsRetained:2,sourceInquiry:'/connect',backFocusAndScrollRestored:true,restoredLoadedRecords:40,input:name==='mobile'?'emulated-touch':name==='desktop'?'keyboard':'pointer',providerCallsBeforeSubmit:providerCalls,reducedMotion:'reduce',recording:(await page.video().path()).split('/').at(-1),startSeconds,endSeconds:Number(((performance.now()-recordingStarted)/1000).toFixed(2))}));
+   if(name==='mobile'){
+    const noJs=await browser.newContext({viewport:{width,height},javaScriptEnabled:false});await noJs.route('**/*',serve);const plain=await noJs.newPage();await plain.goto(origin+'/cards/village-youth');assert.deepEqual(await plain.locator('.youth-reading p,.youth-inquiry p').allTextContents(),source.detail);assert.equal(await plain.locator('.youth-inquiry a').getAttribute('href'),'/connect');await plain.screenshot({path:resolve(output,'mobile-youth-no-js-full.png'),fullPage:true});await plain.locator('.youth-inquiry a').click();assert.equal(new URL(plain.url()).pathname,'/connect');await noJs.close();
    }
   }
   if(['desktop','intermediate','mobile'].includes(name)){
