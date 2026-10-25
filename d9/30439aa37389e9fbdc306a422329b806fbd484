@@ -1,0 +1,27 @@
+docs/VILLAGE-YOUTH.md
+  s_e2bf1542692bef::t_3d873467cc5add 9
+tests/feed-history.test.mjs
+  s_e2bf1542692bef::t_3d873467cc5add 46-51
+dist/feed-history.js
+  s_e2bf1542692bef::t_f8d85b3c6115f0 35
+source-manifest.json
+  s_e2bf1542692bef::t_cac26e34d7797d 107
+src/content/youth.mjs
+  s_e2bf1542692bef::t_77cddeecd55460 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d930439aa37389e9fbdc306a422329b806fbd484",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
