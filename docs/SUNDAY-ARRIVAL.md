@@ -30,7 +30,8 @@ visit-card action that would point back to the current page.
 Current live source says Sunday 2:10 PM at Youngil Church in Yangjae. Youngil has
 an elevator and no on-site parking. The office is separate, and visitors should
 contact the church before going there. These values remain in canonical records;
-none is copied into rendering code. No D1 content writes or media publication.
+displayed values are read from records. Only the image identity guard names the
+expected venue and canonical map URLs. No D1 content writes or private-media publication.
 
 Cloud fixtures use synthetic prose/addresses. Review requires full-page desktop,
 intermediate and mobile captures and actual relevant interaction recording,
