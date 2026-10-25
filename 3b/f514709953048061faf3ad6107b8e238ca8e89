@@ -1,0 +1,33 @@
+.github/workflows/content-validation.yml
+  s_e2bf1542692bef::t_0087222f3999eb 18,21,27,30-32,42,84-90
+dist/content-view.css
+  s_e2bf1542692bef::t_a209da9ad96617 229-230
+docs/CHILDREN-IN-WORSHIP.md
+  s_e2bf1542692bef::t_7fc7cd378548a8 1-7
+source-manifest.json
+  s_e2bf1542692bef::t_25d23ab0c67bd3 103
+tests/children-worship.test.mjs
+  s_e2bf1542692bef::t_99b3d48ebe6d86 1-14
+tests/families.test.mjs
+  s_e2bf1542692bef::t_af7fd6a4a8f1da 20
+tests/fixtures/families.mjs
+  s_e2bf1542692bef::t_452096977851ca 17
+tests/worship-rendered.mjs
+  s_e2bf1542692bef::t_0e1da3be087952 1-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3bf514709953048061faf3ad6107b8e238ca8e89",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
