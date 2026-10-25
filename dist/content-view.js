@@ -100,8 +100,9 @@
     const height=Math.min(380,usable);
     reading.style.setProperty('--kids-stage-top',top+'px');reading.style.setProperty('--kids-stage-height',height+'px');
     reading.toggleAttribute('data-scene-stage',wide);
-    // Never create blank scroll distance just to hold a scene.
-    if(wide&&prose.getBoundingClientRect().height<height)reading.removeAttribute('data-scene-stage');
+    // Fit the shortest real chapter so the final scene can remain complete
+    // before natural release, without adding prose padding or scroll distance.
+    if(wide){const fitted=Math.min(height,...chapters.map(el=>el.getBoundingClientRect().height));if(fitted<200||prose.getBoundingClientRect().height<fitted)reading.removeAttribute('data-scene-stage');else reading.style.setProperty('--kids-stage-height',fitted+'px');}
    }
    if(!reading.hasAttribute('data-scene-stage')){if(located>=0)links[located]?.removeAttribute('aria-current');located=-1;return;}
    const boundary=Math.max(contents.getBoundingClientRect().bottom+40,160),top=parseFloat(reading.style.getPropertyValue('--kids-stage-top'));

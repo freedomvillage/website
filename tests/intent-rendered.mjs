@@ -338,7 +338,7 @@ try{
      for(let step=0;step<65;step++){
       const reached=await reading.evaluate(({index,enhanced})=>{const heads=[...document.querySelectorAll('.kids-chapter h2')],nav=document.querySelector('.kids-contents'),edge=Math.max(nav.getBoundingClientRect().bottom+40,160),stage=document.querySelector('.kids-scene-stage'),top=parseFloat(document.querySelector('.kids-reading').style.getPropertyValue('--kids-stage-top'));return heads[index].getBoundingClientRect().top<=edge&&(!heads[index+1]||heads[index+1].getBoundingClientRect().top>edge)&&(!enhanced||Math.abs(stage.getBoundingClientRect().top-top)<2);},{index,enhanced});
       if(reached)return;await advance(direction);
-     }throw Error(prefix+' native scroll did not reach chapter '+index);
+     }console.log(JSON.stringify({viewport:name,phase,nativeReachFailure:index,geometry:await reading.evaluate(()=>({y:scrollY,headings:[...document.querySelectorAll('.kids-chapter h2')].map(e=>e.getBoundingClientRect().top),chapters:[...document.querySelectorAll('.kids-chapter')].map(e=>e.getBoundingClientRect().height),stage:document.querySelector('.kids-scene-stage')?.getBoundingClientRect().toJSON(),sequence:document.querySelector('.kids-scene-sequence')?.getBoundingClientRect().toJSON(),configuredTop:document.querySelector('.kids-reading').style.getPropertyValue('--kids-stage-top'),configuredHeight:document.querySelector('.kids-reading').style.getPropertyValue('--kids-stage-height')}))}));await reading.screenshot({path:resolve(output,prefix+'-reach-failure.png')});throw Error(prefix+' native scroll did not reach chapter '+index);
     };
     const capture=async(index,direction)=>{
      await reach(index,direction);
