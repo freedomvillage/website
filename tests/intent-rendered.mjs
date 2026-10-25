@@ -188,7 +188,8 @@ try{
    }
   }
   if(['breakpoint','narrow'].includes(name)){
-   await page.goto(origin+'/topics/families');await page.locator('html[data-site-revealed="true"]').waitFor();await page.locator('.load-more').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelectorAll('#grid > article.card').length===40);
+   // The Godly Back journey already restored the complete collection here.
+   assert.equal(new URL(page.url()).pathname,'/topics/families');assert.deepEqual((await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id))).sort(),expectedFamilyIds);
    await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});await familySupportBounds(page);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    console.log(JSON.stringify({viewport:name,familiesSupport:'intrinsic-flow-passed',completeFamilyRecords:40}));
   }
