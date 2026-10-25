@@ -78,6 +78,45 @@
    });
   }
  }
+ function kidsSceneStage(){
+  const reading=document.querySelector('.kids-detail .kids-reading'),story=reading?.querySelector('.kids-story'),contents=reading?.querySelector('.kids-contents');
+  const chapters=story&&[...story.children].filter(el=>el.matches('.kids-chapter')).slice(0,3);
+  if(!reading||reading.dataset.stageReady||chapters?.length!==3||!root.CSS?.supports('position','sticky'))return;
+  const arts=chapters.map(el=>el.querySelector('.kids-spread-art')),headings=chapters.map(el=>el.querySelector('h2[id]'));
+  if(arts.some(el=>!el)||headings.some(el=>!el))return;
+  reading.dataset.stageReady='true';
+  const sequence=document.createElement('div'),stage=document.createElement('div'),prose=document.createElement('div');
+  sequence.className='kids-scene-sequence';stage.className='kids-scene-stage';stage.setAttribute('aria-hidden','true');prose.className='kids-scene-prose';
+  const frames=arts.map((art,i)=>{const frame=art.cloneNode(true);frame.className='kids-scene-frame';frame.hidden=i!==0;stage.append(frame);return frame;});
+  chapters[0].before(sequence);sequence.append(stage,prose);prose.append(...chapters);
+  const links=headings.map(h=>[...contents.querySelectorAll('a')].find(a=>new URL(a.href).hash==='#'+h.id));
+  let queued=false,needsLayout=true,active=-1,located=-1;
+  function update(){
+   queued=false;
+   if(needsLayout){
+    needsLayout=false;
+    const composer=document.getElementById('prompt-composer'),top=contents.offsetHeight+24,bottom=composer?.getBoundingClientRect().top||innerHeight;
+    const usable=bottom-top-24,wide=story.clientWidth>=560&&innerWidth>800&&innerHeight>=720&&!reduced.matches&&usable>=280;
+    const height=Math.min(380,usable);
+    reading.style.setProperty('--kids-stage-top',top+'px');reading.style.setProperty('--kids-stage-height',height+'px');
+    reading.toggleAttribute('data-scene-stage',wide);
+    // Never create blank scroll distance just to hold a scene.
+    if(wide&&prose.getBoundingClientRect().height<height)reading.removeAttribute('data-scene-stage');
+   }
+   if(!reading.hasAttribute('data-scene-stage')){if(located>=0)links[located]?.removeAttribute('aria-current');located=-1;return;}
+   const boundary=contents.getBoundingClientRect().bottom+40,top=parseFloat(reading.style.getPropertyValue('--kids-stage-top'));
+   let current=0;for(let i=1;i<headings.length;i++)if(headings[i].getBoundingClientRect().top<=boundary)current=i;
+   const bounds=sequence.getBoundingClientRect(),location=bounds.top<innerHeight&&bounds.bottom>top?current:-1;
+   if(active!==current){for(let i=0;i<frames.length;i++)frames[i].hidden=i!==current;stage.dataset.chapter=String(current);active=current;}
+   if(located!==location){if(located>=0)links[located]?.removeAttribute('aria-current');if(location>=0)links[location]?.setAttribute('aria-current','location');located=location;}
+  }
+  function schedule(){if(!queued){queued=true;requestAnimationFrame(update);}}
+  function layout(){needsLayout=true;schedule();}
+  root.addEventListener('scroll',schedule,{passive:true});root.addEventListener('resize',layout,{passive:true});
+  root.visualViewport?.addEventListener('resize',layout,{passive:true});reduced.addEventListener('change',layout);
+  if(root.ResizeObserver){const observer=new ResizeObserver(layout);observer.observe(contents);observer.observe(document.getElementById('prompt-composer')||reading);}
+  schedule();
+ }
  function pagination(){
   const more=document.querySelector('.load-more');if(!more||more.dataset.ready)return;more.dataset.ready='true';
   let autoFailed=false,ended=false;
@@ -108,7 +147,7 @@
  reduced.addEventListener('change',motionState);
  document.addEventListener('visibilitychange',motionState);
  root.contentView={render(){if(legacyLink())return;if(!started){started=true;enhance();detailBack();connectDraft();
-  kidsContents();let paging;
+  kidsContents();kidsSceneStage();let paging;
   const history=root.createFeedHistory?.({pageCount:()=>pagesLoaded,isIntent:()=>intentActive,loadMore:signal=>paging?.load(false,true,signal)||false,measure:()=>{if(typeof sizeCards==='function')sizeCards();}});
   restoring=history?.willRestore()||false;paging=pagination();
   if(history)void history.restore().finally(()=>{restoring=false;paging?.observe();});

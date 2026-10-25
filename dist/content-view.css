@@ -170,6 +170,16 @@ html[data-site-revealed="true"] .presentation-teaching.art-entered .craft-teachi
 /* The retained sidebar leaves a narrow reading measure before the mobile shell takes over. */
 @media(min-width:701px) and (max-width:800px){.card.family-opening{grid-template-columns:minmax(0,1fr)}.card.family-opening .family-entry-scene{grid-column:1;grid-row:1;min-height:230px;max-width:340px;width:100%;justify-self:center;margin:0}.card.family-opening .family-entry-heading{grid-column:1;grid-row:2}.kids-heading{grid-template-columns:minmax(0,1fr)}.kids-heading-art{min-height:300px;max-width:380px;width:100%;justify-self:center}}
 
+/* Progressive reading stage: native document scroll keeps art beside its current prose. */
+.kids-scene-sequence,.kids-scene-prose{display:contents}.kids-scene-stage{display:none}
+@media(min-width:801px) and (min-height:720px) and (prefers-reduced-motion:no-preference){
+.kids-reading[data-scene-stage] .kids-scene-sequence{display:grid;grid-template-columns:minmax(200px,.85fr) minmax(0,1.15fr);gap:24px;align-items:start;padding:20px 24px 0;background:#f4eddb;color:#243b34}
+.kids-reading[data-scene-stage] .kids-scene-prose{display:block;min-width:0}.kids-reading[data-scene-stage] .kids-scene-stage{display:block;position:sticky;top:var(--kids-stage-top);height:var(--kids-stage-height);min-width:0;background:#e6c5b3;border-radius:48% 48% 0 0;pointer-events:none}
+.kids-scene-frame{position:absolute;inset:0;min-width:0}.kids-scene-frame[hidden]{display:none}.kids-scene-frame .kids-paper{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:contain}.kids-scene-frame .kids-fold-number{top:18px;left:12px;font-size:36px}
+.kids-reading[data-scene-stage] .kids-chapter{display:block;padding:28px 12px 32px;margin:0;background:transparent;border-radius:0}.kids-reading[data-scene-stage] .kids-chapter .kids-spread-art{display:none}.kids-reading[data-scene-stage] .kids-spread-copy{max-width:none}.kids-reading[data-scene-stage] .kids-chapter h2{font-size:clamp(32px,3.4vw,48px);scroll-margin-top:150px}.kids-reading[data-scene-stage] .kids-chapter p{font-size:17px;line-height:1.8}
+.kids-contents a[aria-current="location"]{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
+}
+
 /* Sunday invitation leads directly to a source-backed arrival guide. */
 .card.sunday-entry{padding:22px 20px 20px;border-top:6px solid currentColor;background:var(--paper)}
 .sunday-entry-facts .library-facts{margin:0 0 20px}.sunday-entry-facts .library-facts p{font:600 19px/1.4 Arial,sans-serif!important;margin:0 0 6px!important}
