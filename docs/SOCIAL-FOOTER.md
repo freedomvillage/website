@@ -16,9 +16,9 @@ coordinates are displayed with translate(0,448) scale(1,-1); paths are unchanged
 No remote font or new icon package is loaded.
 
 An empty live status shows the links. Pending, error and result statuses use the
-existing persistent status region instead. The privacy description remains
-associated with the textarea and becomes visible when it is focused or contains
-a draft. A question is sent only by the existing explicit submit action. Links,
+existing persistent status region instead. The textarea retains its visible
+label and live status association, without static helper copy on focus or draft
+entry. A question is sent only by the existing explicit submit action. Links,
 focus and appearance changes never send the draft or invoke Jev.
 
 The composer stays fixed at the bottom. Its existing size observer continues to

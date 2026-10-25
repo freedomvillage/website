@@ -62,6 +62,14 @@ const kidsEntryReview=async(page,name,place,activate,recordingStarted)=>{
  await page.waitForFunction(({path,y})=>location.pathname===path&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('#card-freedom-kids'),{path,y:departureY});await page.screenshot({path:resolve(output,`${name}-${place}-kids-entry-return.png`)});
  console.log(JSON.stringify({viewport:name,kidsEntryJourney:'passed',place,...composition,...flow,keyboardDisclosure:true,touchDisclosure:name==='mobile',backFocusAndScrollRestored:true,recording:(await page.video().path()).split('/').at(-1),startSeconds,endSeconds:Number(((performance.now()-recordingStarted)/1000).toFixed(2))}));
 };
+const helperFree=async(page,state)=>{
+ assert.equal(await page.locator('#composer-privacy').count(),0);
+ assert.doesNotMatch(await page.locator('body').innerText(),/\bJev\b|avoid personal or sensitive details/i);
+ const input=page.getByRole('textbox',{name:'What can we help you find?',exact:true});
+ assert.equal(await input.count(),1);assert.equal(await input.getAttribute('aria-describedby'),'composer-status');
+ assert.equal(await page.locator('#composer-status').getAttribute('role'),'status');
+ console.log(JSON.stringify({viewport:page.viewportSize().width,helperCopyAbsent:state,path:new URL(page.url()).pathname,labelAndLiveStatusPreserved:true}));
+};
 const browser=await chromium.launch();
 try{
  for(const [name,width,height] of [['desktop',1440,1000],['intermediate',900,900],['breakpoint',720,900],['mobile',390,844],['narrow',320,800]]){
@@ -81,7 +89,7 @@ try{
     run:async()=>({meta:{changes:Number(s.run(...args).changes)}})
    };}};
   }};
-  let providerCalls=0,zero=false,failPage=false;
+  let providerCalls=0,zero=false,failPage=false,forcedIntentStatus=null;
   const worker=createWorker({now:()=>at,resolveIntentOwner:async()=> 'a'.repeat(64),fetchUpstream:async(_,options)=>{
    providerCalls++;const body=JSON.parse(options.body);
    return Response.json({model:'jev-1.14.0',usage:{input_tokens:100,output_tokens:20},answers:Object.fromEntries(body.state.candidates.map((c,i)=>{
@@ -101,6 +109,7 @@ try{
    const r=route.request(),url=new URL(r.url());
    if(url.href==='https://cdn.prod.website-files.com/60e0035471e8115799a8640b/64e0f1446e4ab5692426f843_Village-Youth-Logo.svg'){await new Promise(resolve=>setTimeout(resolve,250));return route.fulfill({status:200,contentType:'image/svg+xml',body:await readFile(resolve('dist/village-youth-source.svg'))});}
    if(url.origin!==origin)return route.abort();
+   if(forcedIntentStatus&&url.pathname==='/api/content/intent'&&r.method()==='POST')return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({status:forcedIntentStatus})});
    if(failPage&&url.pathname==='/api/content/intent'&&url.searchParams.has('after')){failPage=false;return route.fulfill({status:503,contentType:'application/json',body:'{"status":"unavailable"}'});}
    const headers=new Headers(r.headers());headers.set('Cf-Access-Jwt-Assertion','SYNTHETIC_FIXTURE');if(r.method()==='POST')headers.set('Origin',origin);
    const response=await worker.fetch(new Request(r.url(),{method:r.method(),headers,...(r.postData()?{body:r.postData()}: {})}),env);
@@ -123,8 +132,8 @@ try{
   for(const button of await controlButtons.all()){const rect=await button.boundingBox();assert(rect&&rect.width>=44&&rect.height>=44&&rect.x>=0&&rect.x+rect.width<=width,'composer control targets remain in the viewport');}
   assert.equal(await page.locator('#composer-status').textContent(),'');assert.equal(providerCalls,0);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  await page.screenshot({path:resolve(output,name+'-browse.png')});
-  await page.locator('#prompt-text').focus();await page.keyboard.press('Tab');
+  await helperFree(page,'home-idle');await page.screenshot({path:resolve(output,name+'-browse.png')});
+  await page.locator('#prompt-text').focus();await helperFree(page,'home-focused');await page.screenshot({path:resolve(output,name+'-composer-focused.png')});await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'YouTube');
   await page.screenshot({path:resolve(output,name+'-social-focus.png')});
   for(let linkIndex=0;linkIndex<5;linkIndex++)await page.keyboard.press('Tab');
@@ -135,8 +144,7 @@ try{
   await page.screenshot({path:resolve(output,name+'-composer-dark.png')});
   await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
   await page.locator('#prompt-text').fill('Synthetic private draft');
-  const privacy=await page.locator('#composer-privacy').boundingBox();assert(privacy&&privacy.width>1&&privacy.height>1);
-  assert((await page.locator('#prompt-text').getAttribute('aria-describedby')).includes('composer-privacy'));
+  await helperFree(page,'draft-entry');
   await page.screenshot({path:resolve(output,name+'-composer-draft.png')});assert.equal(providerCalls,0);
   {
    await page.locator('#prompt-text').fill('');await page.locator('#prompt-text').blur();const familyStartSeconds=Number(((performance.now()-recordingStarted)/1000).toFixed(2));
@@ -171,7 +179,7 @@ try{
    await page.locator('.kids-contents a').first().hover();assert(await contrast(page.locator('.kids-questions h2'))>=4.5);await captureTop(page);await page.screenshot({path:resolve(output,name+'-kids-dark-hover-full.png'),fullPage:true});
    await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
    await activate(page.locator('.kids-question').first().locator('summary'));assert.equal(await page.locator('.kids-question').first().getAttribute('open'),'');
-   await page.screenshot({path:resolve(output,name+'-kids-question-open-viewport.png')});assert(await contrast(page.locator('.kids-questions h2'))>=4.5);await captureTop(page);await page.screenshot({path:resolve(output,name+'-kids-question-open-full.png'),fullPage:true});
+   await helperFree(page,'native-question-open');await page.screenshot({path:resolve(output,name+'-kids-question-open-viewport.png')});assert(await contrast(page.locator('.kids-questions h2'))>=4.5);await captureTop(page);await page.screenshot({path:resolve(output,name+'-kids-question-open-full.png'),fullPage:true});
    if(['desktop','intermediate','mobile'].includes(name)){
     const bridgeStart=Number(((performance.now()-recordingStarted)/1000).toFixed(2)),question=page.locator('.godly-question-entry'),readMore=question.locator('a[href="/cards/godly-play"]');
     await readMore.focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const questionY=await page.evaluate(()=>scrollY);await page.screenshot({path:resolve(output,name+'-godly-kids-bridge-focus.png')});
@@ -203,7 +211,7 @@ try{
    await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/godly-play');assert.equal(await page.locator('.godly-reading p').count(),2);
    assert.deepEqual(await page.locator('.godly-reading p').allTextContents(),familyFixtures().find(([id])=>id==='godly-play')[1].detail);assert.equal(await page.locator('.godly-heading .kids-source-mark').evaluate(e=>e.complete&&e.naturalWidth===398),true);
    assert.equal(await page.locator('.godly-parent a').getAttribute('href'),'/cards/freedom-kids');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-   await captureTop(page);await page.screenshot({path:resolve(output,name+'-godly-opening-viewport.png')});await page.screenshot({path:resolve(output,name+'-godly-detail-full.png'),fullPage:true});
+   await helperFree(page,'detail-reader');await captureTop(page);await page.screenshot({path:resolve(output,name+'-godly-opening-viewport.png')});await page.screenshot({path:resolve(output,name+'-godly-detail-full.png'),fullPage:true});
    await page.locator('.godly-story').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(output,name+'-godly-reading-viewport.png')});await page.locator('.godly-exploration').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(output,name+'-godly-exploration-viewport.png')});
    for(const text of ['.godly-heading h1','.godly-intro','.godly-reading p','.godly-parent p'])assert(await contrast(page.locator(text).first())>=4.5);
    await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="dark"]').click();await page.locator('#settings-close').click();await page.locator('.godly-parent a').hover();assert(await contrast(page.locator('.godly-parent a'))>=4.5);await captureTop(page);await page.screenshot({path:resolve(output,name+'-godly-dark-full.png'),fullPage:true});
@@ -298,7 +306,7 @@ try{
   await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='24 ranked resources loaded');
   assert.equal(await page.getByRole('navigation',{name:'Freedom Village links'}).isVisible(),false);assert((await page.locator('#composer-status').textContent()).includes('ranked for your question'));
   assert.equal(await page.locator('.collection-context').count(),0,'category introduction does not leak into global intent results');assert.equal(await page.locator('#collection').getAttribute('data-topic'),null,'Families presentation does not change global ranking layout');
-  await page.screenshot({path:resolve(output,name+'-ranked-head.png')});
+  await helperFree(page,'ranked-results');await page.screenshot({path:resolve(output,name+'-ranked-head.png')});
   const calls=providerCalls;
   await page.locator('#intent-more').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(output,name+'-more.png')});
   failPage=true;await page.locator('#intent-more').click();await page.getByRole('button',{name:'Could not load. Try again ↓'}).waitFor();
@@ -317,8 +325,13 @@ try{
   db.prepare("UPDATE content_checks SET result_json=json_set(result_json,'$.lastStartedAt',0) WHERE id='jev-intent-runtime-v1'").run();zero=true;
   await page.locator('#prompt-text').fill('Synthetic no-close question');await page.locator('#prompt-submit').click();
   await page.waitForFunction(()=>document.querySelector('#composer-status')?.textContent.startsWith('No close matches.'));
-  assert.equal(await page.locator('#grid > article.card').count(),24);await page.screenshot({path:resolve(output,name+'-no-close.png')});assert.deepEqual(errors,[]);
+  assert.equal(await page.locator('#grid > article.card').count(),24);await helperFree(page,'no-close-results');await page.screenshot({path:resolve(output,name+'-no-close.png')});assert.deepEqual(errors,[]);
   console.log(JSON.stringify({viewport:name,candidateCount:71,rendered:ids.length,weakSecond:true,noCloseRetained:24,continuationProviderCalls,composerWithinViewport:true,pageErrors:errors}));
+  const beforeFailureCalls=providerCalls;forcedIntentStatus='unconfigured';
+  await page.locator('#prompt-text').fill('Synthetic unavailable question');await page.locator('#prompt-submit').click();
+  await page.waitForFunction(()=>document.getElementById('composer-status')?.textContent.startsWith('Questions are not configured yet.'));
+  await helperFree(page,'unconfigured-status');assert.equal(providerCalls,beforeFailureCalls);assert.equal(await page.locator('#grid > article.card').count(),24);
+  await page.screenshot({path:resolve(output,name+'-composer-unconfigured.png')});assert.deepEqual(errors,[]);
   await context.close();db.close();
  }
 }finally{await browser.close();}
