@@ -24,7 +24,7 @@ test('departure stores only bounded navigation hints, retaining unrelated histor
  assert.deepEqual(Object.keys(value.fvcFeedRestore).sort(),['at','focus','pages','path','version','y']);assert(!JSON.stringify(value).includes('<article'));
 });
 test('no-store Back reconstructs appended pages before restoring exact scroll and card focus',async()=>{
- for(const path of ['/', '/topics/families','/studies/families#study-ministry-first','/topics/faith?after=50%3Abaptism']){
+ for(const path of ['/', '/topics/families','/topics/families#card-freedom-kids','/studies/families#study-ministry-first','/topics/faith?after=50%3Abaptism']){
   const h=harness({path,state:saved(path),navigation:'back_forward'});let loads=0,measure=0;
   const controller=h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,async loadMore(){loads++;if(loads===2)h.link();return true;},measure(){measure++;}});
   assert(controller.willRestore());await controller.restore();assert.equal(loads,2);assert.equal(measure,1);assert.deepEqual(h.focused,['card-village-youth']);assert.equal(h.scrolls.at(-1).top,9169);assert.equal(h.context.history.scrollRestoration,'auto');

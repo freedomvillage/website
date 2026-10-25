@@ -1,0 +1,18 @@
+// Synthetic prose for cloud fixtures, never a source-content export.
+const section=(heading,paragraph)=>({heading,paragraphs:[paragraph],links:[],cardIds:[]});
+const base=()=>({schemaVersion:2,template:'ministry',summary:'Synthetic family review content.',detail:['Synthetic family review content.'],facts:[],categories:['families'],actions:[],related:[],media:null,design:{theme:'paper',layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false});
+export function familyFixtures(){
+ const kids={...base(),title:'Freedom Kids',summary:'Synthetic review: stories, questions and discovery together.',detail:['Synthetic review: stories, questions and discovery together.'],media:{kind:'brand',src:'https://cdn.prod.website-files.com/60e0035471e8115799a8640b/615a16d6ad04b5b28a15036a_Freedom-Kids-Logo.png',alt:'Freedom Kids'},sections:[
+  section('Story and discovery','Synthetic source prose for the first reading section. This text checks a complete paragraph with enough length to reveal responsive reading rhythm, rather than a short placeholder.'),
+  section('Learning together','Synthetic source prose for a second, distinct section. It exercises a useful sequence of reading and local navigation without making claims about actual ministry arrangements.'),
+  section('Faith at home','Synthetic source prose for the final reading section. The closing actions remain available after the complete story and its supporting questions.')
+ ],actions:[{label:'Ask a question',targetId:'connect-card'}],related:['godly-play','children-in-worship']};
+ return [
+  ['freedom-kids',kids],
+  ['families-growing-together',{...base(),title:'Sample family discipleship',summary:'Synthetic review: conversations beyond the gathering.',detail:['Synthetic review: conversations beyond the gathering.'],sections:[section('Sample family context','Synthetic contextual introduction for this category. It explains the fixture subject without exporting any private church content.')],actions:[{label:'Freedom Kids',targetId:'freedom-kids'},{label:'Junior Village',targetId:'junior-village'},{label:'Village Youth',targetId:'village-youth'},{label:'Ask a family question',targetId:'connect-card'}]}],
+  ['junior-village',{...base(),title:'Junior Village'}],
+  ['village-youth',{...base(),title:'Village Youth',design:{...base().design,theme:'youth'}}],
+  ['godly-play',{...base(),template:'faq',title:'What is Godly Play?',detail:['Synthetic explanatory resource text for the first parent question. Its complete paragraph is revealed with a native disclosure.']}],
+  ['children-in-worship',{...base(),template:'faq',title:'Children in worship',detail:['Synthetic explanatory resource text for the second parent question. No schedule, location or age claim is introduced.']}]
+ ];
+}

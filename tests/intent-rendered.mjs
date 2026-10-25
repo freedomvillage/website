@@ -4,6 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 import {createWorker} from '../src/worker.mjs';
+import {familyFixtures} from './fixtures/families.mjs';
 if(process.env.CI!=='true'||process.platform!=='linux')throw Error('Cloud Linux only');
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE);
 const origin='https://next.freedomvillage.church',at=Date.parse('2026-10-25T03:00:00Z');
@@ -14,10 +15,11 @@ try{
   const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE content_cards(id TEXT PRIMARY KEY,status TEXT,content_json TEXT,expires_at TEXT);CREATE TABLE content_checks(id TEXT PRIMARY KEY,result_json TEXT,created_at TEXT)');
   const themes=['paper','ink','forest','clay','youth','outline'];
   for(let i=0;i<71;i++){
-   const id=i===0?'freedom-kids':i===1?'connect-card':'sample-'+String(i).padStart(3,'0');
+   const id=['freedom-kids','connect-card','families-growing-together','village-youth','junior-village','godly-play','children-in-worship'][i]||'sample-'+String(i).padStart(3,'0');
    const card={schemaVersion:2,template:'story',title:'Review resource '+(i+1),summary:'Synthetic review content for ranked resource continuation.',detail:['Synthetic public prose for browser acceptance.'],facts:[],categories:['community'],actions:[],related:[],media:null,design:{theme:themes[i%themes.length],layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false};
    db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
   }
+  for(const [id,card] of familyFixtures())db.prepare('INSERT OR REPLACE INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
   const adapter={prepare(sql){
    const s=db.prepare(sql);
    return {bind(...args){return {
@@ -40,15 +42,16 @@ try{
    const types={'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2'};
    try{return new Response(await readFile(file),{headers:{'Content-Type':types[extname(file)]||'application/octet-stream'}});}catch{return new Response('',{status:404});}
   }}};
-  const context=await browser.newContext({viewport:{width,height},reducedMotion:'reduce'});
-  await context.route('**/*',async route=>{
+  const context=await browser.newContext({viewport:{width,height},reducedMotion:'reduce',recordVideo:{dir:resolve(output,'journey-recordings'),size:{width,height}}});
+  const serve=async route=>{
    const r=route.request(),url=new URL(r.url());if(url.origin!==origin)return route.abort();
    if(failPage&&url.pathname==='/api/content/intent'&&url.searchParams.has('after')){failPage=false;return route.fulfill({status:503,contentType:'application/json',body:'{"status":"unavailable"}'});}
    const headers=new Headers(r.headers());headers.set('Cf-Access-Jwt-Assertion','SYNTHETIC_FIXTURE');if(r.method()==='POST')headers.set('Origin',origin);
    const response=await worker.fetch(new Request(r.url(),{method:r.method(),headers,...(r.postData()?{body:r.postData()}: {})}),env);
    if(url.pathname==='/api/content/intent'){const value=await response.clone().json();console.log(JSON.stringify({viewport:name,method:r.method(),httpStatus:response.status,status:value.status,selected:value.selectedIds?.length,nextCursor:value.renderSelection?.nextCursor}));}
    await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});
-  });
+  };
+  await context.route('**/*',serve);
   const page=await context.newPage();await page.clock.install({time:new Date(at)});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin);await page.locator('html[data-site-revealed="true"]').waitFor({timeout:30000});
@@ -71,9 +74,36 @@ try{
   const privacy=await page.locator('#composer-privacy').boundingBox();assert(privacy&&privacy.width>1&&privacy.height>1);
   assert((await page.locator('#prompt-text').getAttribute('aria-describedby')).includes('composer-privacy'));
   await page.screenshot({path:resolve(output,name+'-composer-draft.png')});assert.equal(providerCalls,0);
+  if(['desktop','intermediate','mobile'].includes(name)){
+   await page.locator('#prompt-text').fill('');await page.locator('#prompt-text').blur();
+   await page.screenshot({path:resolve(output,name+'-families-home-full.png'),fullPage:true});
+   await page.locator('.family-entry-route').click();await page.locator('html[data-site-revealed="true"]').waitFor();
+   assert.equal(new URL(page.url()).pathname,'/topics/families');assert.equal(await page.locator('.family-context nav a').count(),3);
+   assert.equal(await page.locator('.family-entry-route').isVisible(),false);
+   await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});
+   await page.locator('.family-context a[href="#card-freedom-kids"]').click();await page.locator('.kids-brand-link').focus();
+   await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+   const departureY=await page.evaluate(()=>scrollY);
+   await page.locator('.kids-brand-link').click();await page.locator('html[data-site-revealed="true"]').waitFor();
+   assert.equal(new URL(page.url()).pathname,'/cards/freedom-kids');assert.equal(await page.locator('.kids-chapter').count(),3);assert.equal(await page.locator('.kids-question').count(),2);
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+   await page.screenshot({path:resolve(output,name+'-kids-detail-full.png'),fullPage:true});
+   await page.locator('.kids-question').first().locator('summary').click();assert.equal(await page.locator('.kids-question').first().getAttribute('open'),'');
+   await page.screenshot({path:resolve(output,name+'-kids-question-open-full.png'),fullPage:true});
+   await page.locator('.kids-contents a').nth(1).click();assert.equal(new URL(page.url()).hash,'#kids-freedom-kids-1');
+   await page.locator('.kids-detail > .back').click();await page.waitForFunction(y=>Math.abs(scrollY-y)<3&&document.activeElement?.closest('.kids-card'),departureY);
+   await page.screenshot({path:resolve(output,name+'-families-return.png')});assert.equal(providerCalls,0);
+   console.log(JSON.stringify({viewport:name,familiesJourney:'passed',backScrollRestored:true,backFocusRestored:true,providerCallsBeforeSubmit:providerCalls}));
+   if(name==='mobile'){
+    const noJs=await browser.newContext({viewport:{width,height},javaScriptEnabled:false});await noJs.route('**/*',serve);const plain=await noJs.newPage();await plain.goto(origin+'/cards/freedom-kids');
+    assert.equal(await plain.locator('.kids-chapter').count(),3);await plain.locator('.kids-question').first().locator('summary').click();assert.equal(await plain.locator('.kids-question').first().getAttribute('open'),'');
+    await plain.screenshot({path:resolve(output,'mobile-kids-no-js-full.png'),fullPage:true});await noJs.close();assert.equal(providerCalls,0);
+   }
+  }
   await page.locator('#prompt-text').fill('Synthetic review question');await page.locator('#prompt-submit').click();
   await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='24 ranked resources loaded');
   assert.equal(await page.getByRole('navigation',{name:'Freedom Village links'}).isVisible(),false);assert((await page.locator('#composer-status').textContent()).includes('ranked for your question'));
+  assert.equal(await page.locator('.collection-context').count(),0,'category introduction does not leak into global intent results');
   await page.screenshot({path:resolve(output,name+'-ranked-head.png')});
   const calls=providerCalls;
   await page.locator('#intent-more').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(output,name+'-more.png')});
