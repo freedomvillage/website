@@ -8,7 +8,7 @@
    const u=new URL(value,root.location.href),listing=u.pathname==='/'||/^\/topics\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),study=/^\/studies\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname);
    if(u.origin!==root.location.origin||u.username||u.password||(!listing&&!study)||u.href.length>512)return null;
    if(u.search){const after=u.searchParams.get('after')||'',m=/^(\d{1,3}):[a-z][a-z0-9-]{0,79}$/.exec(after);if(!listing||[...u.searchParams.keys()].some(k=>k!=='after')||u.searchParams.getAll('after').length!==1||!m||Number(m[1])>100)return null;}
-   if(u.hash&&!/^#(?:main|study-[a-z0-9_-]{1,120})$/.test(u.hash))return null;
+   if(u.hash&&!/^#(?:main|study-[a-z0-9_-]{1,120}|card-[a-z][a-z0-9-]{0,79})$/.test(u.hash))return null;
    return u.pathname+u.search+u.hash;
   }catch{return null;}
  }
@@ -73,7 +73,7 @@
   const overlay=composer.getBoundingClientRect(),v=root.visualViewport;
   const top=Math.max(12,(v?.offsetTop||0)+12),bottom=Math.min(root.innerHeight,(v?.offsetTop||0)+(v?.height||root.innerHeight),overlay.height>0?overlay.top:root.innerHeight)-12;
   if(bottom<=top)return;
-  const landmark=target.matches('a')?(target.querySelector('h2,h3')||target):target,rect=landmark.getBoundingClientRect();
+  const landmark=target.matches('a')?(target.querySelector('h2:not(.visually-hidden),h3:not(.visually-hidden)')||target):target,rect=landmark.getBoundingClientRect();
   const delta=rect.height>bottom-top||rect.top<top?rect.top-top:rect.bottom>bottom?rect.bottom-bottom:0;
   if(delta)root.scrollBy({top:delta,left:0,behavior:'instant'});
  };

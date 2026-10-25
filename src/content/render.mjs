@@ -1,4 +1,5 @@
 import {renderCraftCard,renderCraftArt} from './card-craft.mjs';
+import {renderFamilyCard,renderKidsDetail} from './families.mjs';
 // Structured source content only: no stored HTML, script or arbitrary styling is rendered.
 export const escape=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 export const CORE_PAGES=Object.freeze({'/connect':'connect-card','/give':'giving-overview','/prayer':'prayer-and-praise','/resources':'church-resources'});
@@ -24,6 +25,7 @@ export function renderLibraryCard(c,namespace='',headingLevel=2){
  const heading=headingLevel===3?'h3':'h2';
  namespace=typeof namespace==='string'?namespace:'';
  const domId=escape((namespace?namespace+'-':'')+'card-'+c.id);
+ const family=renderFamilyCard(c,{escape,cardPath,heading,domId,facts:genericFacts});if(family)return family;
  const crafted=renderCraftCard(c,{escape,cardPath,heading,domId});if(crafted)return crafted;
  if(['actions','utility'].includes(c.template))return `<article class="card library-card practical-card theme-${c.design.theme}" id="${domId}"><div class="library-copy"><${heading}><a href="${cardPath(c)}">${escape(c.title)}</a></${heading}>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div><div class="practical-actions">${c.actions.map(a=>`<a ${actionAttrs(a)}>${escape(a.label)} <span aria-hidden="true">↗</span></a>`).join('')}</div></article>`;
  const motion=c.design.motion==='gradient',art=genericArt(c);
@@ -43,6 +45,7 @@ function connectDraft(c){
  return `<section class="connect-draft" data-connect-draft hidden aria-labelledby="connect-draft-title"><h2 id="connect-draft-title">What would you like to explore?</h2><p>Choose any interests for an email draft. Nothing is sent from this page.</p><fieldset><legend class="visually-hidden">Interests to include in your email</legend>${options}</fieldset><div class="connect-draft-action"><a class="pilot-action" data-connect-email href="${escape(draft.email)}">Open email draft</a><p data-connect-status aria-live="polite">Add a question in your email app, then review and send.</p></div></section>`;
 }
 export function renderLibraryDetail(c,related=[],embedded=[]){
+ const kids=renderKidsDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(kids)return kids;
  const video=c.media?.kind==='youtube'?`<div class="video-player" data-video="${c.media.videoId}"><button type="button" class="video-load" data-video-title="${escape(c.media.title)}">▶ Load video</button><p>Video loads from YouTube when selected.</p><a href="https://www.youtube.com/watch?v=${c.media.videoId}" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a></div>`:'';
  return `<article class="detail-shell library-detail theme-${c.design.theme}${c.design.motion==='gradient'?' has-motion':''}${c.media?.kind==='image'?' has-image':''}${c.media?.kind==='brand'?' has-brand':''}${c.id==='missional-families'?' has-community-photo':''}${c.media?.disclosure==='source-artwork'?' has-source-artwork':''}"><a class="back" href="/">← Back</a><header class="library-detail-heading"><div><h1 tabindex="-1">${escape(c.title)}</h1>${genericFacts(c)}</div>${genericArt(c,true)}</header><div class="detail-body"><p class="detail-intro">${escape(c.summary)}</p>${connectDraft(c)}${c.actions.length?`<nav class="detail-actions" aria-label="Next steps">${c.actions.map(a=>`<a class="pilot-action" ${actionAttrs(a)}>${escape(a.label)} ↗</a>`).join('')}</nav>`:''}${c.detail.filter(p=>p!==c.summary).map(p=>`<p>${escape(p)}</p>`).join('')}${authoredSections(c,embedded)}${video}</div></article>${related.length?`<section class="related-content" aria-labelledby="related-title"><h2 id="related-title">Related</h2><div class="related-grid">${related.map(renderLibraryCard).join('')}</div></section>`:''}`;
 }

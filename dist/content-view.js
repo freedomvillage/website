@@ -64,6 +64,20 @@
   for(const choice of choices)choice.addEventListener('change',update);
   update();picker.hidden=false;
  }
+ function kidsContents(){
+  // Local reading navigation replaces this document's fragment. It must not
+  // add extra steps between the explicit Families return and its source feed.
+  for(const link of document.querySelectorAll('.kids-contents a'))if(!link.dataset.ready){
+   link.dataset.ready='true';link.addEventListener('click',event=>{
+    if(event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||(event.button!==undefined&&event.button!==0))return;
+    const destination=new URL(link.getAttribute('href'),location.href),hash=destination.hash;
+    if(destination.origin!==location.origin||destination.pathname!==location.pathname||destination.search!==location.search||!/^#kids-freedom-kids-\d{1,2}$/.test(hash))return;
+    const target=document.getElementById(hash.slice(1));if(!target)return;
+    try{root.history.replaceState(root.history.state,'',location.pathname+location.search+hash);}catch{return;}
+    event.preventDefault();target.scrollIntoView({block:'start',behavior:'auto'});target.focus({preventScroll:true});
+   });
+  }
+ }
  function pagination(){
   const more=document.querySelector('.load-more');if(!more||more.dataset.ready)return;more.dataset.ready='true';
   let autoFailed=false,ended=false;
@@ -94,7 +108,7 @@
  reduced.addEventListener('change',motionState);
  document.addEventListener('visibilitychange',motionState);
  root.contentView={render(){if(legacyLink())return;if(!started){started=true;enhance();detailBack();connectDraft();
-  let paging;
+  kidsContents();let paging;
   const history=root.createFeedHistory?.({pageCount:()=>pagesLoaded,isIntent:()=>intentActive,loadMore:signal=>paging?.load(false,true,signal)||false,measure:()=>{if(typeof sizeCards==='function')sizeCards();}});
   restoring=history?.willRestore()||false;paging=pagination();
   if(history)void history.restore().finally(()=>{restoring=false;paging?.observe();});
@@ -102,6 +116,7 @@
   const grid=document.getElementById('grid'),collection=document.getElementById('collection'),detail=document.getElementById('detail');if(!grid||!collection||!detail)throw Error('Results view unavailable');
   const parsed=new DOMParser().parseFromString('<div>'+html+'</div>','text/html'),articles=[...parsed.body.firstElementChild.children];
   if(articles.some(el=>!el.matches('article.card')))throw Error('Invalid results');
+  if(!append){document.querySelector('.collection-context')?.remove();collection.removeAttribute('data-topic');}
   if(append&&!intentActive)throw Error('Results view changed');
   intentActive=true;document.querySelector('.load-more:not(#intent-more)')?.remove();
   // Keep the original grid node used by masonry sizing; no generated JS executes.

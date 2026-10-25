@@ -99,13 +99,14 @@
     "dist/air-quality.js": "6b6d4943437566d35a59b1c917da9ac923117f13eea03e79ad6f0985931d401d",
     "dist/scene-bootstrap.js": "988e71208ae9f5170c3baba601f4a95def1e0050f08d3bd8643a85cd494d4a6c",
     "dist/scene-clock.js": "d2898bf2e4b94e9f78c8b9d046da6c472f2f90895f02d19b25dc2bcc72e3b3d3",
-    "dist/content-view.js": "56c0b50a9ea0ad259d206fcdfc1337c70eb16934031e15d110d5ef2c7a957cee",
-    "dist/content-view.css": "ca445e26eb7c467d31717ef06a982d5f6187c0a0fded479a2c36f8ef6114db2a",
+    "dist/content-view.js": "58dea826cc6afa7fb2b13b45c9223c64419b7ab056a0ab616de8a5704cfe547d",
+    "dist/content-view.css": "7dd4ad7071b1a9d99e577f0cf1994c7305780eb572392dd5c145440d249cc42c",
     "dist/composer.js": "73dece20e4fc508902b814691ae2f2519da4c0f07e2a9ebc268f524166ff3507",
     "dist/style.css": "d3ddddf95d8294d8450db863dc7c8a647106dd71bf51396fd1d9512138f4bcd8",
     "dist/intent.js": "18d492173576358b5d319cd3173139270a623aebdc243511b8a95cef8e1dc4af",
-    "dist/feed-history.js": "15ecb8273519d8bfe00b27479c02fb3a644d14ed6ef1dea6be8889b1950cec7a",
-    "dist/social-icons.svg": "03f7b3af5b40ae29876f0ed55fade67767d1d04da55acc93c3ca487958db52d4"
+    "dist/feed-history.js": "eaa0730efbbe0e974d349df7d03ca59f100d268751ee47fe639f2bd80ef17514",
+    "dist/social-icons.svg": "03f7b3af5b40ae29876f0ed55fade67767d1d04da55acc93c3ca487958db52d4",
+    "dist/freedom-kids-source.png": "81183de937be8a441711f8e50cf001b0e5202002770782784e5f6efc37a12893"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
   "adaptation": "Shared night-only air-quality cache and one-hour observation limit, reconciled with approved UI runtime and artwork overlays; original paintings unchanged.",
