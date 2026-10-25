@@ -1,4 +1,5 @@
 import {renderCraftCard,renderCraftArt} from './card-craft.mjs';
+import {renderWorshipCard,renderWorshipDetail} from './children-worship.mjs';
 import {renderFamilyCard,renderKidsDetail,renderGodlyDetail} from './families.mjs';
 import {renderSundayCard,renderVisitDetail} from './sunday.mjs';
 import {renderYouthDetail,youthBrandAttributes} from './youth.mjs';
@@ -27,6 +28,7 @@ export function renderLibraryCard(c,namespace='',headingLevel=2,companions=[],co
  const heading=headingLevel===3?'h3':'h2';
  namespace=typeof namespace==='string'?namespace:'';
  const domId=escape((namespace?namespace+'-':'')+'card-'+c.id);
+ const worship=renderWorshipCard(c,{escape,cardPath,heading,domId,facts:genericFacts,actionAttrs});if(worship)return worship;
  const sunday=renderSundayCard(c,{escape,cardPath,heading,domId,facts:genericFacts,companions});if(sunday)return sunday;
  const family=renderFamilyCard(c,{escape,cardPath,heading,domId,facts:genericFacts,companions,context});if(family)return family;
  const crafted=renderCraftCard(c,{escape,cardPath,heading,domId});if(crafted)return crafted;
@@ -48,6 +50,7 @@ function connectDraft(c){
  return `<section class="connect-draft" data-connect-draft hidden aria-labelledby="connect-draft-title"><h2 id="connect-draft-title">What would you like to explore?</h2><p>Choose any interests for an email draft. Nothing is sent from this page.</p><fieldset><legend class="visually-hidden">Interests to include in your email</legend>${options}</fieldset><div class="connect-draft-action"><a class="pilot-action" data-connect-email href="${escape(draft.email)}">Open email draft</a><p data-connect-status aria-live="polite">Add a question in your email app, then review and send.</p></div></section>`;
 }
 export function renderLibraryDetail(c,related=[],embedded=[]){
+ const worship=renderWorshipDetail(c,related,{escape,renderCard:renderLibraryCard,facts:genericFacts,actionAttrs});if(worship)return worship;
  const youth=renderYouthDetail(c,related,{escape,renderCard:renderLibraryCard,actionAttrs,facts:genericFacts});if(youth)return youth;
  const godly=renderGodlyDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(godly)return godly;
  const visit=renderVisitDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(visit)return visit;
