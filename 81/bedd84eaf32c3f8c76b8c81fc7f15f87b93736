@@ -1,0 +1,48 @@
+tests/fixtures/sunday.mjs
+  s_e2bf1542692bef::t_5a397c0232ef23 1-10
+docs/SUNDAY-ARRIVAL.md
+  s_e2bf1542692bef::t_5a397c0232ef23 1-31
+  s_e2bf1542692bef::t_586de2aee85ab8 32-45
+src/content/sunday.mjs
+  s_e2bf1542692bef::t_6453bacc9c4c0a 1-16
+  s_e2bf1542692bef::t_6dc4845d383f69 17-19
+tests/sunday.test.mjs
+  s_e2bf1542692bef::t_5a397c0232ef23 1-22
+  s_e2bf1542692bef::t_3e871ec9c8b339 23-30
+dist/content-view.css
+  s_e2bf1542692bef::t_8fa53f36f32054 123,125,130,161-186
+docs/CARD-CRAFT.md
+  s_e2bf1542692bef::t_5f88c00967ac40 3
+package.json
+  s_e2bf1542692bef::t_53589df3cf0677 7
+source-manifest.json
+  s_e2bf1542692bef::t_02f04453ec5f90 103,109-110
+src/content/card-craft.mjs
+  s_e2bf1542692bef::t_164f3d224bdfd1 1
+src/content/intent.mjs
+  s_e2bf1542692bef::t_ee613536452780 79
+src/content/pages.mjs
+  s_e2bf1542692bef::t_49ed02e91403ff 12,16
+src/content/render.mjs
+  s_e2bf1542692bef::t_9212a2f19b115b 3,25,29,50
+tests/card-craft.test.mjs
+  s_e2bf1542692bef::t_4fb8e840585ff1 9-10,13
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_122d57bcb2b895 8,19,23,57,114-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "81bedd84eaf32c3f8c76b8c81fc7f15f87b93736",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
