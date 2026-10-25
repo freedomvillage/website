@@ -168,3 +168,15 @@ html[data-site-revealed="true"] #site-loading{display:none}
 html{scroll-padding-bottom:var(--composer-clearance,290px)}main,body.content-detail main{padding-bottom:calc(var(--composer-height,250px) + 72px + env(safe-area-inset-bottom,0px) + var(--keyboard-offset,0px))!important}main :is(a,button,input,summary,[tabindex]){scroll-margin-bottom:12px}
 
 @media(max-width:700px){.composer-bottom p{font-size:11px}}
+
+/* The idle footer reuses the source site's icon outlines. Live status keeps its own region. */
+.composer-feedback{min-width:0;flex:1 1 220px}
+.composer-socials{display:flex;flex-direction:row;gap:0}
+.composer-socials a{display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;min-width:44px;min-height:44px;margin:0;padding:0;border-radius:50%;color:var(--muted)}
+.composer-socials svg{display:block;width:22px;height:22px;fill:currentColor}
+.composer-socials a:hover{background:transparent;color:var(--ink)}
+.composer-feedback:has(#composer-status:not(:empty)) .composer-socials{display:none}
+.composer-feedback #composer-status:empty{margin:0}
+.prompt-composer .composer-privacy{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.prompt-composer:has(#prompt-text:focus) .composer-privacy,.prompt-composer:has(#prompt-text:not(:placeholder-shown)) .composer-privacy{position:static;width:auto;height:auto;margin:4px 0 8px;overflow:visible;clip:auto;white-space:normal;font-size:12px;line-height:1.5;color:var(--muted)}
+.composer-bottom{flex-wrap:wrap;row-gap:4px}.composer-actions{margin-left:auto}

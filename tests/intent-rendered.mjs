@@ -10,7 +10,7 @@ const origin='https://next.freedomvillage.church',at=Date.parse('2026-10-25T03:0
 const output=resolve('rendered-review');await mkdir(output,{recursive:true});
 const browser=await chromium.launch();
 try{
- for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844]]){
+ for(const [name,width,height] of [['desktop',1440,1000],['intermediate',900,900],['breakpoint',720,900],['mobile',390,844],['narrow',320,800]]){
   const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE content_cards(id TEXT PRIMARY KEY,status TEXT,content_json TEXT,expires_at TEXT);CREATE TABLE content_checks(id TEXT PRIMARY KEY,result_json TEXT,created_at TEXT)');
   const themes=['paper','ink','forest','clay','youth','outline'];
   for(let i=0;i<71;i++){
@@ -52,9 +52,28 @@ try{
   const page=await context.newPage();await page.clock.install({time:new Date(at)});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin);await page.locator('html[data-site-revealed="true"]').waitFor({timeout:30000});
+  const socialLinks=page.getByRole('navigation',{name:'Freedom Village links'}).getByRole('link');
+  assert.deepEqual(await socialLinks.evaluateAll(links=>links.map(a=>[a.getAttribute('aria-label'),a.href])),[
+   ['YouTube','https://www.youtube.com/FreedomVillageChurch'],['Instagram','https://www.instagram.com/freedom_village_church/'],['Kakao','https://pf.kakao.com/_nEAVn'],['SoundCloud','https://soundcloud.com/freedomvillage'],['Email Freedom Village','mailto:contact@freedomvillage.church']
+  ]);
+  const actions=await page.locator('.composer-actions').boundingBox();assert(actions);
+  for(const link of await socialLinks.all()){const rect=await link.boundingBox();assert(rect&&rect.width>=44&&rect.height>=44&&rect.x>=0&&rect.x+rect.width<=width);assert(!(rect.x<actions.x+actions.width&&rect.x+rect.width>actions.x&&rect.y<actions.y+actions.height&&rect.y+rect.height>actions.y),'social links and composer actions must not overlap');}
+  assert.equal(await page.locator('#composer-status').textContent(),'');assert.equal(providerCalls,0);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.screenshot({path:resolve(output,name+'-browse.png')});
+  await page.locator('#prompt-text').focus();await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'YouTube');
+  await page.screenshot({path:resolve(output,name+'-social-focus.png')});
+  await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="dark"]').click();await page.locator('#settings-close').click();
+  await page.screenshot({path:resolve(output,name+'-social-dark.png')});
+  await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
+  await page.locator('#prompt-text').fill('Synthetic private draft');
+  const privacy=await page.locator('#composer-privacy').boundingBox();assert(privacy&&privacy.width>1&&privacy.height>1);
+  assert((await page.locator('#prompt-text').getAttribute('aria-describedby')).includes('composer-privacy'));
+  await page.screenshot({path:resolve(output,name+'-composer-draft.png')});assert.equal(providerCalls,0);
   await page.locator('#prompt-text').fill('Synthetic review question');await page.locator('#prompt-submit').click();
   await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='24 ranked resources loaded');
+  assert.equal(await page.getByRole('navigation',{name:'Freedom Village links'}).isVisible(),false);assert((await page.locator('#composer-status').textContent()).includes('ranked for your question'));
   await page.screenshot({path:resolve(output,name+'-ranked-head.png')});
   const calls=providerCalls;
   await page.locator('#intent-more').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(output,name+'-more.png')});
