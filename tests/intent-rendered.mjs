@@ -126,7 +126,7 @@ try{
   {
    const startSeconds=Number(((performance.now()-recordingStarted)/1000).toFixed(2));
    await page.goto(origin+'/topics/families');await page.locator('html[data-site-revealed="true"]').waitFor();await page.locator('.load-more').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelectorAll('#grid > article.card').length===40);
-   const entry=page.locator('#card-godly-play .godly-card-link');await entry.focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const departureY=await page.evaluate(()=>scrollY);
+   const entry=page.locator('#card-godly-play .godly-card-link');await entry.focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert.equal(await entry.evaluate(el=>parseFloat(getComputedStyle(el).outlineOffset)>=2&&parseFloat(getComputedStyle(el).outlineWidth)>=2),true,'question card focus ring stays outside its text');const departureY=await page.evaluate(()=>scrollY);
    await page.screenshot({path:resolve(output,name+'-godly-entry-focus.png')});if(name==='desktop')await page.keyboard.press('Enter');else await activate(entry);
    await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/godly-play');assert.equal(await page.locator('.godly-reading p').count(),2);
    assert.deepEqual(await page.locator('.godly-reading p').allTextContents(),familyFixtures().find(([id])=>id==='godly-play')[1].detail);assert.equal(await page.locator('.godly-heading .kids-source-mark').evaluate(e=>e.complete&&e.naturalWidth===398),true);
