@@ -122,7 +122,7 @@ try{
    if(name==='desktop')await page.keyboard.press('Enter');else await activate(page.locator('.kids-brand-link'));await page.locator('html[data-site-revealed="true"]').waitFor();
    assert.equal(new URL(page.url()).pathname,'/cards/freedom-kids');assert.equal(await page.locator('.kids-chapter').count(),3);assert.equal(await page.locator('.kids-question').count(),2);assert.equal(await page.locator('.kids-chapter').evaluateAll(es=>es.every(e=>getComputedStyle(e).animationName==='none')),true);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-   
+
    const sourceKids=familyFixtures().find(([id])=>id==='freedom-kids')[1];assert.deepEqual(await page.locator('.kids-chapter p').allTextContents(),sourceKids.sections.flatMap(s=>s.paragraphs));
    for(let i=0;i<3;i++){const chapter=page.locator('.kids-chapter').nth(i);await chapter.scrollIntoViewIfNeeded();await page.waitForFunction(i=>{const e=document.querySelectorAll('.kids-chapter img')[i];return e?.complete&&e.naturalWidth===1254;},i);await page.screenshot({path:resolve(output,name+'-kids-spread-'+i+'-viewport.png')});await chapter.screenshot({path:resolve(output,name+'-kids-spread-'+i+'.png')});assert(await contrast(chapter.locator('p').first())>=4.5);}
    await page.screenshot({path:resolve(output,name+'-kids-detail-full.png'),fullPage:true});assert.equal(await page.locator('.family-context').count(),0);
