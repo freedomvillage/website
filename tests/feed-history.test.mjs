@@ -43,6 +43,12 @@ test('the two authored readers restore bounded single-page hints without enablin
  }
  for(const unsupported of ['/cards/freedom-kids','/cards/other-reader','/cards/godly-play?query=PRIVATE','/cards/godly-play?after=50%3Ax','/cards/village-youth?question=PRIVATE','/cards/village-youth?after=50%3Ax'])assert.equal(harness({path:unsupported}).context.createFeedHistory({}),null);
 });
+test('a marked inquiry restores the exact link occurrence when an earlier link has the same destination',async()=>{
+ const path='/cards/village-youth',h=harness({path});h.link('youth-reader','/connect');const ending=h.link('youth-inquiry','/connect');
+ ending.closest=selector=>selector==='main a[href]'?ending:selector==='section[data-history-anchor][id]'?h.cards.get('youth-inquiry'):selector==='article[id]'?h.cards.get('youth-reader'):null;
+ h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('No reader pagination');},measure(){}});h.click(ending);h.emit('pagehide');const state=JSON.parse(JSON.stringify(h.context.history.state));assert.deepEqual(state.fvcFeedRestore.focus,{cardId:'youth-inquiry',href:'/connect'});
+ const returned=harness({path,state,navigation:'back_forward'});returned.link('youth-reader','/connect');returned.link('youth-inquiry','/connect');await returned.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('No reader pagination');},measure(){}}).restore();assert.deepEqual(returned.focused,['youth-inquiry']);
+});
 test('user input cancels restoration without stealing scroll/focus; failed paging remains usable',async()=>{
  for(const cancellation of [true,false]){
   const h=harness({state:saved(),navigation:'back_forward'});let loads=0;

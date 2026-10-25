@@ -32,7 +32,7 @@
   root.document.addEventListener('click',event=>{
    if(event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||(event.button!==undefined&&event.button!==0)||isIntent())return;
    const link=event.target?.closest?.('main a[href]'),href=link&&destination(link.href);if(!href||link.target==='_blank'||link.hasAttribute('download'))return;
-   const card=link.closest('article[id]');focus=card&&/^[a-zA-Z0-9_-]{1,180}$/.test(card.id)?{cardId:card.id,href}:null;write();
+   const card=link.closest('section[data-history-anchor][id]')||link.closest('article[id]');focus=card&&/^[a-zA-Z0-9_-]{1,180}$/.test(card.id)?{cardId:card.id,href}:null;write();
   });
   root.addEventListener('pagehide',()=>{write();revealObserver?.disconnect();});
   const cancel=()=>{cancelled=true;revealObserver?.disconnect();};

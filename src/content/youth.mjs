@@ -9,6 +9,6 @@ export function renderYouthDetail(c,related,h){
  <a class="back" href="/topics/families">← Back</a>
  <header class="youth-hero"><div class="library-brand-art youth-identity"><img src="/village-youth-source.svg" alt="${escape(c.media.alt)}" width="2200" height="2200" decoding="async"></div><div class="youth-hero-copy"><h1 tabindex="-1">${escape(c.title)}</h1>${h.facts(c)}<p>${escape(c.summary)}</p><nav class="youth-hero-actions" aria-label="Youth inquiry">${actions()}</nav></div></header>
  <section class="youth-reading" aria-labelledby="youth-reading-title"><h2 id="youth-reading-title">Faith in everyday life</h2><div>${prose.slice(0,1).map(p=>`<p>${escape(p)}</p>`).join('')}</div></section>
- <section class="youth-inquiry" aria-labelledby="youth-inquiry-title"><div><h2 id="youth-inquiry-title">Ask about joining</h2>${prose.slice(1).map(p=>`<p>${escape(p)}</p>`).join('')}</div><nav aria-label="Youth next steps">${actions()}</nav></section>
+ <section class="youth-inquiry" id="youth-inquiry" data-history-anchor aria-labelledby="youth-inquiry-title"><div><h2 id="youth-inquiry-title">Ask about joining</h2>${prose.slice(1).map(p=>`<p>${escape(p)}</p>`).join('')}</div><nav aria-label="Youth next steps">${actions()}</nav></section>
  </article>${related.length?`<section class="related-content" aria-labelledby="related-title"><h2 id="related-title">Related</h2><div class="related-grid">${related.map(card=>renderCard(card)).join('')}</div></section>`:''}`;
 }

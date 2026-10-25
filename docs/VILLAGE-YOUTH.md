@@ -6,7 +6,7 @@ The composition is bound to `village-youth`, its ministry template, the exact ex
 
 The displayed grade remains source guidance. The page adds no meeting time, age policy, leader, availability, check-in promise or named contact. Connect remains an inquiry route, with no enrollment or submission claim.
 
-The bounded history controller supports the exact Youth reader path with one page, like Godly Play. Its existing hints store only path, scroll, focus destination and timestamp. No source copy, question, form draft or response is cached. Other detail paths and reader query URLs remain rejected.
+The bounded history controller supports the exact Youth reader path with one page, like Godly Play. A stable inquiry-section marker distinguishes the ending from an earlier link to the same destination; the existing hint shape remains unchanged. Hints store only path, scroll, focus destination and timestamp. No source copy, question, form draft or response is cached. Other detail paths and reader query URLs remain rejected.
 
 ## Original public artwork
 
