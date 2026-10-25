@@ -77,7 +77,7 @@ try{
     const popupPromise=context.waitForEvent('page');await page.locator('#filters a[href="/topics/faith"]').click({modifiers:['Control']});const popup=await popupPromise;await popup.close();await opened(page);assert.equal(new URL(page.url()).pathname,'/topics/families','Modified new-tab click leaves menu and source route intact');
    }
    await page.goBack();await closed(page);assert(Math.abs(await page.evaluate(()=>scrollY)-y)<3,'Browser Back dismisses only the overlay');
-   await page.goForward();await opened(page);await page.getByRole('button',{name:'Close menu',exact:true}).click();await closed(page);
+   await page.goForward();await opened(page);await page.getByRole('button',{name:'Close menu',exact:true}).click();await closed(page);await page.waitForFunction(value=>history.scrollRestoration===value,restoration);console.log(JSON.stringify({viewport:name,forwardCloseRestoration:await page.evaluate(()=>history.scrollRestoration)}));
    assert.equal(new URL(page.url()).pathname,'/topics/families');assert.equal(await page.evaluate(()=>history.length),historyLength+1,'Reopening reuses the replaced forward overlay entry');
    await menu.tap();await opened(page);await page.mouse.click(width-3,Math.min(height-20,250));await closed(page);assert(Math.abs(await page.evaluate(()=>scrollY)-y)<3);
    await menu.tap();await opened(page);await page.locator('#filters a[href="/topics/faith"]').click();await page.waitForURL(origin+'/topics/faith');await ready(page);assert.equal(await page.locator('#site-menu-dialog').getAttribute('open'),null);
@@ -95,6 +95,7 @@ try{
     await menu.tap();await opened(page);await page.evaluate(()=>{closeMenu();openMenu();});await opened(page);await page.keyboard.press('Escape');await closed(page);await page.waitForFunction(value=>history.scrollRestoration===value,restoration);
    }
    if(name==='mobile'){
+    await page.evaluate(()=>{history.scrollRestoration='manual';openMenu();});await opened(page);await page.goBack();await closed(page);await page.goForward();await opened(page);await page.keyboard.press('Escape');await closed(page);await page.waitForFunction(()=>history.scrollRestoration==='manual');await page.evaluate(value=>{history.scrollRestoration=value;},restoration);
     await page.mouse.wheel(0,650);await page.waitForTimeout(100);const sourceY=await page.evaluate(()=>scrollY);assert(sourceY>100);
     await page.evaluate(()=>openMenu());await opened(page);await page.keyboard.press('Escape');await closed(page);assert(Math.abs(await page.evaluate(()=>scrollY)-sourceY)<3,'Separately labeled controller-level nonzero-scroll case');console.log(JSON.stringify({viewport:name,controllerNonzeroScroll:{before:sourceY,after:await page.evaluate(()=>scrollY)}}));
    }

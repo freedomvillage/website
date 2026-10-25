@@ -18,7 +18,7 @@ dismissal restore the initiating focus. Crossing the breakpoint transfers focus
 to visible navigation or Menu. Only unmodified same-origin navigation is handled;
 modified/new-tab links retain native behavior.
 
-History pushes one temporary same-URL entry with a versioned, bounded scroll-position overlay hint. Back dismisses
+History pushes one temporary same-URL entry with a versioned, bounded scroll-position and original auto/manual policy hint. Back dismisses
 the drawer; Forward can reopen it. Repeated close requests cannot traverse twice.
 A route selected in the drawer first consumes its overlay entry, then follows the
 canonical URL. Pagehide cleans up the modal so a native Back return is usable.
