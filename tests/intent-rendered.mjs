@@ -84,7 +84,7 @@ try{
    await page.locator('#prompt-text').fill('');await page.locator('#prompt-text').blur();
    await page.screenshot({path:resolve(output,name+'-families-home-full.png'),fullPage:true});
    await activate(page.locator('.family-entry-route'));await page.locator('html[data-site-revealed="true"]').waitFor();
-   assert.equal(new URL(page.url()).pathname,'/topics/families');assert.equal(await page.locator('.family-context nav a').count(),3);
+   assert.equal(new URL(page.url()).pathname,'/topics/families');assert.equal(await page.locator('.family-context nav a').count(),3);const familyOrder=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));assert.deepEqual(familyOrder.slice(0,4),['card-families-growing-together','card-freedom-kids','card-junior-village','card-village-youth']);assert.deepEqual(familyOrder.slice(-2),['card-sunday-gatherings','card-visit-help']);if(width>700){const support=await page.locator('.sunday-scene-entry').boundingBox(),grid=await page.locator('#grid').boundingBox();assert(support.width<grid.width/2,'Families Sunday scene is a supporting column, not the Home feature');}
    assert.equal(await page.locator('.family-entry-route').isVisible(),false);
    await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});
    await activate(page.locator('.family-context a[href$="#card-freedom-kids"]'));assert.equal(new URL(page.url()).pathname,'/topics/families');await page.locator('.kids-brand-link').focus();
@@ -157,7 +157,7 @@ try{
   await page.locator('#prompt-text').fill('Synthetic review question');await page.locator('#prompt-submit').click();
   await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='24 ranked resources loaded');
   assert.equal(await page.locator('#prompt-composer a').count(),0);assert((await page.locator('#composer-status').textContent()).includes('ranked for your question'));
-  assert.equal(await page.locator('.collection-context').count(),0,'category introduction does not leak into global intent results');
+  assert.equal(await page.locator('.collection-context').count(),0,'category introduction does not leak into global intent results');assert.equal(await page.locator('#collection').getAttribute('data-topic'),null,'Families presentation does not change global ranking layout');
   await page.screenshot({path:resolve(output,name+'-ranked-head.png')});
   const calls=providerCalls;
   await page.locator('#intent-more').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(output,name+'-more.png')});
