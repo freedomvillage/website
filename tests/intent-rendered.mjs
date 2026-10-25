@@ -9,12 +9,17 @@ import {sundayFixtures} from './fixtures/sunday.mjs';
 if(process.env.CI!=='true'||process.platform!=='linux')throw Error('Cloud Linux only');
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE);
 const origin='https://next.freedomvillage.church',at=Date.parse('2026-10-25T03:00:00Z');
+const expectedFamilyIds=['freedom-kids','families-growing-together','junior-village','village-youth','godly-play','children-in-worship','sunday-gatherings','visit-help',...Array.from({length:32},(_,i)=>'sample-'+String(i+20).padStart(3,'0'))].map(id=>'card-'+id).sort();
 const output=resolve('rendered-review');await mkdir(output,{recursive:true});
 const contrast=locator=>locator.evaluate(el=>{
  const rgb=s=>(s.match(/[\d.]+/g)||[]).map(Number),luma=c=>c.slice(0,3).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);
  const color=rgb(getComputedStyle(el).color);let background=[255,255,255];for(let p=el;p;p=p.parentElement){const value=rgb(getComputedStyle(p).backgroundColor);if(value.length===3||value[3]>=.99){background=value;break;}}
  const a=luma(color),b=luma(background);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
 });
+const familySupportBounds=async page=>{
+ const copy=await page.locator('#collection .sunday-scene-copy').boundingBox(),caption=await page.locator('#collection .sunday-venue figcaption').boundingBox(),tail=await page.locator('#collection .sunday-entry-tail').boundingBox();
+ assert(copy&&caption&&tail&&copy.y>=caption.y+caption.height&&copy.y+copy.height<=tail.y+.5,'Families support text flows intrinsically between source caption and actions');
+};
 const browser=await chromium.launch();
 try{
  for(const [name,width,height] of [['desktop',1440,1000],['intermediate',900,900],['breakpoint',720,900],['mobile',390,844],['narrow',320,800]]){
@@ -22,7 +27,7 @@ try{
   const themes=['paper','ink','forest','clay','youth','outline'];
   for(let i=0;i<71;i++){
    const id=['freedom-kids','connect-card','families-growing-together','village-youth','junior-village','godly-play','children-in-worship','sunday-gatherings','visit-help'][i]||'sample-'+String(i).padStart(3,'0');
-   const card={schemaVersion:2,template:'story',title:'Review resource '+(i+1),summary:'Synthetic review content for ranked resource continuation.',detail:['Synthetic public prose for browser acceptance.'],facts:[],categories:['community'],actions:[],related:[],media:null,design:{theme:themes[i%themes.length],layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false};
+   const card={schemaVersion:2,template:'story',title:'Review resource '+(i+1),summary:'Synthetic review content for ranked resource continuation.',detail:['Synthetic public prose for browser acceptance.'],facts:[],categories:i>=20&&i<52?['families']:['community'],actions:[],related:[],media:null,design:{theme:themes[i%themes.length],layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false};
    db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
   }
   for(const [id,card] of [...familyFixtures(),...sundayFixtures()])db.prepare('INSERT OR REPLACE INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
@@ -85,8 +90,8 @@ try{
    await page.screenshot({path:resolve(output,name+'-families-home-full.png'),fullPage:true});
    await activate(page.locator('.family-entry-route'));await page.locator('html[data-site-revealed="true"]').waitFor();
    assert.equal(new URL(page.url()).pathname,'/topics/families');assert.equal(await page.locator('.family-context nav a').count(),3);const familyOrder=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));assert.deepEqual(familyOrder.slice(0,4),['card-families-growing-together','card-freedom-kids','card-junior-village','card-village-youth']);assert.deepEqual(familyOrder.slice(-2),['card-sunday-gatherings','card-visit-help']);if(width>700){const support=await page.locator('.sunday-scene-entry').boundingBox(),grid=await page.locator('#grid').boundingBox();assert(support.width<grid.width/2,'Families Sunday scene is a supporting column, not the Home feature');}
-   assert.equal(await page.locator('.family-entry-route').isVisible(),false);
-   await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});
+   assert.equal(await page.locator('.family-entry-route').isVisible(),false);const initialFamilyIds=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));await page.locator('.load-more').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelectorAll('#grid > article.card').length===40);const completeFamilyIds=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));assert.equal(new Set(completeFamilyIds).size,40);assert.deepEqual([...completeFamilyIds].sort(),expectedFamilyIds);assert.deepEqual(completeFamilyIds.slice(0,4),['card-families-growing-together','card-freedom-kids','card-junior-village','card-village-youth']);assert.deepEqual(completeFamilyIds.slice(-2),['card-sunday-gatherings','card-visit-help']);assert(completeFamilyIds.includes('card-sample-051'));console.log(JSON.stringify({viewport:name,familiesCollection:'complete',initial:initialFamilyIds.length,appended:completeFamilyIds.length-initialFamilyIds.length,total:40,cursorSelectionUnchanged:true}));
+   await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});await familySupportBounds(page);
    await activate(page.locator('.family-context a[href$="#card-freedom-kids"]'));assert.equal(new URL(page.url()).pathname,'/topics/families');await page.locator('.kids-brand-link').focus();
    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
    const departureY=await page.evaluate(()=>scrollY);
@@ -111,7 +116,7 @@ try{
     assert.equal(await plain.locator('.kids-chapter').count(),3);await plain.locator('.kids-question').first().locator('summary').click();assert.equal(await plain.locator('.kids-question').first().getAttribute('open'),'');
     await plain.locator('.kids-contents a').nth(1).click();assert.equal(new URL(plain.url()).pathname,'/cards/freedom-kids');assert.equal(new URL(plain.url()).hash,'#kids-freedom-kids-1');
     await plain.screenshot({path:resolve(output,'mobile-kids-no-js-full.png'),fullPage:true});
-    await plain.goto(origin+'/topics/families');await plain.locator('.family-context a[href$="#card-freedom-kids"]').click();assert.equal(new URL(plain.url()).pathname,'/topics/families');
+    await plain.goto(origin+'/topics/families');await plain.locator('.family-context a[href$="#card-freedom-kids"]').click();assert.equal(new URL(plain.url()).pathname,'/topics/families');const firstIds=await plain.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));await plain.locator('.load-more').click();assert(new URL(plain.url()).searchParams.has('after'));const secondIds=await plain.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));assert.equal(firstIds.length,24);assert.equal(secondIds.length,16);assert.equal(new Set([...firstIds,...secondIds]).size,40);assert.deepEqual([...firstIds,...secondIds].sort(),expectedFamilyIds);await plain.screenshot({path:resolve(output,'mobile-families-native-page2-full.png'),fullPage:true});
     await noJs.close();assert.equal(providerCalls,0);
    }
   }
@@ -153,6 +158,11 @@ try{
    if(name==='mobile'){
     const noJs=await browser.newContext({viewport:{width,height},javaScriptEnabled:false});await noJs.route('**/*',serve);const plain=await noJs.newPage();await plain.goto(origin);await plain.locator('.sunday-entry-actions a[href="/cards/visit-help"]').click();assert.equal(new URL(plain.url()).pathname,'/cards/visit-help');assert.equal(await plain.locator('.arrival-section').count(),3);assert.equal(await plain.locator('.arrival-contact a').count(),2);await plain.screenshot({path:resolve(output,'mobile-visit-no-js-full.png'),fullPage:true});await noJs.close();
    }
+  }
+  if(['breakpoint','narrow'].includes(name)){
+   await page.goto(origin+'/topics/families');await page.locator('html[data-site-revealed="true"]').waitFor();await page.locator('.load-more').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelectorAll('#grid > article.card').length===40);
+   await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});await familySupportBounds(page);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+   console.log(JSON.stringify({viewport:name,familiesSupport:'intrinsic-flow-passed',completeFamilyRecords:40}));
   }
   await page.locator('#prompt-text').fill('Synthetic review question');await page.locator('#prompt-submit').click();
   await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='24 ranked resources loaded');

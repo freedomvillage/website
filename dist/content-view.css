@@ -191,7 +191,7 @@ html[data-site-revealed="true"] .presentation-teaching.art-entered .craft-teachi
 /* Families leads with its ministries; arrival information supports this collection. Home keeps its generous scene. */
 #collection[data-topic="families"] .family-entry{background:var(--paper);padding:24px;border-top:4px solid #d34543}
 #collection[data-topic="families"] .sunday-scene-entry{grid-column:auto}
-#collection[data-topic="families"] .sunday-scene-copy{inset:18px auto auto 20px;width:49%}
+#collection[data-topic="families"] .sunday-scene-copy{position:static;width:auto;padding:20px 22px 0}
 #collection[data-topic="families"] .sunday-entry-facts .library-facts{margin-bottom:12px}
 #collection[data-topic="families"] .sunday-entry-facts .library-facts p{font-size:15px!important}
 #collection[data-topic="families"] .sunday-scene-entry h2{font-size:clamp(26px,2.3vw,34px)}

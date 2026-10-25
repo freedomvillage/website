@@ -93,7 +93,7 @@
     const next=page.querySelector('.load-more'),href=next?new URL(next.getAttribute('href'),url):null;
     if(href&&(href.origin!==location.origin||href.href===url.href))throw Error();
     if(intentActive)return;
-    let first=null;for(const article of incoming.children)if(article.matches('article.card')&&!document.getElementById(article.id)){const copy=document.importNode(article,true);grid.append(copy);first??=copy.querySelector('a');}
+    let first=null;for(const article of incoming.children)if(article.matches('article.card')&&!document.getElementById(article.id)){const copy=document.importNode(article,true),order=Number(copy.dataset.familyOrder);const before=document.getElementById('collection')?.dataset?.topic==='families'&&Number.isInteger(order)?[...grid.children].find(card=>Number(card.dataset.familyOrder)>order):null;if(before)grid.insertBefore(copy,before);else grid.append(copy);first??=copy.querySelector('a');}
     enhance(grid);autoFailed=false;pagesLoaded++;
     if(href){more.href=href.href;more.textContent='More cards ↓';}else{ended=true;nearBottom?.disconnect();more.remove();}
     if(manual)first?.focus({preventScroll:true});
