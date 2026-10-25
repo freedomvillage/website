@@ -1,0 +1,29 @@
+.github/workflows/content-validation.yml
+  s_e2bf1542692bef::t_0e49968c7fd2e8 18,21,27,30-31,82-92
+dist/content-view.css
+  s_e2bf1542692bef::t_af5877c1a733aa 178
+dist/content-view.js
+  s_e2bf1542692bef::t_05104b5e7f2847 107
+docs/KIDS-READING-STAGE.md
+  s_e2bf1542692bef::t_6402210a2781c7 1-9
+source-manifest.json
+  s_e2bf1542692bef::t_5d75a7dc251c15 102-103
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_e82b175e1768d4 3,12-13,87,99,316-361
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0cf9a840fa40ad6284b2d92891bab40f90f96f29",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
