@@ -1,6 +1,6 @@
 import {privateNextRequest,publicCard,readCatalog,json,TOPICS,validCursor} from './catalog.mjs';
 import {escape,cardPath,CORE_PAGES,renderLibraryCard,renderLibraryDetail} from './render.mjs';
-import {renderFamilyContext,familyCollectionItems,familyCollectionPriority} from './families.mjs';
+import {renderFamilyContext,familyCollectionItems,familyCollectionPriority,familyDetailIds} from './families.mjs';
 export {cardPath} from './render.mjs';
 const ID=/^[a-z][a-z0-9-]{0,79}$/;
 export function serializeBoot(value){return JSON.stringify(value).replaceAll('<','\\u003c').replaceAll('>','\\u003e').replaceAll('&','\\u0026').replaceAll('\u2028','\\u2028').replaceAll('\u2029','\\u2029');}
@@ -48,7 +48,7 @@ export async function handleContentPage(request,env,{now=Date.now()}={}){
    card=row&&publicCard(row);if(card){
     if(path!==cardPath(card))return new Response(null,{status:308,headers:{Location:cardPath(card),'Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});
     catalog.items=[card];
-    const requested=[...new Set([...(card.related||[]),...(card.sections||[]).flatMap(s=>s.cardIds)])];
+    const requested=[...new Set([...(card.related||[]),...(card.sections||[]).flatMap(s=>s.cardIds),...familyDetailIds(card)])];
     if(requested.length){const rows=await env.CONTENT_DB.prepare(`SELECT id,content_json FROM content_cards WHERE id IN (${requested.map(()=>'?').join(',')}) AND status='draft' AND (expires_at IS NULL OR expires_at>?)`).bind(...requested,new Date(now).toISOString()).all();embedded=(rows.results||[]).map(publicCard).filter(c=>c&&c.schemaVersion===2&&c.id!==card.id);related=embedded.filter(c=>card.related?.includes(c.id)).sort((a,b)=>card.related.indexOf(a.id)-card.related.indexOf(b.id));}
    }else status=404;
   }else status=404;

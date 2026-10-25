@@ -34,6 +34,13 @@ test('no-store Back reconstructs appended pages before restoring exact scroll an
 test('study hash changes are saved for the actual departing history entry',()=>{
  const h=harness({path:'/studies/families'});h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore:async()=>false,measure(){}});h.context.location.hash='#study-ministry-first';h.click(h.link());assert.equal(h.context.history.state.fvcFeedRestore.path,'/studies/families#study-ministry-first');
 });
+test('the Godly reader restores only bounded single-page navigation hints without enabling other detail or query state',async()=>{
+ const path='/cards/godly-play',h=harness({path,state:null});h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('Reader has no pagination');},measure(){}});h.click(h.link('godly-play-reader','/cards/freedom-kids'));h.emit('pagehide');
+ const state=JSON.parse(JSON.stringify(h.context.history.state));assert.equal(state.fvcFeedRestore.path,path);assert.equal(state.fvcFeedRestore.pages,1);assert.deepEqual(state.fvcFeedRestore.focus,{cardId:'godly-play-reader',href:'/cards/freedom-kids'});
+ const returned=harness({path,state,navigation:'back_forward'});returned.link('godly-play-reader','/cards/freedom-kids');const controller=returned.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('Reader must not re-fetch pages');},measure(){}});assert(controller.willRestore());await controller.restore();assert.deepEqual(returned.focused,['godly-play-reader']);assert.equal(returned.scrolls.at(-1).top,9169);
+ for(const unsupported of ['/cards/freedom-kids','/cards/other-reader','/cards/godly-play?query=PRIVATE','/cards/godly-play?after=50%3Ax'])assert.equal(harness({path:unsupported}).context.createFeedHistory({}),null);
+ state.fvcFeedRestore.pages=2;assert(!harness({path,state,navigation:'back_forward'}).context.createFeedHistory({}).willRestore());
+});
 test('user input cancels restoration without stealing scroll/focus; failed paging remains usable',async()=>{
  for(const cancellation of [true,false]){
   const h=harness({state:saved(),navigation:'back_forward'});let loads=0;

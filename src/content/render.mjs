@@ -1,5 +1,5 @@
 import {renderCraftCard,renderCraftArt} from './card-craft.mjs';
-import {renderFamilyCard,renderKidsDetail} from './families.mjs';
+import {renderFamilyCard,renderKidsDetail,renderGodlyDetail} from './families.mjs';
 import {renderSundayCard,renderVisitDetail} from './sunday.mjs';
 // Structured source content only: no stored HTML, script or arbitrary styling is rendered.
 export const escape=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
@@ -47,6 +47,7 @@ function connectDraft(c){
  return `<section class="connect-draft" data-connect-draft hidden aria-labelledby="connect-draft-title"><h2 id="connect-draft-title">What would you like to explore?</h2><p>Choose any interests for an email draft. Nothing is sent from this page.</p><fieldset><legend class="visually-hidden">Interests to include in your email</legend>${options}</fieldset><div class="connect-draft-action"><a class="pilot-action" data-connect-email href="${escape(draft.email)}">Open email draft</a><p data-connect-status aria-live="polite">Add a question in your email app, then review and send.</p></div></section>`;
 }
 export function renderLibraryDetail(c,related=[],embedded=[]){
+ const godly=renderGodlyDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(godly)return godly;
  const visit=renderVisitDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(visit)return visit;
  const kids=renderKidsDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(kids)return kids;
  const video=c.media?.kind==='youtube'?`<div class="video-player" data-video="${c.media.videoId}"><button type="button" class="video-load" data-video-title="${escape(c.media.title)}">▶ Load video</button><p>Video loads from YouTube when selected.</p><a href="https://www.youtube.com/watch?v=${c.media.videoId}" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a></div>`:'';
