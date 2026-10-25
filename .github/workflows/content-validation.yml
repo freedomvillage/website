@@ -15,18 +15,20 @@ permissions:
 jobs:
   route-and-air-regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 7
     env:
       REVIEW_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
       - name: Fetch exact public review commit without credentials
         shell: bash
         run: |
           [[ "$REVIEW_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$BASE_SHA" =~ ^[0-9a-f]{40}$ ]]
           git init --quiet .
           git remote add origin https://github.com/freedomvillage/website.git
-          git fetch --depth=1 origin "$REVIEW_SHA"
-          git checkout --detach FETCH_HEAD
+          git fetch --depth=1 origin "$REVIEW_SHA" "$BASE_SHA"
+          git checkout --detach "$REVIEW_SHA"
       - name: Verify server content and preserved air behavior
         run: |
           node --version
@@ -75,5 +77,16 @@ jobs:
             rendered-review/*-youth-*.png
             rendered-review/*-families-home-full.png
             rendered-review/*-families-category-full.png
+            rendered-review/journey-recordings/*.webm
+          if-no-files-found: ignore
+      - name: Save native Kids reading review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kids-reading-review
+          path: |
+            rendered-review/*-kids-scroll-*.png
+            rendered-review/*-kids-detail-full.png
+            rendered-review/*-kids-no-js-full.png
             rendered-review/journey-recordings/*.webm
           if-no-files-found: ignore

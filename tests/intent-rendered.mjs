@@ -1,5 +1,6 @@
 // Explicit cloud-only rendered acceptance. No credentials, provider calls or live DB.
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
@@ -8,6 +9,8 @@ import {familyFixtures} from './fixtures/families.mjs';
 import {sundayFixtures} from './fixtures/sunday.mjs';
 if(process.env.CI!=='true'||process.platform!=='linux')throw Error('Cloud Linux only');
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE);
+const baselineSha=process.env.BASE_SHA;if(!/^[0-9a-f]{40}$/.test(baselineSha||''))throw Error('Exact public baseline SHA required');
+const baselineSceneFiles=new Map(['/content-view.js','/content-view.css'].map(path=>[path,execFileSync('git',['show',baselineSha+':dist'+path])]));
 const origin='https://next.freedomvillage.church',at=Date.parse('2026-10-25T03:00:00Z');
 const expectedFamilyIds=['freedom-kids','families-growing-together','junior-village','village-youth','godly-play','children-in-worship','sunday-gatherings','visit-help',...Array.from({length:32},(_,i)=>'sample-'+String(i+20).padStart(3,'0'))].map(id=>'card-'+id).sort();
 const output=resolve('rendered-review');await mkdir(output,{recursive:true});
@@ -81,7 +84,7 @@ try{
     run:async()=>({meta:{changes:Number(s.run(...args).changes)}})
    };}};
   }};
-  let providerCalls=0,zero=false,failPage=false;
+  let providerCalls=0,zero=false,failPage=false,baselineSceneAssets=false;
   const worker=createWorker({now:()=>at,resolveIntentOwner:async()=> 'a'.repeat(64),fetchUpstream:async(_,options)=>{
    providerCalls++;const body=JSON.parse(options.body);
    return Response.json({model:'jev-1.14.0',usage:{input_tokens:100,output_tokens:20},answers:Object.fromEntries(body.state.candidates.map((c,i)=>{
@@ -93,7 +96,7 @@ try{
    const path=new URL(request.url).pathname,file=resolve('dist','.'+(path==='/'?'/index.html':path));
    if(!file.startsWith(resolve('dist')+'/'))return new Response('',{status:404});
    const types={'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2'};
-   try{return new Response(await readFile(file),{headers:{'Content-Type':types[extname(file)]||'application/octet-stream'}});}catch{return new Response('',{status:404});}
+   try{return new Response(baselineSceneAssets&&baselineSceneFiles.has(path)?baselineSceneFiles.get(path):await readFile(file),{headers:{'Content-Type':types[extname(file)]||'application/octet-stream'}});}catch{return new Response('',{status:404});}
   }}};
   const context=await browser.newContext({viewport:{width,height},hasTouch:['mobile','narrow'].includes(name),reducedMotion:'reduce',recordVideo:{dir:resolve(output,'journey-recordings'),size:{width,height}}});
   const activate=locator=>name==='mobile'?locator.tap():locator.click();
@@ -310,6 +313,51 @@ try{
   await page.waitForFunction(()=>document.querySelector('#composer-status')?.textContent.startsWith('No close matches.'));
   assert.equal(await page.locator('#grid > article.card').count(),24);await page.screenshot({path:resolve(output,name+'-no-close.png')});assert.deepEqual(errors,[]);
   console.log(JSON.stringify({viewport:name,candidateCount:71,rendered:ids.length,weakSecond:true,noCloseRetained:24,continuationProviderCalls,composerWithinViewport:true,pageErrors:errors}));
-  await context.close();db.close();
+  await context.close();
+  // Actual before/after native scrolling: identical current source markup and
+  // synthetic records; only the two exact baseline browser assets are swapped.
+  const nativeCalls=providerCalls;
+  for(const phase of ['before','after']){
+   if(!['desktop','intermediate','mobile'].includes(name)&&phase==='before')continue;
+   baselineSceneAssets=phase==='before';
+   const natural=await browser.newContext({viewport:{width,height},hasTouch:name==='mobile',reducedMotion:'no-preference',recordVideo:{dir:resolve(output,'journey-recordings'),size:{width,height}}});await natural.route('**/*',serve);
+   const reading=await natural.newPage(),nativeStarted=performance.now();await reading.clock.install({time:new Date(at)});const nativeErrors=[];reading.on('pageerror',e=>nativeErrors.push(e.message));
+   await completeFamilies(reading);const invitation=reading.locator('.kids-brand-link');await invitation.focus();await reading.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const departureY=await reading.evaluate(()=>scrollY);await invitation.click();await reading.locator('html[data-site-revealed="true"]').waitFor();
+   const enhanced=phase==='after'&&['desktop','intermediate'].includes(name);if(enhanced)await reading.locator('.kids-reading[data-scene-stage]').waitFor();else assert.equal(await reading.locator('.kids-reading[data-scene-stage]').count(),0);
+   const prefix=name+'-kids-scroll-'+phase,recording=(await reading.video().path()).split('/').at(-1),samples=[];
+   if(['desktop','intermediate','mobile'].includes(name)){
+    await reading.locator('.kids-detail>.back').focus();await reading.evaluate(()=>{window.__nativeRead={wheel:0,scroll:0,touch:0};addEventListener('wheel',()=>__nativeRead.wheel++,{passive:true});addEventListener('scroll',()=>__nativeRead.scroll++,{passive:true});addEventListener('touchmove',()=>__nativeRead.touch++,{passive:true});});
+    const identity=await reading.evaluate(()=>({href:location.href,history:history.length,state:JSON.stringify(history.state),focus:document.activeElement.outerHTML})),startSeconds=Number(((performance.now()-nativeStarted)/1000).toFixed(2));
+    const touch=name==='mobile'?await natural.newCDPSession(reading):null;
+    const advance=async direction=>{
+     if(touch)await touch.send('Input.synthesizeScrollGesture',{x:Math.round(width*.65),y:Math.round(height*.5),yDistance:-direction*180,gestureSourceType:'touch',speed:900});
+     else{await reading.mouse.move(Math.round(width*.78),Math.round(height*.45));await reading.mouse.wheel(0,direction*120);}
+     await reading.waitForTimeout(70);
+    };
+    const reach=async(index,direction)=>{
+     for(let step=0;step<65;step++){
+      const reached=await reading.evaluate(({index,enhanced})=>{const heads=[...document.querySelectorAll('.kids-chapter h2')],nav=document.querySelector('.kids-contents'),edge=Math.max(nav.getBoundingClientRect().bottom+40,160),stage=document.querySelector('.kids-scene-stage'),top=parseFloat(document.querySelector('.kids-reading').style.getPropertyValue('--kids-stage-top'));return heads[index].getBoundingClientRect().top<=edge&&(!heads[index+1]||heads[index+1].getBoundingClientRect().top>edge)&&(!enhanced||Math.abs(stage.getBoundingClientRect().top-top)<2);},{index,enhanced});
+      if(reached)return;await advance(direction);
+     }throw Error(prefix+' native scroll did not reach chapter '+index);
+    };
+    const capture=async(index,direction)=>{
+     await reach(index,direction);
+     if(enhanced){await reading.waitForFunction(index=>document.querySelector('.kids-scene-stage').dataset.chapter===String(index),index);await reading.waitForFunction(()=>{const i=document.querySelector('.kids-scene-frame:not([hidden]) img');return i?.complete&&i.naturalWidth>0;});const art=await reading.locator('.kids-scene-stage').boundingBox(),nav=await reading.locator('.kids-contents').boundingBox(),composer=await reading.locator('#prompt-composer').boundingBox();assert(art.y>=nav.y+nav.height&&art.y+art.height<=composer.y,'native reading stage fits between existing contents and composer');assert.equal(await reading.locator('.kids-contents a').nth(index).getAttribute('aria-current'),'location');}
+     else await reading.waitForFunction(index=>{const i=document.querySelectorAll('.kids-chapter img')[index];return i?.complete&&i.naturalWidth>0;},index);
+     await reading.screenshot({path:resolve(output,prefix+'-'+(direction>0?'forward':'backward')+'-'+index+'.png')});samples.push({direction:direction>0?'forward':'backward',chapter:index,...await reading.evaluate(()=>({y:scrollY,stage:document.querySelector('.kids-scene-stage')?.dataset.chapter||null}))});
+    };
+    for(const index of [0,1,2])await capture(index,1);
+    for(let step=0;step<35;step++){if(await reading.locator('.kids-questions').evaluate(e=>e.getBoundingClientRect().top<=180))break;await advance(1);}
+    if(enhanced){const art=await reading.locator('.kids-scene-stage').boundingBox(),questions=await reading.locator('.kids-questions').boundingBox();assert(art.y+art.height<=questions.y+.5,'scene releases before questions and closing actions');}await reading.screenshot({path:resolve(output,prefix+'-release.png')});
+    for(const index of [2,1,0])await capture(index,-1);
+    assert.deepEqual(await reading.evaluate(()=>({href:location.href,history:history.length,state:JSON.stringify(history.state),focus:document.activeElement.outerHTML})),identity,'passive native progression does not change URL/history/focus');const inputCounts=await reading.evaluate(()=>__nativeRead);assert(inputCounts.scroll>0);if(!touch)assert(inputCounts.wheel>0);
+    console.log(JSON.stringify({viewport:name,kidsNativeScroll:'passed',phase,baselineSha,enhanced,input:touch?'CDP-emulated-touch-scroll':'native-mouse-wheel',...inputCounts,samples,passiveFocusUrlHistoryUnchanged:true,recording,startSeconds,endSeconds:Number(((performance.now()-nativeStarted)/1000).toFixed(2))}));
+    await reading.locator('.kids-contents a').nth(1).focus();await reading.keyboard.press('Enter');assert.equal(new URL(reading.url()).hash,'#kids-freedom-kids-1');assert.equal(await reading.locator('#kids-freedom-kids-1').evaluate(e=>document.activeElement===e),true);if(enhanced)await reading.waitForFunction(()=>document.querySelector('.kids-scene-stage').dataset.chapter==='1');await reading.screenshot({path:resolve(output,prefix+'-keyboard-jump.png')});
+   }
+   for(let i=0;i<3;i++)if(!enhanced)await loadScene(reading,'.kids-spread-'+i+' .kids-paper');await captureTop(reading);await reading.screenshot({path:resolve(output,prefix+'-full.png'),fullPage:true});
+   if(enhanced){await reading.emulateMedia({reducedMotion:'reduce'});await reading.waitForFunction(()=>!document.querySelector('.kids-reading').hasAttribute('data-scene-stage'));assert.equal(await reading.locator('.kids-chapter .kids-spread-art').evaluateAll(art=>art.every(e=>getComputedStyle(e).display!=='none')),true);for(let i=0;i<3;i++)await loadScene(reading,'.kids-spread-'+i+' .kids-paper');await captureTop(reading);await reading.screenshot({path:resolve(output,prefix+'-reduced-full.png'),fullPage:true});await reading.emulateMedia({reducedMotion:'no-preference'});await reading.locator('.kids-reading[data-scene-stage]').waitFor();await reading.setViewportSize({width,height:650});await reading.waitForFunction(()=>!document.querySelector('.kids-reading').hasAttribute('data-scene-stage'));await captureTop(reading);await reading.screenshot({path:resolve(output,prefix+'-short-static.png'),fullPage:true});await reading.setViewportSize({width,height});await reading.locator('.kids-reading[data-scene-stage]').waitFor();}
+   await reading.locator('.kids-detail>.back').click();await reading.waitForFunction(y=>location.pathname==='/topics/families'&&document.querySelectorAll('#grid>article.card').length===40&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('#card-freedom-kids'),departureY);await reading.screenshot({path:resolve(output,prefix+'-families-back.png')});assert.deepEqual(nativeErrors,[]);await natural.close();
+  }
+  baselineSceneAssets=false;assert.equal(providerCalls,nativeCalls,'native reading makes no extra provider call');db.close();
  }
 }finally{await browser.close();}

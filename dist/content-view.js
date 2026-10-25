@@ -104,7 +104,7 @@
     if(wide&&prose.getBoundingClientRect().height<height)reading.removeAttribute('data-scene-stage');
    }
    if(!reading.hasAttribute('data-scene-stage')){if(located>=0)links[located]?.removeAttribute('aria-current');located=-1;return;}
-   const boundary=contents.getBoundingClientRect().bottom+40,top=parseFloat(reading.style.getPropertyValue('--kids-stage-top'));
+   const boundary=Math.max(contents.getBoundingClientRect().bottom+40,160),top=parseFloat(reading.style.getPropertyValue('--kids-stage-top'));
    let current=0;for(let i=1;i<headings.length;i++)if(headings[i].getBoundingClientRect().top<=boundary)current=i;
    const bounds=sequence.getBoundingClientRect(),location=bounds.top<innerHeight&&bounds.bottom>top?current:-1;
    if(active!==current){for(let i=0;i<frames.length;i++)frames[i].hidden=i!==current;stage.dataset.chapter=String(current);active=current;}
