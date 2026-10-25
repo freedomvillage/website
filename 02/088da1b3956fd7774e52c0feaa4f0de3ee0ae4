@@ -1,0 +1,23 @@
+dist/content-view.css
+  s_e2bf1542692bef::t_5d9a2615de315b 170,179
+docs/SUNDAY-ARRIVAL.md
+  s_e2bf1542692bef::t_6ea487751b5c89 33-34
+source-manifest.json
+  s_e2bf1542692bef::t_d032015b39a0ae 103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "02088da1b3956fd7774e52c0feaa4f0de3ee0ae4",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
