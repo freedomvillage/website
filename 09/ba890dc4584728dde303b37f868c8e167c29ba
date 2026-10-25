@@ -1,0 +1,32 @@
+docs/VILLAGE-YOUTH.md
+  s_e2bf1542692bef::t_4d3cc081a7f3a3 3
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_adca13ab85cfc8 28-35,73
+  s_e2bf1542692bef::t_fae52ba2d879b6 168,184
+src/content/youth.mjs
+  s_e2bf1542692bef::t_4d3cc081a7f3a3 3-6
+tests/families.test.mjs
+  s_e2bf1542692bef::t_4d3cc081a7f3a3 49,52
+dist/content-view.css
+  s_e2bf1542692bef::t_4d3cc081a7f3a3 210
+src/content/render.mjs
+  s_e2bf1542692bef::t_4d3cc081a7f3a3 4,21
+source-manifest.json
+  s_e2bf1542692bef::t_021fb358356e68 103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "09ba890dc4584728dde303b37f868c8e167c29ba",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
