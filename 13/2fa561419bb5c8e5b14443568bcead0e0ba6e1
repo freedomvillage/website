@@ -1,0 +1,48 @@
+dist/kids-gather.svg
+  s_e2bf1542692bef::t_858a1a91e8da56 1-12
+src/content/render.mjs
+  s_e2bf1542692bef::t_858a1a91e8da56 26,31
+dist/kids-connect.svg
+  s_e2bf1542692bef::t_858a1a91e8da56 1-11
+src/content/pages.mjs
+  s_e2bf1542692bef::t_858a1a91e8da56 3
+  s_e2bf1542692bef::t_74f538d1e8ced4 12,16
+dist/gathering-paper.svg
+  s_e2bf1542692bef::t_b5f380f06315d2 1-10
+dist/kids-unfold.svg
+  s_e2bf1542692bef::t_858a1a91e8da56 1-11
+dist/content-view.css
+  s_e2bf1542692bef::t_e12a66350f70be 138-151,153-162,164-169,190-193,196,200
+docs/FAMILIES-JOURNEY.md
+  s_e2bf1542692bef::t_b5bdd2f1112aae 1-34
+docs/SUNDAY-ARRIVAL.md
+  s_e2bf1542692bef::t_27a6e407d9bf1e 1,3-7,9-13,15-19
+source-manifest.json
+  s_e2bf1542692bef::t_98213bb61ebf78 103,109-113
+src/content/families.mjs
+  s_e2bf1542692bef::t_a4f0c90c222873 19-20,23-27,30,41-42
+src/content/sunday.mjs
+  s_e2bf1542692bef::t_f1b0d22bfd953d 8-9,15
+tests/families.test.mjs
+  s_e2bf1542692bef::t_9c81e4f7dfa08c 5,8-13,19
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_bc4fde5960f578 20-21,103,105,107,109,116,120-122,197,235
+tests/sunday.test.mjs
+  s_e2bf1542692bef::t_b68387c601bb2b 24-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "132fa561419bb5c8e5b14443568bcead0e0ba6e1",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
