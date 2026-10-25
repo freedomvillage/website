@@ -1,0 +1,27 @@
+dist/index.html
+  s_e2bf1542692bef::t_b1e4b7f9cd911b 6
+dist/style.css
+  s_e2bf1542692bef::t_464d88265bf6fb 172,174
+docs/COMPOSER-CONTROLS.md
+  s_e2bf1542692bef::t_ff19c7b7c00c30 1-17
+source-manifest.json
+  s_e2bf1542692bef::t_a4fe331715f2cb 98,105
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_ef38dd3f8ef711 65-68,73-75,77,159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a0dc7a0941c48e8b9a2224669eda50384d048b68",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
