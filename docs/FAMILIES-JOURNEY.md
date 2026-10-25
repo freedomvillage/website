@@ -27,7 +27,7 @@ Native disclosures and explicit local anchors supply purposeful interaction. No
 scroll animation, universal fades, selectors or client state were added. Static
 reduced-motion and no-JavaScript reading remain complete. Existing fragment
 replacement retains a single Back to the source feed. Original scenery, logo,
-masonry and sticky gear-only composer remain; Jev eligibility/ranking is unchanged.
+masonry and sticky composer with source social links and icon-only settings remain; Jev eligibility/ranking is unchanged.
 
 Cloud Ubuntu CI captures full-page Home/category/Kids at390/900/1440 plus narrow
 checks, individual spreads and actual disclosure/navigation/contents/Back behavior

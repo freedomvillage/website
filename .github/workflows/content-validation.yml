@@ -15,7 +15,7 @@ permissions:
 jobs:
   route-and-air-regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 10
     env:
       REVIEW_SHA: ${{ github.event.pull_request.head.sha }}
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -39,6 +39,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/fvc-render" --no-save --ignore-scripts playwright@1.64.1
           "$RUNNER_TEMP/fvc-render/node_modules/.bin/playwright" install chromium
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/fvc-render/node_modules/playwright/index.mjs" node tests/intent-rendered.mjs
+          CONTENT_BASELINE_DIR="$RUNNER_TEMP/fvc-before" PLAYWRIGHT_MODULE="$RUNNER_TEMP/fvc-render/node_modules/playwright/index.mjs" node tests/menu-rendered.mjs
           CONTENT_BASELINE_DIR="$RUNNER_TEMP/fvc-before" PLAYWRIGHT_MODULE="$RUNNER_TEMP/fvc-render/node_modules/playwright/index.mjs" node tests/worship-rendered.mjs
       - name: Save rendered review evidence
         if: always()
@@ -80,6 +81,13 @@ jobs:
             rendered-review/*-families-home-full.png
             rendered-review/*-families-category-full.png
             rendered-review/journey-recordings/*.webm
+          if-no-files-found: ignore
+      - name: Save synthetic menu behavior review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: menu-review
+          path: menu-review/
           if-no-files-found: ignore
       - name: Save synthetic worship composition review
         if: always()
