@@ -5,10 +5,10 @@
  const number=(n,max)=>Number.isFinite(n)&&n>=0&&n<=max;
  function sourcePath(value){
   try{
-   const u=new URL(value,root.location.href),listing=u.pathname==='/'||/^\/topics\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),study=/^\/studies\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),reader=['/cards/godly-play','/cards/village-youth'].includes(u.pathname);
+   const u=new URL(value,root.location.href),listing=u.pathname==='/'||/^\/topics\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),study=/^\/studies\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),reader=['/cards/godly-play','/cards/village-youth','/cards/freedom-kids'].includes(u.pathname);
    if(u.origin!==root.location.origin||u.username||u.password||(!listing&&!study&&!reader)||u.href.length>512)return null;
    if(u.search){const after=u.searchParams.get('after')||'',m=/^(\d{1,3}):[a-z][a-z0-9-]{0,79}$/.exec(after);if(!listing||[...u.searchParams.keys()].some(k=>k!=='after')||u.searchParams.getAll('after').length!==1||!m||Number(m[1])>100)return null;}
-   if(u.hash&&!/^#(?:main|study-[a-z0-9_-]{1,120}|card-[a-z][a-z0-9-]{0,79})$/.test(u.hash))return null;
+   if(u.hash&&!/^#(?:main|study-[a-z0-9_-]{1,120}|card-[a-z][a-z0-9-]{0,79})$/.test(u.hash)&&!(u.pathname==='/cards/freedom-kids'&&/^#kids-freedom-kids-\d{1,2}$/.test(u.hash)))return null;
    return u.pathname+u.search+u.hash;
   }catch{return null;}
  }
@@ -32,7 +32,7 @@
   root.document.addEventListener('click',event=>{
    if(event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||(event.button!==undefined&&event.button!==0)||isIntent())return;
    const link=event.target?.closest?.('main a[href]'),href=link&&destination(link.href);if(!href||link.target==='_blank'||link.hasAttribute('download'))return;
-   const card=link.closest('section[data-history-anchor][id]')||link.closest('article[id]');focus=card&&/^[a-zA-Z0-9_-]{1,180}$/.test(card.id)?{cardId:card.id,href}:null;write();
+   const card=link.closest('section[data-history-anchor][id]')||link.closest('details[data-history-anchor][id]')||link.closest('article[id]');focus=card&&/^[a-zA-Z0-9_-]{1,180}$/.test(card.id)?{cardId:card.id,href}:null;write();
   });
   root.addEventListener('pagehide',()=>{write();revealObserver?.disconnect();});
   const cancel=()=>{cancelled=true;revealObserver?.disconnect();};
@@ -60,6 +60,12 @@
    try{
     for(let page=1;page<saved.pages&&!cancelled&&Date.now()-started<20000;page++)if(!await loadMore(signal))break;
     if(cancelled)return;
+    // A reconstructed Kids reader must reopen the native source question before
+    // measuring its saved departure position. The hint stores only a route/ID.
+    if(path.startsWith('/cards/freedom-kids')&&saved.focus){
+     const card=root.document.getElementById(saved.focus.cardId),link=card&&[...card.querySelectorAll('a[href]')].find(a=>destination(a.href)===saved.focus.href);
+     const disclosure=link?.closest?.('details.kids-question');if(disclosure)disclosure.open=true;
+    }
     measure();await new Promise(resolve=>root.requestAnimationFrame(()=>root.requestAnimationFrame(resolve)));
     if(cancelled)return;
     place();finished=true;

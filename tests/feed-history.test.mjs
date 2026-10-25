@@ -34,14 +34,27 @@ test('no-store Back reconstructs appended pages before restoring exact scroll an
 test('study hash changes are saved for the actual departing history entry',()=>{
  const h=harness({path:'/studies/families'});h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore:async()=>false,measure(){}});h.context.location.hash='#study-ministry-first';h.click(h.link());assert.equal(h.context.history.state.fvcFeedRestore.path,'/studies/families#study-ministry-first');
 });
-test('the two authored readers restore bounded single-page hints without enabling other detail or query state',async()=>{
- for(const [path,id,href] of [['/cards/godly-play','godly-play-reader','/cards/freedom-kids'],['/cards/village-youth','youth-reader','/connect']]){
+test('the authored readers restore bounded single-page hints without enabling other detail or query state',async()=>{
+ for(const [path,id,href] of [['/cards/godly-play','godly-play-reader','/cards/freedom-kids'],['/cards/village-youth','youth-reader','/connect'],['/cards/freedom-kids','kids-reader','/cards/godly-play'],['/cards/freedom-kids#kids-freedom-kids-2','kids-reader','/cards/godly-play']]){
   const h=harness({path,state:null});h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('Reader has no pagination');},measure(){}});h.click(h.link(id,href));h.emit('pagehide');
   const state=JSON.parse(JSON.stringify(h.context.history.state));assert.equal(state.fvcFeedRestore.path,path);assert.equal(state.fvcFeedRestore.pages,1);assert.deepEqual(state.fvcFeedRestore.focus,{cardId:id,href});
   const returned=harness({path,state,navigation:'back_forward'});returned.link(id,href);const controller=returned.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('Reader must not re-fetch pages');},measure(){}});assert(controller.willRestore());await controller.restore();assert.deepEqual(returned.focused,[id]);assert.equal(returned.scrolls.at(-1).top,9169);
   state.fvcFeedRestore.pages=2;assert(!harness({path,state,navigation:'back_forward'}).context.createFeedHistory({}).willRestore());
  }
- for(const unsupported of ['/cards/freedom-kids','/cards/other-reader','/cards/godly-play?query=PRIVATE','/cards/godly-play?after=50%3Ax','/cards/village-youth?question=PRIVATE','/cards/village-youth?after=50%3Ax'])assert.equal(harness({path:unsupported}).context.createFeedHistory({}),null);
+ for(const unsupported of ['/cards/freedom-kids#PRIVATE','/cards/freedom-kids?query=PRIVATE','/cards/other-reader','/cards/godly-play?query=PRIVATE','/cards/godly-play?after=50%3Ax','/cards/village-youth?question=PRIVATE','/cards/village-youth?after=50%3Ax'])assert.equal(harness({path:unsupported}).context.createFeedHistory({}),null);
+});
+test('reconstructed Kids return reopens only the departed native question before measurement without storing prose',async()=>{
+ const path='/cards/freedom-kids#kids-freedom-kids-2',state=saved(path,1);state.fvcFeedRestore.focus={cardId:'kids-reader',href:'/cards/godly-play'};
+ const h=harness({path,state,navigation:'back_forward'}),link=h.link('kids-reader','/cards/godly-play'),disclosure={open:false};link.closest=selector=>selector==='details.kids-question'?disclosure:null;
+ let measured=false;await h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('No reader paging');},measure(){assert(disclosure.open);measured=true;}}).restore();
+ assert(measured);assert.deepEqual(h.focused,['kids-reader']);assert.equal(h.scrolls.at(-1).top,9169);assert.equal(state.fvcFeedRestore.pages,1);assert.deepEqual(Object.keys(state.fvcFeedRestore).sort(),['at','focus','pages','path','version','y']);
+});
+test('a departed native question restores its exact occurrence when an earlier source link shares the destination',async()=>{
+ const path='/cards/freedom-kids',h=harness({path});h.link('kids-reader','/cards/godly-play');const departure=h.link('kids-question-godly-play','/cards/godly-play');
+ departure.closest=selector=>selector==='main a[href]'?departure:selector==='details[data-history-anchor][id]'?h.cards.get('kids-question-godly-play'):selector==='article[id]'?h.cards.get('kids-reader'):null;
+ h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('No reader paging');},measure(){}});h.click(departure);h.emit('pagehide');const state=JSON.parse(JSON.stringify(h.context.history.state));assert.deepEqual(state.fvcFeedRestore.focus,{cardId:'kids-question-godly-play',href:'/cards/godly-play'});
+ const returned=harness({path,state,navigation:'back_forward'});returned.link('kids-reader','/cards/godly-play');const expected=returned.link('kids-question-godly-play','/cards/godly-play'),disclosure={open:false};expected.closest=selector=>selector==='details.kids-question'?disclosure:null;
+ await returned.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('No reader paging');},measure(){assert(disclosure.open);}}).restore();assert.deepEqual(returned.focused,['kids-question-godly-play']);
 });
 test('a marked inquiry restores the exact link occurrence when an earlier link has the same destination',async()=>{
  const path='/cards/village-youth',h=harness({path});h.link('youth-reader','/connect');const ending=h.link('youth-inquiry','/connect');
