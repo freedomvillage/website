@@ -1,0 +1,29 @@
+.github/workflows/content-validation.yml
+  s_e2bf1542692bef::t_b2334a38d87e34 69-79
+dist/content-view.css
+  s_e2bf1542692bef::t_f2d888ff94553c 219,222-226
+docs/VILLAGE-YOUTH.md
+  s_e2bf1542692bef::t_5ca77195a24a62 3,9
+source-manifest.json
+  s_e2bf1542692bef::t_be452bcf597f32 103
+src/content/youth.mjs
+  s_e2bf1542692bef::t_5a37137a87c9bb 13,15
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_4c837940372b22 145-149,225-226,229
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fce3919d8c10bb559be362c0bd54f746000a671d",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
