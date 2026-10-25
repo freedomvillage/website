@@ -38,7 +38,7 @@ const serve=(targetWorker,targetEnv)=>async route=>{
  await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});
 };
 const records=[],browser=await chromium.launch();let activePage=null,activeName='';
-const ready=async page=>{await page.locator('html[data-site-revealed="true"]').waitFor();await page.evaluate(()=>document.fonts.ready);};
+const ready=async page=>{await page.locator('html[data-site-revealed="true"]').waitFor({state:'attached'});await page.evaluate(()=>document.fonts.ready);if(await page.evaluate(()=>Boolean(document.getElementById('site-menu-dialog')?.open)))await page.locator('#drawer-close').waitFor({state:'visible'});else await page.locator('#main').waitFor({state:'visible'});};
 const closed=async page=>page.waitForFunction(()=>document.getElementById('site-menu-dialog').dataset.phase==='closed'&&!document.getElementById('site-menu-dialog').open&&!document.getElementById('main').inert&&!document.getElementById('prompt-composer').inert&&document.body.style.position!=='fixed'&&document.getElementById('menu-toggle').getAttribute('aria-expanded')==='false');
 const opened=async page=>page.waitForFunction(()=>document.getElementById('site-menu-dialog').dataset.phase==='open'&&document.getElementById('site-menu-dialog').open&&document.getElementById('main').inert&&document.getElementById('prompt-composer').inert&&document.body.style.position==='fixed'&&Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.getElementById('site-menu-dialog')).transform).m41)<.5);
 const startSampling=page=>page.evaluate(()=>{
