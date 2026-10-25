@@ -15,18 +15,21 @@ permissions:
 jobs:
   route-and-air-regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     env:
       REVIEW_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
       - name: Fetch exact public review commit without credentials
         shell: bash
         run: |
           [[ "$REVIEW_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$BASE_SHA" =~ ^[0-9a-f]{40}$ ]]
           git init --quiet .
           git remote add origin https://github.com/freedomvillage/website.git
-          git fetch --depth=1 origin "$REVIEW_SHA"
-          git checkout --detach FETCH_HEAD
+          git fetch --depth=1 origin "$REVIEW_SHA" "$BASE_SHA"
+          git checkout --detach "$REVIEW_SHA"
+          git worktree add --detach "$RUNNER_TEMP/fvc-before" "$BASE_SHA"
       - name: Verify server content and preserved air behavior
         run: |
           node --version
@@ -36,6 +39,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/fvc-render" --no-save --ignore-scripts playwright@1.64.1
           "$RUNNER_TEMP/fvc-render/node_modules/.bin/playwright" install chromium
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/fvc-render/node_modules/playwright/index.mjs" node tests/intent-rendered.mjs
+          CONTENT_BASELINE_DIR="$RUNNER_TEMP/fvc-before" PLAYWRIGHT_MODULE="$RUNNER_TEMP/fvc-render/node_modules/playwright/index.mjs" node tests/menu-rendered.mjs
       - name: Save rendered review evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -76,4 +80,11 @@ jobs:
             rendered-review/*-families-home-full.png
             rendered-review/*-families-category-full.png
             rendered-review/journey-recordings/*.webm
+          if-no-files-found: ignore
+      - name: Save synthetic menu behavior review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: menu-review
+          path: menu-review/
           if-no-files-found: ignore

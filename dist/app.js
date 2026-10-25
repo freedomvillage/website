@@ -1,14 +1,10 @@
 const categories=[['all','All']];
 const items=[];
-const filters=document.querySelector('#filters'),grid=document.querySelector('#grid'),sidebar=document.querySelector('#sidebar'),toggle=document.querySelector('#menu-toggle'),scrim=document.querySelector('#scrim'),collection=document.querySelector('#collection'),detail=document.querySelector('#detail');
+const filters=document.querySelector('#filters'),grid=document.querySelector('#grid'),collection=document.querySelector('#collection'),detail=document.querySelector('#detail');
 let current='all',lastCard=null;const esc=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-function closeMenu(){document.getElementById('prompt-composer')?.removeAttribute('inert');sidebar.classList.remove('open');toggle.setAttribute('aria-expanded','false');scrim.hidden=true;document.body.style.overflow='';if(window.innerWidth<=700)sidebar.inert=true;document.querySelector('main').inert=false;document.querySelector('.mobile-bar').inert=false;}
-function openMenu(){document.getElementById('prompt-composer')?.setAttribute('inert','');sidebar.inert=false;sidebar.classList.add('open');toggle.setAttribute('aria-expanded','true');scrim.hidden=false;document.body.style.overflow='hidden';document.querySelector('main').inert=true;document.querySelector('.mobile-bar').inert=true;sidebar.querySelector('a').focus();}
-toggle.onclick=openMenu;document.querySelector('#drawer-close').onclick=()=>{closeMenu();toggle.focus()};scrim.onclick=()=>{closeMenu();toggle.focus()};
-document.addEventListener('keydown',e=>{if(!sidebar.classList.contains('open'))return;if(e.key==='Escape'){closeMenu();toggle.focus()}if(e.key==='Tab'){const focusable=[...sidebar.querySelectorAll('a,button')];let first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
 function sizeCards(){for(const card of grid.children){card.style.gridRowEnd=`span ${Math.ceil((card.getBoundingClientRect().height+18)/4)}`}}
-function render(){closeMenu();globalThis.contentView.render();}
-filters.addEventListener('click',()=>{if(window.innerWidth<=700){closeMenu();document.querySelector('#main').focus({preventScroll:true})}});window.addEventListener('hashchange',render);window.addEventListener('resize',()=>{if(window.innerWidth>700){closeMenu();sidebar.inert=false}else if(!sidebar.classList.contains('open'))sidebar.inert=true;sizeCards()});new ResizeObserver(sizeCards).observe(grid);render();
+function render(){globalThis.contentView.render();}
+window.addEventListener('hashchange',render);window.addEventListener('resize',sizeCards);new ResizeObserver(sizeCards).observe(grid);render();
 
 // Scene keyframes: separate authored seasonal day/dusk/night paintings, no global tint.
 const sceneTime=document.getElementById('scene-time'),sceneSeason=document.getElementById('scene-season');
