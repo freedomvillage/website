@@ -1,0 +1,19 @@
+docs/FAMILIES-JOURNEY.md
+  s_e2bf1542692bef::t_03482263785abb 4-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6dde4a30201df4f8cf139a6a6ef3f8a5a77b111b",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
