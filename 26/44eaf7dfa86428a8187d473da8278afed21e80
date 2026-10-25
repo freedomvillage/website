@@ -1,0 +1,29 @@
+dist/gathering-paper.svg
+  s_e2bf1542692bef::t_2025daa28f8ab3 1
+dist/kids-connect.svg
+  s_e2bf1542692bef::t_0a27b3fc0bd1d3 1
+dist/kids-gather.svg
+  s_e2bf1542692bef::t_60569570b2e729 1
+dist/kids-unfold.svg
+  s_e2bf1542692bef::t_101b691573ddf5 1
+source-manifest.json
+  s_e2bf1542692bef::t_db4fd7e718575f 110-113
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_81aafc7690bc9e 103,107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2644eaf7dfa86428a8187d473da8278afed21e80",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
