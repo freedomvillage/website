@@ -9,7 +9,7 @@ canonical actions, continuation membership and detail route remain. Secondary
 actions use a native disclosure. Kids leads; Junior/Youth retain their identities.
 
 Kids has three distinct spreads: unfolding split composition, connected horizontal
-composition and gathered dark ending. All source paragraphs, facts, sections,
+composition and a home-window silhouette ending. All source paragraphs, facts, sections,
 links, actions and eligible embedded/related records remain in order. Future extra
 sections get complete plain reading blocks. The exact logo-identity guard remains;
 changed media uses the complete generic renderer. No source-content writes.
