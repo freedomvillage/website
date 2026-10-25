@@ -126,7 +126,7 @@ try{
    assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('href')),'/cards/visit-help');
    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
    const departureY=await page.evaluate(()=>scrollY);
-   assert(await contrast(visitLink)>=4.5);await page.locator('.sunday-entry-actions a').last().hover();assert(await contrast(page.locator('.sunday-entry-actions a').last())>=4.5);await page.screenshot({path:resolve(output,name+'-sunday-entry-focus.png')});
+   assert(await contrast(visitLink)>=4.5);await page.screenshot({path:resolve(output,name+'-sunday-entry-focus.png')});
    if(name==='desktop')await page.keyboard.press('Enter');else await activate(visitLink);
    await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/visit-help');
    assert.equal(await page.locator('.arrival-section').count(),3);assert.deepEqual(await page.locator('.arrival-destination .library-facts p').allTextContents(),['Sunday · 2:10 PM','Youngil Church · Yangjae']);
@@ -149,7 +149,7 @@ try{
    await page.locator('.arrival-contact a').last().hover();assert(await contrast(page.locator('.arrival-contact a').last())>=4.5);await page.locator('[aria-label="Venue maps"] a').first().hover();assert(await contrast(page.locator('[aria-label="Venue maps"] a').first())>=4.5);await page.screenshot({path:resolve(output,name+'-visit-dark-full.png'),fullPage:true});
    await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
    await activate(page.locator('.visit-detail > .back'));await page.waitForFunction(y=>location.pathname==='/'&&Math.abs(scrollY-y)<3&&document.activeElement?.getAttribute('href')==='/cards/visit-help',departureY);
-   await page.screenshot({path:resolve(output,name+'-sunday-return.png')});assert.equal(providerCalls,0);
+   await page.screenshot({path:resolve(output,name+'-sunday-return.png')});await page.locator('.sunday-entry-actions a').last().focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));await page.locator('.sunday-entry-actions a').last().hover();assert(await contrast(page.locator('.sunday-entry-actions a').last())>=4.5);await page.screenshot({path:resolve(output,name+'-sunday-secondary-hover.png')});assert.equal(providerCalls,0);
    console.log(JSON.stringify({viewport:name,sundayJourney:'passed',entryInput:name==='mobile'?'emulated-touch':name==='desktop'?'keyboard':'pointer',keyboardMapParkingContactOrder:true,backScrollRestored:true,backFocusRestored:true,providerCallsBeforeSubmit:providerCalls,reducedMotion:'reduce',recording:(await page.video().path()).split('/').at(-1),startSeconds,endSeconds:Number(((performance.now()-recordingStarted)/1000).toFixed(2))}));
    if(name==='mobile'){
     const noJs=await browser.newContext({viewport:{width,height},javaScriptEnabled:false});await noJs.route('**/*',serve);const plain=await noJs.newPage();await plain.goto(origin);await plain.locator('.sunday-entry-actions a[href="/cards/visit-help"]').click();assert.equal(new URL(plain.url()).pathname,'/cards/visit-help');assert.equal(await plain.locator('.arrival-section').count(),3);assert.equal(await plain.locator('.arrival-contact a').count(),2);await plain.screenshot({path:resolve(output,'mobile-visit-no-js-full.png'),fullPage:true});await noJs.close();
