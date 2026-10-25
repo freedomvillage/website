@@ -1,0 +1,27 @@
+.github/workflows/content-validation.yml
+  s_e2bf1542692bef::t_03890f29957c1c 56-68
+dist/content-view.css
+  s_e2bf1542692bef::t_46ca2876136e49 209-211,213-217
+source-manifest.json
+  s_e2bf1542692bef::t_9a1e9cdb1dc47e 103
+src/content/families.mjs
+  s_e2bf1542692bef::t_f00a1550724e75 29,36,43
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_f99aa61332f8e3 161-167,192-195
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "33e6f6725e9be1d37af381abc9827d7a95cd8943",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
