@@ -37,3 +37,28 @@ and media remain a separate read-only verification after protected deployment.
 
 This is a scoped source-backed increment, not selection or transplantation of the
 private R8 package and not a claim that the full site design contract is complete.
+
+
+## Contextual collection hierarchy
+
+The Families collection presents the currently eligible page with family
+introduction/ministry records first, other family resources in their existing
+relative order, and Sunday/arrival information last. Appended pages merge using
+server presentation metadata without moving existing nodes or losing focus. Sunday retains its source
+image and all direct actions in a supporting column. Text takes intrinsic height
+beneath its image/caption, including narrow two-column layouts. The family gateway gains a
+quiet reading surface; its original subject accents and varied ministry cards
+remain. Home keeps the generous Sunday scene, including on mobile.
+
+This is presentation of the current page, not a new catalog or model ranking.
+Every supplied eligible record remains present once. API membership, source
+priority values, cursor selection and pagination are unchanged; native continuation pages are
+curated from their own eligible records, while appended pages preserve the
+combined loaded hierarchy. The source array is not mutated. Global
+Jev rendering removes the category context and does not use this display order.
+No facts, source actions, media identity/disclosure guards or data are changed.
+
+Cloud acceptance extends the synthetic Families collection to40 eligible records
+within the same71-record catalog. It checks complete appended membership and
+hierarchy, Back restoration, a native no-JavaScript continuation page, and actual
+720/320px support text fit as well as the desktop/intermediate/mobile journeys.

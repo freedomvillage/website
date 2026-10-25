@@ -187,3 +187,12 @@ html[data-site-revealed="true"] .presentation-teaching.art-entered .craft-teachi
 
 /* Explicit surfaces prevent global navigation colors/spacing leaking into arrival actions. */
 .arrival-contact{display:block}.arrival-links{flex-direction:row}.visit-detail .arrival-links a{color:inherit;margin:0;padding:10px 0;justify-content:flex-start;border-radius:0}.card.sunday-scene-entry .sunday-entry-actions a{color:inherit}.card.sunday-scene-entry .sunday-entry-actions a:first-child{color:#173d7b}
+
+/* Families leads with its ministries; arrival information supports this collection. Home keeps its generous scene. */
+#collection[data-topic="families"] .family-entry{background:var(--paper);padding:24px;border-top:4px solid #d34543}
+#collection[data-topic="families"] .sunday-scene-entry{grid-column:auto}
+#collection[data-topic="families"] .sunday-scene-copy{position:static;width:auto;padding:20px 22px 0}
+#collection[data-topic="families"] .sunday-entry-facts .library-facts{margin-bottom:12px}
+#collection[data-topic="families"] .sunday-entry-facts .library-facts p{font-size:15px!important}
+#collection[data-topic="families"] .sunday-scene-entry h2{font-size:clamp(26px,2.3vw,34px)}
+#collection[data-topic="families"] .sunday-entry-tail{grid-template-columns:minmax(0,1fr);gap:18px;padding:22px}

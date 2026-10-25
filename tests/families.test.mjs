@@ -2,7 +2,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {publicCard} from '../src/content/catalog.mjs';
 import {renderLibraryCard,renderLibraryDetail} from '../src/content/render.mjs';
-import {renderFamilyContext} from '../src/content/families.mjs';
+import {renderFamilyContext,familyCollectionItems} from '../src/content/families.mjs';
 import {familyFixtures} from './fixtures/families.mjs';
 const cards=()=>familyFixtures().map(([id,content])=>publicCard({id,content_json:JSON.stringify(content)}));
 test('family gateway links to the category and preserves canonical actions; category context jumps only to present eligible records',()=>{
@@ -23,4 +23,10 @@ test('authored output escapes source text, never spreads private fields and keep
  const all=cards(),kids=all.find(c=>c.id==='freedom-kids');kids.title='<script>BAD()</script>';kids.sections[0].paragraphs=['<img src=x onerror=BAD()>'];kids.editorial='PRIVATE_SENTINEL';
  const html=renderLibraryDetail(kids)+renderLibraryCard(kids,'embedded',3);assert(!html.includes('<script>BAD()'));assert(!html.includes('<img src=x'));assert(!html.includes('PRIVATE_SENTINEL'));assert(html.includes('&lt;script&gt;'));assert(html.includes('id="embedded-card-freedom-kids"'));
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size);
+});
+
+test('Families presentation leads with current ministries and keeps arrival supporting without changing membership, source order or other contexts',()=>{
+ const items=[{id:'sunday-gatherings'},{id:'visit-help'},{id:'village-youth'},{id:'other-family-a'},{id:'freedom-kids'},{id:'families-growing-together'},{id:'junior-village'},{id:'other-family-b'}],original=items.map(c=>c.id);
+ assert.deepEqual(familyCollectionItems({topic:'families',items}).map(c=>c.id),['families-growing-together','freedom-kids','junior-village','village-youth','other-family-a','other-family-b','sunday-gatherings','visit-help']);assert.deepEqual(items.map(c=>c.id),original);assert.equal(familyCollectionItems({topic:'',items}),items);assert.equal(familyCollectionItems({topic:'community',items}),items);
+ const nextPage=items.filter(c=>['other-family-a','visit-help'].includes(c.id));assert.deepEqual(familyCollectionItems({topic:'families',items:nextPage}).map(c=>c.id),['other-family-a','visit-help']);assert.equal(familyCollectionItems({topic:'families',items:[]}).length,0);
 });

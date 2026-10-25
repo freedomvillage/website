@@ -3,6 +3,14 @@ const KIDS_SOURCE='https://cdn.prod.website-files.com/60e0035471e8115799a8640b/6
 const kids=c=>c.id==='freedom-kids'&&c.media?.kind==='brand'&&c.media.src===KIDS_SOURCE&&c.sections?.length;
 const family=c=>c.id==='families-growing-together'&&c.sections?.length&&c.actions.some(a=>a.targetId==='freedom-kids');
 const children=['freedom-kids','junior-village','village-youth'];
+// Presentation metadata merges appended pages without changing canonical catalog cursors or Jev order.
+export function familyCollectionPriority(c){
+ const lead=['families-growing-together',...children],support=['sunday-gatherings','visit-help'];
+ return lead.includes(c.id)?lead.indexOf(c.id):support.includes(c.id)?100+support.indexOf(c.id):10;
+}
+export function familyCollectionItems(catalog){
+ return catalog.topic==='families'?[...catalog.items].sort((a,b)=>familyCollectionPriority(a)-familyCollectionPriority(b)):catalog.items;
+}
 const logo='<img class="kids-source-mark" src="/freedom-kids-source.png" width="398" height="216" alt="" loading="lazy" decoding="async">';
 function action(a,{escape,cardPath}){return `<a href="${escape(a.targetId?cardPath({id:a.targetId}):a.href)}"${!a.targetId&&a.href.startsWith('https:')?' target="_blank" rel="noopener noreferrer"':''}>${escape(a.label)} <span aria-hidden="true">↗</span></a>`;}
 export function renderFamilyContext(catalog,escape,path='/topics/families'){
