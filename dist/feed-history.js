@@ -5,15 +5,15 @@
  const number=(n,max)=>Number.isFinite(n)&&n>=0&&n<=max;
  function sourcePath(value){
   try{
-   const u=new URL(value,root.location.href),listing=u.pathname==='/'||/^\/topics\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),study=/^\/studies\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname);
-   if(u.origin!==root.location.origin||u.username||u.password||(!listing&&!study)||u.href.length>512)return null;
+   const u=new URL(value,root.location.href),listing=u.pathname==='/'||/^\/topics\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),study=/^\/studies\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname),reader=u.pathname==='/cards/godly-play';
+   if(u.origin!==root.location.origin||u.username||u.password||(!listing&&!study&&!reader)||u.href.length>512)return null;
    if(u.search){const after=u.searchParams.get('after')||'',m=/^(\d{1,3}):[a-z][a-z0-9-]{0,79}$/.exec(after);if(!listing||[...u.searchParams.keys()].some(k=>k!=='after')||u.searchParams.getAll('after').length!==1||!m||Number(m[1])>100)return null;}
    if(u.hash&&!/^#(?:main|study-[a-z0-9_-]{1,120}|card-[a-z][a-z0-9-]{0,79})$/.test(u.hash))return null;
    return u.pathname+u.search+u.hash;
   }catch{return null;}
  }
  const destination=value=>{try{const u=new URL(value,root.location.href);return u.origin===root.location.origin&&!u.username&&!u.password&&!u.search&&!u.hash&&(/^\/(?:cards|events|studies)\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname)||['/connect','/give','/prayer','/resources'].includes(u.pathname))?u.pathname:null;}catch{return null;}};
- function valid(value,path){return value?.version===1&&value.path===path&&Number.isInteger(value.pages)&&value.pages>=1&&value.pages<=MAX_PAGES&&number(value.y,10000000)&&number(Date.now()-value.at,TTL)&&
+ function valid(value,path){return value?.version===1&&value.path===path&&Number.isInteger(value.pages)&&value.pages>=1&&value.pages<=MAX_PAGES&&(!path.startsWith('/cards/')||value.pages===1)&&number(value.y,10000000)&&number(Date.now()-value.at,TTL)&&
   (value.focus===null||(typeof value.focus?.cardId==='string'&&/^[a-zA-Z0-9_-]{1,180}$/.test(value.focus.cardId)&&destination(value.focus.href)===value.focus.href));}
  root.createFeedHistory=function({pageCount,isIntent,loadMore,measure}){
   const path=sourcePath(root.location.href);if(!path||!root.history?.replaceState)return null;
