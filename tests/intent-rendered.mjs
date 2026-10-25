@@ -25,6 +25,14 @@ const completeFamilies=async page=>{
  await page.locator('html[data-site-revealed="true"]').waitFor();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
  await page.waitForFunction(()=>document.querySelectorAll('#grid > article.card').length===40);assert.deepEqual((await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id))).sort(),expectedFamilyIds);
 };
+const youthEntryClearance=async(page,phase)=>{
+ const bounds=await page.evaluate(()=>{
+  const card=document.getElementById('card-village-youth'),content=card.querySelector('a[href="/cards/village-youth"]').getBoundingClientRect();
+  const next=[...document.querySelectorAll('#grid > article.card')].filter(e=>e!==card).map(e=>({id:e.id,r:e.getBoundingClientRect()})).filter(({r})=>r.top>content.top+1&&r.left<content.right-1&&r.right>content.left+1).sort((a,b)=>a.r.top-b.r.top)[0];
+  return {contentBottom:content.bottom,nextTop:next?.r.top,nextId:next?.id};
+ });
+ console.log(JSON.stringify({viewport:page.viewportSize().width,youthEntryClearance:phase,...bounds}));assert(bounds.nextTop>=bounds.contentBottom-.5,'the next same-column card clears the complete Youth entry and its padding');
+};
 const browser=await chromium.launch();
 try{
  for(const [name,width,height] of [['desktop',1440,1000],['intermediate',900,900],['breakpoint',720,900],['mobile',390,844],['narrow',320,800]]){
@@ -62,7 +70,7 @@ try{
   const activate=locator=>name==='mobile'?locator.tap():locator.click();
   const serve=async route=>{
    const r=route.request(),url=new URL(r.url());
-   if(url.href==='https://cdn.prod.website-files.com/60e0035471e8115799a8640b/64e0f1446e4ab5692426f843_Village-Youth-Logo.svg')return route.fulfill({status:200,contentType:'image/svg+xml',body:await readFile(resolve('dist/village-youth-source.svg'))});
+   if(url.href==='https://cdn.prod.website-files.com/60e0035471e8115799a8640b/64e0f1446e4ab5692426f843_Village-Youth-Logo.svg'){await new Promise(resolve=>setTimeout(resolve,250));return route.fulfill({status:200,contentType:'image/svg+xml',body:await readFile(resolve('dist/village-youth-source.svg'))});}
    if(url.origin!==origin)return route.abort();
    if(failPage&&url.pathname==='/api/content/intent'&&url.searchParams.has('after')){failPage=false;return route.fulfill({status:503,contentType:'application/json',body:'{"status":"unavailable"}'});}
    const headers=new Headers(r.headers());headers.set('Cf-Access-Jwt-Assertion','SYNTHETIC_FIXTURE');if(r.method()==='POST')headers.set('Origin',origin);
@@ -157,7 +165,7 @@ try{
   }
   {
    const startSeconds=Number(((performance.now()-recordingStarted)/1000).toFixed(2));await completeFamilies(page);
-   const entry=page.locator('#card-village-youth a[href="/cards/village-youth"]');await entry.focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const departureY=await page.evaluate(()=>scrollY);assert.equal(await page.locator('#card-village-youth .library-brand-art img').evaluate(e=>e.complete&&e.naturalWidth>0&&e.naturalWidth===e.naturalHeight),true);await page.screenshot({path:resolve(output,name+'-youth-entry-preserved.png')});
+   const entry=page.locator('#card-village-youth a[href="/cards/village-youth"]');await entry.focus();await page.waitForFunction(()=>{const e=document.querySelector('#card-village-youth .library-brand-art img');return e?.complete&&e.naturalWidth>0&&e.naturalWidth===e.naturalHeight;});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const departureY=await page.evaluate(()=>scrollY);await youthEntryClearance(page,'initial-after-delayed-image');await page.screenshot({path:resolve(output,name+'-youth-entry-preserved.png')});
    if(name==='desktop')await page.keyboard.press('Enter');else await activate(entry);await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/village-youth');assert.equal(await page.locator('.youth-detail').count(),1);
    const source=familyFixtures().find(([id])=>id==='village-youth')[1];assert.deepEqual(await page.locator('.youth-reading p,.youth-inquiry p').allTextContents(),source.detail);assert.deepEqual(await page.locator('.youth-hero .library-facts p').allTextContents(),source.facts);assert.equal(await page.locator('.youth-identity img').evaluate(e=>e.complete&&e.naturalWidth>0&&e.naturalWidth===e.naturalHeight&&getComputedStyle(e).objectFit==='contain'),true);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    assert.deepEqual(await page.locator('.youth-detail nav a').evaluateAll(a=>a.map(e=>e.getAttribute('href'))),['/connect','/connect']);assert.deepEqual(await page.locator('#detail .related-grid > article').evaluateAll(a=>a.map(e=>e.id)),['card-children-in-worship','card-serve']);
@@ -173,7 +181,7 @@ try{
    if(name==='mobile'){
     await page.emulateMedia({reducedMotion:'no-preference'});await page.locator('.youth-hero').scrollIntoViewIfNeeded();const motionStart=Number(((performance.now()-recordingStarted)/1000).toFixed(2));await page.waitForFunction(()=>getComputedStyle(document.querySelector('.youth-identity')).animationName==='brand-drift');await page.screenshot({path:resolve(output,'mobile-youth-motion-start.png')});await page.waitForTimeout(4300);await page.screenshot({path:resolve(output,'mobile-youth-motion-end.png')});assert.equal(await page.locator('.youth-identity').evaluate(e=>getComputedStyle(e).animationIterationCount),'1');console.log(JSON.stringify({viewport:name,youthMotion:'existing-finite-brand-gradient',recording:(await page.video().path()).split('/').at(-1),startSeconds:motionStart,endSeconds:Number(((performance.now()-recordingStarted)/1000).toFixed(2))}));await page.emulateMedia({reducedMotion:'reduce'});
    }
-   await activate(page.locator('.youth-detail > .back'));await page.waitForFunction(y=>location.pathname==='/topics/families'&&document.querySelectorAll('#grid > article.card').length===40&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('#card-village-youth'),departureY);await page.screenshot({path:resolve(output,name+'-youth-families-return.png')});assert.equal(providerCalls,0);
+   await activate(page.locator('.youth-detail > .back'));await page.waitForFunction(y=>location.pathname==='/topics/families'&&document.querySelectorAll('#grid > article.card').length===40&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('#card-village-youth'),departureY);await page.waitForFunction(()=>{const e=document.querySelector('#card-village-youth .library-brand-art img');return e?.complete&&e.naturalWidth>0;});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));await youthEntryClearance(page,'back-after-delayed-image');await page.screenshot({path:resolve(output,name+'-youth-families-return.png')});assert.equal(providerCalls,0);
    console.log(JSON.stringify({viewport:name,youthJourney:'passed',sourceParagraphsRetained:2,sourceInquiry:'/connect',backFocusAndScrollRestored:true,restoredLoadedRecords:40,input:name==='mobile'?'emulated-touch':name==='desktop'?'keyboard':'pointer',providerCallsBeforeSubmit:providerCalls,reducedMotion:'reduce',recording:(await page.video().path()).split('/').at(-1),startSeconds,endSeconds:Number(((performance.now()-recordingStarted)/1000).toFixed(2))}));
    if(name==='mobile'){
     const noJs=await browser.newContext({viewport:{width,height},javaScriptEnabled:false});await noJs.route('**/*',serve);const plain=await noJs.newPage();await plain.goto(origin+'/cards/village-youth');assert.deepEqual(await plain.locator('.youth-reading p,.youth-inquiry p').allTextContents(),source.detail);assert.equal(await plain.locator('.youth-inquiry a').getAttribute('href'),'/connect');await plain.screenshot({path:resolve(output,'mobile-youth-no-js-full.png'),fullPage:true});await plain.locator('.youth-inquiry a').click();assert.equal(new URL(plain.url()).pathname,'/connect');await noJs.close();

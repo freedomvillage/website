@@ -1,6 +1,6 @@
 # Village Youth detail
 
-The existing brand-led entry remains unchanged. Its detail carries that identity into a larger source-artwork introduction, followed by the complete explanation and a clear inquiry ending. The same canonical inquiry action is available near both ends so the artwork does not bury a practical route. At narrow widths, the title, facts, summary and inquiry precede the artwork.
+The existing brand-led entry composition is retained. Its known square source reserves intrinsic dimensions before lazy loading, preventing the following masonry card from overlapping its summary. The detail carries that identity into a larger source-artwork introduction, followed by the complete explanation and a clear inquiry ending. The same canonical inquiry action is available near both ends so the artwork does not bury a practical route. At narrow widths, the title, facts, summary and inquiry precede the artwork.
 
 The composition is bound to `village-youth`, its ministry template, the exact existing Youth brand URL, body prose, actions and absence of authored sections. All facts, summary, body paragraphs, actions and eligible related records are retained. Changed identity or new source sections use the complete generic renderer, preserving future sections, links and embedded content. Source records, relationships, selection, expiry/publication guards and Jev ranking are unchanged.
 

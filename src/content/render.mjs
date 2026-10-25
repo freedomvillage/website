@@ -1,7 +1,7 @@
 import {renderCraftCard,renderCraftArt} from './card-craft.mjs';
 import {renderFamilyCard,renderKidsDetail,renderGodlyDetail} from './families.mjs';
 import {renderSundayCard,renderVisitDetail} from './sunday.mjs';
-import {renderYouthDetail} from './youth.mjs';
+import {renderYouthDetail,youthBrandAttributes} from './youth.mjs';
 // Structured source content only: no stored HTML, script or arbitrary styling is rendered.
 export const escape=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
 export const CORE_PAGES=Object.freeze({'/connect':'connect-card','/give':'giving-overview','/prayer':'prayer-and-praise','/resources':'church-resources'});
@@ -18,7 +18,7 @@ function genericArt(c,detail=false){
   const m=c.media,label={synthetic:'Concept artwork · synthetic portraits',historical:'Archive photograph','private-draft':'Private image draft','source-artwork':'Source artwork'}[m.disclosure];
   return `<figure class="library-image"><div class="library-image-frame" style="aspect-ratio:${m.ratio.replace(':','/')}"><img src="${escape(m.src)}" alt="${escape(m.alt)}" width="${m.width}" height="${m.height}" loading="lazy" decoding="async" style="object-fit:${m.fit};object-position:${m.focalPoint.x}% ${m.focalPoint.y}%"></div><figcaption>${escape(label)} · ${escape(m.caption)}</figcaption></figure>`;
  }
- if(c.media?.kind==='brand')return `<div class="library-brand-art"><img src="${escape(c.media.src)}" alt="${escape(c.media.alt)}" loading="lazy" decoding="async"></div>`;
+ if(c.media?.kind==='brand')return `<div class="library-brand-art"><img${youthBrandAttributes(c)} src="${escape(c.media.src)}" alt="${escape(c.media.alt)}" loading="lazy" decoding="async"></div>`;
  if(c.media?.kind==='youtube')return `<div class="library-sermon-art" aria-hidden="true"><span>▶</span>${motif('rings')}</div>`;
  return motif(c.design.motif);
 }

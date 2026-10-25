@@ -1,6 +1,9 @@
 // Subject-bound composition; content and inquiry destinations remain canonical.
 const SOURCE='https://cdn.prod.website-files.com/60e0035471e8115799a8640b/64e0f1446e4ab5692426f843_Village-Youth-Logo.svg';
-const matches=c=>c.id==='village-youth'&&c.template==='ministry'&&c.media?.kind==='brand'&&c.media.src===SOURCE&&c.detail.filter(p=>p!==c.summary).length>=2&&c.actions.length&&!c.sections?.length;
+const brand=c=>c.id==='village-youth'&&c.media?.kind==='brand'&&c.media.src===SOURCE;
+// Reserve the known square source before a lazy load changes masonry geometry.
+export const youthBrandAttributes=c=>brand(c)?' class="youth-source-mark" width="2200" height="2200"':'';
+const matches=c=>brand(c)&&c.template==='ministry'&&c.detail.filter(p=>p!==c.summary).length>=2&&c.actions.length&&!c.sections?.length;
 export function renderYouthDetail(c,related,h){
  if(!matches(c))return '';
  const {escape,renderCard,actionAttrs}=h,prose=c.detail.filter(p=>p!==c.summary);
