@@ -2,7 +2,7 @@
 
 Frozen baseline: reviewed head09ba890dc4584728dde303b37f868c8e167c29ba (PR44).
 Existing content is unchanged. Home's gateway combines the intact authentic Kids
-mark and original abstract paper composition. Families integrates the existing
+mark and original editorial paper composition. Families integrates the existing
 summary, context paragraph and current-page ministry jumps into the canonical
 family article rather than repeating introductions outside masonry. Its ID,
 canonical actions, continuation membership and detail route remain. Secondary
@@ -14,9 +14,12 @@ links, actions and eligible embedded/related records remain in order. Future ext
 sections get complete plain reading blocks. The exact logo-identity guard remains;
 changed media uses the complete generic renderer. No source-content writes.
 
-kids-unfold.svg, kids-connect.svg and kids-gather.svg are original decorative
-abstract graphics, not photographs, reference artwork or claims about facilities
-or outcomes. Explicit dimensions and no external dependencies keep loading bounded.
+The original broad Families illustration joins different hands around a shared
+story path. Kids uses distinct book/discovery, collaborative learning and home
+reading illustrations. They are generated editorial artwork with no reference or
+private assets, not documentary photographs or claims about people/facilities.
+Only the actual Kids module retains prominent Kids branding. WebP encoding
+retains native dimensions/transparency; provenance and hashes are in the manifest.
 Authentic Kids logo bytes are unchanged: SHA256
 81183de937be8a441711f8e50cf001b0e5202002770782784e5f6efc37a12893.
 
