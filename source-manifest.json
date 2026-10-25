@@ -107,10 +107,10 @@
     "dist/feed-history.js": "6be40560a33ac39badcf0cd1a10ea76cf7dda3735fe02bbabdab6fbf6218e49c",
     "dist/freedom-kids-source.png": "81183de937be8a441711f8e50cf001b0e5202002770782784e5f6efc37a12893",
     "dist/village-youth-source.svg": "80e06d9e4447e23f6832c218c6e7e1ef4f011177968ea56bac865cbb75500e73",
-    "dist/kids-unfold.svg": "c86258addd3b319f1a7ee039649a654ad91082adfbc90fb515f9dbcf6a9177e6",
-    "dist/kids-connect.svg": "d03c78fc246f45a6783046c548f9b132f7ce5fb4ae0a694f2670993e963962ce",
-    "dist/kids-gather.svg": "ee5bc95aaadb72e4ce969d8133207d01ec221f8f57d0db3d89a59238fed441f9",
-    "dist/gathering-paper.svg": "65fa0ffea49246d6385845f129032ff6e10bf0cd22a4f6b19fe652809f1b30f1"
+    "dist/kids-unfold.svg": "0a58bc0e2e81898980153ba342776875ac59e42d01fd6f6d42edb34747d2d7e2",
+    "dist/kids-connect.svg": "672998f9d386fdc54f5de21f9eeeda2115d7005add2a219f13b976765a1c3692",
+    "dist/kids-gather.svg": "166365329081c0dae311397ff5e94c95f26cccd664073872d52431d495ae3a61",
+    "dist/gathering-paper.svg": "de682854d7ca150cdd569e6bc363d779ca04375232f589e1c5fe8bc6b58fc5ba"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
   "adaptation": "Shared night-only air-quality cache and one-hour observation limit, reconciled with approved UI runtime and artwork overlays; original paintings unchanged.",
