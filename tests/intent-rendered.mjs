@@ -140,8 +140,8 @@ try{
    await activate(page.locator('.godly-detail > .back'));await page.waitForFunction(y=>location.pathname==='/topics/families'&&document.querySelectorAll('#grid > article.card').length===40&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('#card-godly-play'),departureY);await page.screenshot({path:resolve(output,name+'-godly-families-return.png')});assert.equal(providerCalls,0);
    console.log(JSON.stringify({viewport:name,godlyJourney:'passed',sourceParagraphsRetained:2,parentRoute:'/cards/freedom-kids',input:name==='mobile'?'emulated-touch':name==='desktop'?'keyboard':'pointer',backFocusAndScrollRestored:true,restoredLoadedRecords:40,reducedMotion:'reduce',providerCallsBeforeSubmit:providerCalls,recording:(await page.video().path()).split('/').at(-1),startSeconds,endSeconds:Number(((performance.now()-recordingStarted)/1000).toFixed(2))}));
    if(name==='mobile'){
-    for(const unavailable of ['held','expired']){
-     if(unavailable==='held')db.prepare("UPDATE content_cards SET status='held' WHERE id='freedom-kids'").run();else db.prepare("UPDATE content_cards SET status='draft',expires_at='2026-10-24T00:00:00Z' WHERE id='freedom-kids'").run();
+    for(const unavailable of ['held','private-hold','expired']){
+     if(unavailable==='held')db.prepare("UPDATE content_cards SET status='held' WHERE id='freedom-kids'").run();else if(unavailable==='private-hold')db.prepare("UPDATE content_cards SET status='draft',content_json=json_set(content_json,'$.hold',json('true')) WHERE id='freedom-kids'").run();else db.prepare("UPDATE content_cards SET content_json=json_remove(content_json,'$.hold'),expires_at='2026-10-24T00:00:00Z' WHERE id='freedom-kids'").run();
      await page.goto(origin+'/cards/godly-play');await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(await page.locator('.godly-parent').count(),0);assert.equal(await page.locator('.godly-reading p').count(),2);
     }
     await page.screenshot({path:resolve(output,'mobile-godly-ineligible-parent.png'),fullPage:true});db.prepare("UPDATE content_cards SET status='draft',expires_at=NULL WHERE id='freedom-kids'").run();
