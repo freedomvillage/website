@@ -1,8 +1,8 @@
 # Families visual journey
 
 Frozen baseline: reviewed head09ba890dc4584728dde303b37f868c8e167c29ba (PR44).
-Existing content is unchanged. Home's gateway combines the intact authentic Kids
-mark and original editorial paper composition. Families integrates the existing
+Existing content is unchanged. Home's gateway uses its own broader shared-family
+story illustration; prominent authentic Kids branding belongs to the Kids module. Families integrates the existing
 summary, context paragraph and current-page ministry jumps into the canonical
 family article rather than repeating introductions outside masonry. Its ID,
 canonical actions, continuation membership and detail route remain. Secondary
