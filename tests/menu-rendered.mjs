@@ -37,7 +37,7 @@ const serve=(targetWorker,targetEnv)=>async route=>{
  const response=await targetWorker.fetch(new Request(request.url(),{method:request.method(),headers,...(request.postData()?{body:request.postData()}: {})}),targetEnv);
  await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});
 };
-const records=[],browser=await chromium.launch();
+const records=[],browser=await chromium.launch();let activePage=null,activeName='';
 const ready=async page=>{await page.locator('html[data-site-revealed="true"]').waitFor();await page.evaluate(()=>document.fonts.ready);};
 const closed=async page=>page.waitForFunction(()=>document.getElementById('site-menu-dialog').dataset.phase==='closed'&&!document.getElementById('site-menu-dialog').open&&!document.getElementById('main').inert&&!document.getElementById('prompt-composer').inert&&document.body.style.position!=='fixed'&&document.getElementById('menu-toggle').getAttribute('aria-expanded')==='false');
 const opened=async page=>page.waitForFunction(()=>document.getElementById('site-menu-dialog').dataset.phase==='open'&&document.getElementById('site-menu-dialog').open&&document.getElementById('main').inert&&document.getElementById('prompt-composer').inert&&document.body.style.position==='fixed'&&Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.getElementById('site-menu-dialog')).transform).m41)<.5);
@@ -50,12 +50,12 @@ try{
  for(const [name,width,height] of [['desktop',1440,1024],['intermediate',900,900],['rail-boundary',701,900],['drawer-boundary',700,900],['mobile',390,844],['narrow',320,800],['short',390,500]]){
   if(['desktop','intermediate','mobile'].includes(name)){
    const before=await browser.newContext({viewport:{width,height},reducedMotion:'reduce'});await before.route('**/*',serve(baselineWorker,baselineEnv));
-   const page=await before.newPage();await page.goto(origin+'/topics/families');await ready(page);await page.screenshot({path:resolve(output,name+'-before-opening.png')});
+   const page=await before.newPage();await page.clock.install({time:new Date('2026-10-25T03:00:00Z')});await page.goto(origin+'/topics/families');await ready(page);await page.screenshot({path:resolve(output,name+'-before-opening.png')});
    if(width<=700)await page.getByRole('button',{name:'Menu',exact:false}).click();await page.locator('#filters a[href="/topics/families"]').focus();await page.screenshot({path:resolve(output,name+'-before-menu-focus.png')});await before.close();
   }
   const context=await browser.newContext({viewport:{width,height},hasTouch:width<=700,reducedMotion:'no-preference',recordVideo:{dir:resolve(output,'recordings'),size:{width,height}}});
   await context.route('**/*',serve(worker,env));
-  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));const started=performance.now();
+  const page=await context.newPage(),errors=[];activePage=page;activeName=name;await page.clock.install({time:new Date('2026-10-25T03:00:00Z')});page.on('pageerror',error=>errors.push(error.message));const started=performance.now();
   await page.goto(origin+'/topics/families');await ready(page);
   assert.equal(await page.locator('#scene-settings').textContent(),'');assert.equal(await page.locator('.composer-socials a').count(),5);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
@@ -63,9 +63,11 @@ try{
   await page.screenshot({path:resolve(output,name+'-opening.png')});
   const menu=page.getByRole('button',{name:'Menu',exact:true});let samples=[];
   if(width<=700){
-   await page.locator('#prompt-text').fill('Synthetic unsent menu draft');await page.mouse.wheel(0,650);await page.waitForTimeout(100);const y=await page.evaluate(()=>scrollY),historyLength=await page.evaluate(()=>history.length),restoration=await page.evaluate(()=>history.scrollRestoration);
+   await page.locator('#prompt-text').fill('Synthetic unsent menu draft');await page.mouse.wheel(0,650);await page.waitForTimeout(100);let y=await page.evaluate(()=>scrollY);const beforeTriggerScroll=y,historyLength=await page.evaluate(()=>history.length),restoration=await page.evaluate(()=>history.scrollRestoration);
+   await page.locator('#menu-toggle').evaluate(el=>el.addEventListener('pointerdown',()=>{window.menuActivationY=scrollY;window.menuActivationBounds=el.getBoundingClientRect().toJSON();},{once:true}));
    await startSampling(page);await menu.tap();await page.waitForTimeout(45);await page.keyboard.press('Escape');await page.keyboard.press('Escape');await closed(page);samples=await stopSampling(page);
-   assert(Math.abs(await page.evaluate(()=>scrollY)-y)<3,'Interrupted opening preserves departure scroll');assert.equal(await page.evaluate(()=>document.activeElement.id),'menu-toggle');
+   const activation=await page.evaluate(()=>({y:window.menuActivationY,bounds:window.menuActivationBounds,after:scrollY}));assert(Number.isFinite(activation.y));y=activation.y;console.log(JSON.stringify({viewport:name,menuActivation:{beforeTriggerScroll,...activation}}));
+   assert(Math.abs(activation.after-y)<3,'Interrupted opening preserves the actual visible-trigger departure scroll');assert.equal(await page.evaluate(()=>document.activeElement.id),'menu-toggle');
    assert(samples.some(frame=>frame.phase==='opening'&&frame.open&&frame.x<0),'Actual intermediate opening frame was sampled');
    await menu.tap();await opened(page);await page.screenshot({path:resolve(output,name+'-menu-open.png')});
    const box=await page.locator('#site-menu-dialog').boundingBox();assert(box&&Math.abs(box.x)<1&&Math.abs(box.width-Math.min(336,width*.9))<1&&box.height===height);
@@ -92,6 +94,10 @@ try{
     await menu.tap();await opened(page);await page.goto(origin+'/connect');await ready(page);await page.goBack();await ready(page);await opened(page);await page.keyboard.press('Escape');await closed(page);
     await menu.tap();await opened(page);await page.evaluate(()=>{closeMenu();openMenu();});await opened(page);await page.keyboard.press('Escape');await closed(page);await page.waitForFunction(value=>history.scrollRestoration===value,restoration);
    }
+   if(name==='mobile'){
+    await page.mouse.wheel(0,650);await page.waitForTimeout(100);const sourceY=await page.evaluate(()=>scrollY);assert(sourceY>100);
+    await page.evaluate(()=>openMenu());await opened(page);await page.keyboard.press('Escape');await closed(page);assert(Math.abs(await page.evaluate(()=>scrollY)-sourceY)<3,'Separately labeled controller-level nonzero-scroll case');console.log(JSON.stringify({viewport:name,controllerNonzeroScroll:{before:sourceY,after:await page.evaluate(()=>scrollY)}}));
+   }
    await page.emulateMedia({reducedMotion:'reduce'});await menu.tap();await opened(page);assert.equal(await page.locator('#site-menu-dialog').evaluate(el=>el.getAnimations().length),0);await page.screenshot({path:resolve(output,name+'-reduced-motion.png')});await page.keyboard.press('Escape');await closed(page);
    await page.emulateMedia({reducedMotion:'no-preference'});await menu.tap();await page.waitForTimeout(40);await page.emulateMedia({reducedMotion:'reduce'});await opened(page);assert.equal(await page.locator('#site-menu-dialog').evaluate(el=>el.getAnimations().length),0);await page.keyboard.press('Escape');await closed(page);
   }else{
@@ -99,7 +105,13 @@ try{
    await page.locator('#filters a[href="/topics/families"]').focus();await page.setViewportSize({width:390,height});await page.waitForFunction(()=>document.documentElement.dataset.menuMode==='drawer');assert.equal(await page.evaluate(()=>document.activeElement.id),'menu-toggle');await page.setViewportSize({width,height});await page.waitForFunction(()=>document.documentElement.dataset.menuMode==='rail');
   }
   await page.locator('#scene-settings').click();await page.waitForFunction(()=>document.getElementById('scene-settings-dialog').open);await page.screenshot({path:resolve(output,name+'-settings.png')});await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.getElementById('scene-settings-dialog').open);await page.locator('#scene-settings').click();await page.getByRole('button',{name:/Advanced scene settings/}).click();await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.getElementById('advanced-settings-dialog').open&&!document.body.classList.contains('settings-open'));assert.equal(await page.evaluate(()=>document.activeElement.id),'scene-settings');
+  await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="dark"]').click();await page.locator('#settings-close').click();
+  if(width<=700){await menu.tap();await opened(page);}await page.locator('#filters a[href="/topics/families"]').focus();await page.screenshot({path:resolve(output,name+'-menu-dark-focus.png')});if(width<=700){await page.keyboard.press('Escape');await closed(page);}
+  await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
   assert.equal(await page.evaluate(()=>document.querySelectorAll('dialog[open]').length),0);assert.equal(providerCalls,0);assert.deepEqual(errors,[]);
   const record={viewport:name,width,height,typography,providerCalls,errors,motionSamples:samples,recording:(await page.video().path()).split('/').at(-1),startSeconds:0,endSeconds:Number(((performance.now()-started)/1000).toFixed(2))};records.push(record);console.log(JSON.stringify({...record,motionSamples:samples.length,menuJourney:'passed'}));await context.close();
  }
-}finally{await writeFile(resolve(output,'menu-behavior.json'),JSON.stringify(records,null,2)+'\n');await browser.close();db.close();}
+}catch(error){
+ if(activePage){await activePage.screenshot({path:resolve(output,activeName+'-failure.png')}).catch(()=>{});const diagnostic=await activePage.evaluate(()=>({url:location.pathname,y:scrollY,phase:document.getElementById('site-menu-dialog')?.dataset.phase,bodyStyle:document.body.getAttribute('style'),historyState:history.state,restoration:history.scrollRestoration,active:document.activeElement?.id,activationY:window.menuActivationY,frames:window.menuFrames})).catch(()=>null);await writeFile(resolve(output,'failure.json'),JSON.stringify(diagnostic,null,2));console.error(JSON.stringify({menuFailure:activeName,diagnostic}));}
+ throw error;
+}finally{for(const context of browser.contexts())await context.close();await writeFile(resolve(output,'menu-behavior.json'),JSON.stringify(records,null,2)+'\n');await browser.close();db.close();}

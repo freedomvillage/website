@@ -1,7 +1,7 @@
 # Clear Windows menu
 
 The existing canonical navigation uses the selected Clear Windows direction:
-Manrope 600, squared rows, a leading selected accent, directional arrows and
+Manrope 600, squared rows, a leading selected accent, theme-aware focus (ink by day, amber at night), directional arrows and
 a 25vw desktop rail (26vw at intermediate widths). Existing category labels,
 clean URLs, Connect/Give, logo, scenery and content are retained. Historical
 prototype route labels and venue copy are not a production source.
@@ -18,7 +18,7 @@ dismissal restore the initiating focus. Crossing the breakpoint transfers focus
 to visible navigation or Menu. Only unmodified same-origin navigation is handled;
 modified/new-tab links retain native behavior.
 
-History adds only a versioned, bounded scroll-position overlay hint to the existing entry. Back dismisses
+History pushes one temporary same-URL entry with a versioned, bounded scroll-position overlay hint. Back dismisses
 the drawer; Forward can reopen it. Repeated close requests cannot traverse twice.
 A route selected in the drawer first consumes its overlay entry, then follows the
 canonical URL. Pagehide cleans up the modal so a native Back return is usable.

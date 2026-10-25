@@ -1,8 +1,9 @@
 /* Clear Windows navigation, adapted to the current canonical routes and themes. */
 @font-face{font-family:Manrope;src:url('manrope-variable.woff2') format('woff2');font-style:normal;font-weight:200 800;font-display:swap}
 :root{--left-gutter:25vw;--menu-focus:#ffca7a;--menu-accent:#e7c9b8}
+html:not([data-light="night"]){--menu-focus:var(--ink);--menu-accent:var(--ink)}
 #sidebar,.mobile-bar,#site-menu-dialog,#scene-settings-dialog,#advanced-settings-dialog{font-family:Manrope,Arial,sans-serif}
-#sidebar{width:var(--left-gutter);padding:38px 32px 28px;border:0;background:transparent;pointer-events:none;align-items:center}
+#sidebar{width:var(--left-gutter);padding:38px 32px 28px;border:0;background:transparent;pointer-events:none;display:block}
 #sidebar .sidebar-inner{width:100%;max-width:280px;max-height:calc(100dvh - 66px);margin:auto;overflow:auto;scrollbar-width:thin;pointer-events:auto;scroll-padding:8px}
 #sidebar .brand{padding:0 0 27px}
 #sidebar #filters{display:flex;flex-direction:column;gap:2px;padding:4px;border-radius:4px;background:color-mix(in srgb,var(--paper) 94%,transparent)}
