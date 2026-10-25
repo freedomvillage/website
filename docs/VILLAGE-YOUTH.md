@@ -1,12 +1,12 @@
 # Village Youth detail
 
-The existing brand-led entry composition is retained. Its known square source reserves intrinsic dimensions before lazy loading, preventing the following masonry card from overlapping its summary. The detail carries that identity into a larger source-artwork introduction, followed by the complete explanation and a clear inquiry ending. The same canonical inquiry action is available near both ends so the artwork does not bury a practical route. At narrow widths, the title, facts, summary and inquiry precede the artwork.
+The existing brand-led masonry card and its square image reservation are retained. The detail unites the authentic gradient, intact mark, large title and complete invitation in one poster-like opening. A connected dark reading section carries the full explanation into a purposeful inquiry ending, with the same canonical action still available near both ends. At narrow widths the complete title, facts, summary and early inquiry remain clear of the generously scaled mark within the same gradient scene. No new copy, illustration, photo or source-data claim is introduced.
 
 The composition is bound to `village-youth`, its ministry template, the exact existing Youth brand URL, body prose, actions and absence of authored sections. All facts, summary, body paragraphs, actions and eligible related records are retained. Changed identity or new source sections use the complete generic renderer, preserving future sections, links and embedded content. Source records, relationships, selection, expiry/publication guards and Jev ranking are unchanged.
 
 The displayed grade remains source guidance. The page adds no meeting time, age policy, leader, availability, check-in promise or named contact. Connect remains an inquiry route, with no enrollment or submission claim.
 
-The bounded history controller supports the exact Youth reader path with one page, like Godly Play. A stable inquiry-section marker distinguishes the ending from an earlier link to the same destination; the existing hint shape remains unchanged. Hints store only path, scroll, focus destination and timestamp. No source copy, question, form draft or response is cached. Other detail paths and reader query URLs remain rejected.
+The bounded history controller supports the exact Youth reader path with one page, alongside Godly Play and Freedom Kids. A stable inquiry-section marker distinguishes the ending from an earlier link to the same destination; the existing hint shape remains unchanged. Hints store only path, scroll, focus destination and timestamp. No source copy, question, form draft or response is cached. Unrelated detail paths and reader query URLs remain rejected.
 
 ## Original public artwork
 
