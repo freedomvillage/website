@@ -1,0 +1,31 @@
+tests/feed-history.test.mjs
+  s_e2bf1542692bef::t_43cb3a7a1fb465 37-43
+docs/GODLY-PLAY.md
+  s_e2bf1542692bef::t_43cb3a7a1fb465 9
+dist/content-view.css
+  s_e2bf1542692bef::t_b9f105788ed86f 205
+dist/feed-history.js
+  s_e2bf1542692bef::t_14c300b5ebe48a 8-9,16
+source-manifest.json
+  s_e2bf1542692bef::t_0220491849c2d6 103,107
+src/content/families.mjs
+  s_e2bf1542692bef::t_cb5c7c2abc5b9c 35
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_5e0cb072ac2788 139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a8de98affd9856d93aefbd825b7bb0d72c900b8f",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
