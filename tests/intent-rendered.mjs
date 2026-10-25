@@ -111,7 +111,13 @@ try{
   const page=await context.newPage(),recordingStarted=performance.now();await page.clock.install({time:new Date(at)});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin);await page.locator('html[data-site-revealed="true"]').waitFor({timeout:30000});
-  assert.equal(await page.locator('#prompt-composer a').count(),0);
+  const socialLinks=page.getByRole('navigation',{name:'Freedom Village links'}).getByRole('link');
+  assert.deepEqual(await socialLinks.evaluateAll(links=>links.map(a=>[a.getAttribute('aria-label'),a.href])),[
+   ['YouTube','https://www.youtube.com/FreedomVillageChurch'],['Instagram','https://www.instagram.com/freedom_village_church/'],['Kakao','https://pf.kakao.com/_nEAVn'],['SoundCloud','https://soundcloud.com/freedomvillage'],['Email Freedom Village','mailto:contact@freedomvillage.church']
+  ]);
+  const actions=await page.locator('.composer-actions').boundingBox();assert(actions);
+  for(const link of await socialLinks.all()){const rect=await link.boundingBox();assert(rect&&rect.width>=44&&rect.height>=44&&rect.x>=0&&rect.x+rect.width<=width);assert(!(rect.x<actions.x+actions.width&&rect.x+rect.width>actions.x&&rect.y<actions.y+actions.height&&rect.y+rect.height>actions.y),'social links and composer actions must not overlap');}
+  assert.equal(await page.locator('#scene-settings').textContent(),'');
   const controlButtons=page.locator('.composer-actions button');
   assert.deepEqual(await controlButtons.evaluateAll(buttons=>buttons.map(b=>[b.id,b.getAttribute('aria-label')])),[['scene-settings','Appearance'],['prompt-submit','Find relevant church content']]);
   for(const button of await controlButtons.all()){const rect=await button.boundingBox();assert(rect&&rect.width>=44&&rect.height>=44&&rect.x>=0&&rect.x+rect.width<=width,'composer control targets remain in the viewport');}
@@ -119,6 +125,9 @@ try{
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.screenshot({path:resolve(output,name+'-browse.png')});
   await page.locator('#prompt-text').focus();await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'YouTube');
+  await page.screenshot({path:resolve(output,name+'-social-focus.png')});
+  for(let linkIndex=0;linkIndex<5;linkIndex++)await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(()=>document.activeElement?.id),'scene-settings');
   await page.keyboard.press('Enter');await page.waitForFunction(()=>document.getElementById('scene-settings-dialog')?.open);await page.screenshot({path:resolve(output,name+'-composer-gear-open.png')});await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.getElementById('scene-settings-dialog')?.open&&document.activeElement?.id==='scene-settings');
   await page.screenshot({path:resolve(output,name+'-composer-gear-focus.png')});
@@ -287,7 +296,7 @@ try{
   }
   await page.locator('#prompt-text').fill('Synthetic review question');await page.locator('#prompt-submit').click();
   await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='24 ranked resources loaded');
-  assert.equal(await page.locator('#prompt-composer a').count(),0);assert((await page.locator('#composer-status').textContent()).includes('ranked for your question'));
+  assert.equal(await page.getByRole('navigation',{name:'Freedom Village links'}).isVisible(),false);assert((await page.locator('#composer-status').textContent()).includes('ranked for your question'));
   assert.equal(await page.locator('.collection-context').count(),0,'category introduction does not leak into global intent results');assert.equal(await page.locator('#collection').getAttribute('data-topic'),null,'Families presentation does not change global ranking layout');
   await page.screenshot({path:resolve(output,name+'-ranked-head.png')});
   const calls=providerCalls;

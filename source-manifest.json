@@ -19,9 +19,10 @@
     "dist/village-winter-v1.png": "9ce4b4285c59e0429164681dbe0e8eca8a2046fe47ade5ef98f9bb4cf192be21",
     "dist/village-fall-night-v1.png": "31080c9d435d4326b00c6963697b190e7360a12f7023a604fabef402d2c93bf7",
     "dist/village-summer-dusk-v1.png": "6588a83c4b766bd02c4e72f0ebcf2959446cd01797904c3bd3a36c39de13d0f4",
-    "dist/style.css": "192f405da142f8d9f0437d4c3f5e1a6da525b6487eef1521b071c7e8d234d7ea",
+    "dist/style.css": "2cc31cf340cad67a444ef520b9cd1de4b890aba5bd3e8e9ea133bec4bda8539a",
     "dist/church-vertical-canva.png": "cf81131703d25be3041e5eb4f800992013ba4f04fb7bc0863367cd9bdbcacb2c",
-    "dist/church-horizontal-canva.png": "811a9fa5aadced22499398a33a46a908634821509388089bb808b39003700c72"
+    "dist/church-horizontal-canva.png": "811a9fa5aadced22499398a33a46a908634821509388089bb808b39003700c72",
+    "dist/social-icons.svg": "03f7b3af5b40ae29876f0ed55fade67767d1d04da55acc93c3ca487958db52d4"
   },
   "originalImport": {
     "sourceCommit": "b7ff6f976e58feb70796ef58c2a277722e6497d8",
