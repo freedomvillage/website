@@ -53,3 +53,16 @@ jobs:
             rendered-review/*-families-kids-entry-*.png
             rendered-review/journey-recordings/*.webm
           if-no-files-found: ignore
+      - name: Save focused Godly editorial review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godly-editorial-review
+          path: |
+            rendered-review/*-godly-*.png
+            rendered-review/*-families-home-full.png
+            rendered-review/*-families-category-full.png
+            rendered-review/*-kids-detail-full.png
+            rendered-review/*-kids-question-open-viewport.png
+            rendered-review/journey-recordings/*.webm
+          if-no-files-found: ignore
