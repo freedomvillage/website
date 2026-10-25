@@ -1,0 +1,31 @@
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_7176f6a2d5f91c 13,55-61,63-72,75
+dist/index.html
+  s_e2bf1542692bef::t_52b9834d3d5096 6
+dist/intent.js
+  s_e2bf1542692bef::t_b1eeba8363eda4 42
+dist/social-icons.svg
+  s_e2bf1542692bef::t_30a7f596073cdf 1-28
+dist/style.css
+  s_e2bf1542692bef::t_d2805e8af7fe6f 171-182
+docs/SOCIAL-FOOTER.md
+  s_e2bf1542692bef::t_9c595bd17ff47a 1-26
+source-manifest.json
+  s_e2bf1542692bef::t_6174effc12a2a0 98,105-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6aa3fffe0ce92904c47f63be65e10d517329a6cd",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
