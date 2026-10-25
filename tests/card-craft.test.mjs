@@ -6,12 +6,11 @@ const media=(id,width,height,disclosure)=>({kind:'image',src:'/media/'+id+'.jpg'
 const teaching=()=>source('johns-gospel',{title:'John’s Gospel',media:media('johns-gospel',1080,1080,'source-artwork'),actions:[{label:'Watch the series',href:'https://www.youtube.com/playlist?list=PLsynthetic1234'},{label:'Listen to the series',href:'https://soundcloud.com/freedomvillage/sets/johns-gospel'}]});
 const visit=()=>source('sunday-gatherings',{facts:['Sunday · 2:10 PM'],actions:[{label:'Ask about visiting',targetId:'visit-help'}]});
 const community=()=>source('missional-families',{title:'Missional Families',media:media('missional-families',1024,769,'private-draft'),design:{theme:'paper',layout:'image',motif:'none',motion:'none',size:'feature'},actions:[{label:'Ask about community',targetId:'connect-card'}]});
-test('three display treatments preserve canonical headings, facts, source disclosures and exact actions',()=>{
- const t=renderLibraryCard(teaching()),v=renderLibraryCard(visit()),c=renderLibraryCard(community());
+test('two source-art treatments preserve canonical headings, facts, source disclosures and exact actions',()=>{
+ const t=renderLibraryCard(teaching()),c=renderLibraryCard(community());
  assert(t.includes('presentation-teaching'));const viewport=t.match(/<div class="craft-teaching-window">([\s\S]*?)<\/div>/)[1];assert(!/<(?:a|button|summary)\b/.test(viewport));assert(viewport.includes('<svg'));assert(t.includes('class="series-load"'));assert(!t.includes('<iframe'));assert(t.includes('data-series="PLsynthetic1234"'));assert(t.includes('viewBox="200 130 680 500"'));assert(t.includes('Source artwork · Original caption, 2025.'));assert(t.includes('href="https://www.youtube.com/playlist?list=PLsynthetic1234"'));
- assert(v.includes('presentation-visit'));assert(v.includes('href="/church-horizontal-canva.png"'));assert(v.includes('href="/cards/visit-help"'));assert.equal((v.match(/Sunday · 2:10 PM/g)||[]).length,1);assert(v.indexOf('Sunday · 2:10 PM')<v.indexOf('<details'));
  assert(c.includes('presentation-community'));assert(c.includes('size-feature'));assert(c.includes('viewBox="0 300 850 400"'));assert(c.includes('Private image draft · Original caption, 2025.'));assert(c.includes('href="/connect"'));
- for(const html of [t,v,c]){assert(html.includes('content-presentation'));assert(!html.includes('library-card '));assert(html.includes('<details class="craft-reveal"><summary>'));assert(!html.includes('↗'));assert(!/<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<a\b/.test(html));assert(!html.includes('Pause'));}
+ for(const html of [t,c]){assert(html.includes('content-presentation'));assert(!html.includes('library-card '));assert(html.includes('<details class="craft-reveal"><summary>'));assert(!html.includes('↗'));assert(!/<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<a\b/.test(html));assert(!html.includes('Pause'));}
 });
 test('record-bound crops yield to changed source dimensions/path/disclosure and never alter other cards',()=>{
  for(const c of [teaching(),community()]){c.media.width++;assert(!renderLibraryCard(c).includes('content-presentation'));}

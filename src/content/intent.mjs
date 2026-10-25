@@ -76,7 +76,7 @@ async function results(receipt,db,now,{persistSelection=false,after=''}={}){
  const cards=await intentCatalog(db,now),byId=new Map(cards.map(c=>[c.id,c]));
  const selection=selectionFor(receipt,cards,now,after);
  if(!selection)return error('invalid-cursor',400);
- const html=selection.selectedIds.map(id=>renderCard(byId.get(id))).join('');
+ const html=selection.selectedIds.map(id=>renderCard(byId.get(id),cards)).join('');
  const saved=persistSelection?{...receipt,selection}:receipt;
  if(persistSelection)await save(db,receipt.requestId,saved);
  return json({status:'ok',receipt:publicReceipt(saved),renderSelection:selection,selectedIds:selection.selectedIds,html});

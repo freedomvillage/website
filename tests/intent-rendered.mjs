@@ -5,21 +5,27 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 import {createWorker} from '../src/worker.mjs';
 import {familyFixtures} from './fixtures/families.mjs';
+import {sundayFixtures} from './fixtures/sunday.mjs';
 if(process.env.CI!=='true'||process.platform!=='linux')throw Error('Cloud Linux only');
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE);
 const origin='https://next.freedomvillage.church',at=Date.parse('2026-10-25T03:00:00Z');
 const output=resolve('rendered-review');await mkdir(output,{recursive:true});
+const contrast=locator=>locator.evaluate(el=>{
+ const rgb=s=>(s.match(/[\d.]+/g)||[]).map(Number),luma=c=>c.slice(0,3).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);
+ const color=rgb(getComputedStyle(el).color);let background=[255,255,255];for(let p=el;p;p=p.parentElement){const value=rgb(getComputedStyle(p).backgroundColor);if(value.length===3||value[3]>=.99){background=value;break;}}
+ const a=luma(color),b=luma(background);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+});
 const browser=await chromium.launch();
 try{
  for(const [name,width,height] of [['desktop',1440,1000],['intermediate',900,900],['breakpoint',720,900],['mobile',390,844],['narrow',320,800]]){
   const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE content_cards(id TEXT PRIMARY KEY,status TEXT,content_json TEXT,expires_at TEXT);CREATE TABLE content_checks(id TEXT PRIMARY KEY,result_json TEXT,created_at TEXT)');
   const themes=['paper','ink','forest','clay','youth','outline'];
   for(let i=0;i<71;i++){
-   const id=['freedom-kids','connect-card','families-growing-together','village-youth','junior-village','godly-play','children-in-worship'][i]||'sample-'+String(i).padStart(3,'0');
+   const id=['freedom-kids','connect-card','families-growing-together','village-youth','junior-village','godly-play','children-in-worship','sunday-gatherings','visit-help'][i]||'sample-'+String(i).padStart(3,'0');
    const card={schemaVersion:2,template:'story',title:'Review resource '+(i+1),summary:'Synthetic review content for ranked resource continuation.',detail:['Synthetic public prose for browser acceptance.'],facts:[],categories:['community'],actions:[],related:[],media:null,design:{theme:themes[i%themes.length],layout:'text',motif:'none',motion:'none',size:'regular'},homePriority:50,sourceStatus:'draft',isSynthetic:false};
    db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
   }
-  for(const [id,card] of familyFixtures())db.prepare('INSERT OR REPLACE INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
+  for(const [id,card] of [...familyFixtures(),...sundayFixtures()])db.prepare('INSERT OR REPLACE INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
   const adapter={prepare(sql){
    const s=db.prepare(sql);
    return {bind(...args){return {
@@ -53,7 +59,7 @@ try{
    await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});
   };
   await context.route('**/*',serve);
-  const page=await context.newPage();await page.clock.install({time:new Date(at)});
+  const page=await context.newPage(),recordingStarted=performance.now();await page.clock.install({time:new Date(at)});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin);await page.locator('html[data-site-revealed="true"]').waitFor({timeout:30000});
   const socialLinks=page.getByRole('navigation',{name:'Freedom Village links'}).getByRole('link');
@@ -108,6 +114,45 @@ try{
     await plain.screenshot({path:resolve(output,'mobile-kids-no-js-full.png'),fullPage:true});
     await plain.goto(origin+'/topics/families');await plain.locator('.family-context a[href$="#card-freedom-kids"]').click();assert.equal(new URL(plain.url()).pathname,'/topics/families');
     await noJs.close();assert.equal(providerCalls,0);
+   }
+  }
+  if(['desktop','intermediate','mobile'].includes(name)){
+   const startSeconds=Number(((performance.now()-recordingStarted)/1000).toFixed(2));
+   await page.goto(origin);await page.locator('html[data-site-revealed="true"]').waitFor();
+   await page.screenshot({path:resolve(output,name+'-sunday-home-full.png'),fullPage:true});
+   assert.equal(await page.locator('.sunday-entry details').count(),0);assert.equal(await page.locator('.sunday-scene-entry .sunday-venue img').count(),1);assert.equal(await page.locator('.sunday-venue img').first().evaluate(e=>e.complete&&e.naturalWidth===800),true);
+   const visitLink=page.locator('.sunday-entry-actions a[href="/cards/visit-help"]');
+   await page.locator('.sunday-entry h2 a').focus();await page.keyboard.press('Tab');
+   assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('href')),'/cards/visit-help');
+   await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+   const departureY=await page.evaluate(()=>scrollY);
+   assert(await contrast(visitLink)>=4.5);await page.screenshot({path:resolve(output,name+'-sunday-entry-focus.png')});
+   if(name==='desktop')await page.keyboard.press('Enter');else await activate(visitLink);
+   await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/visit-help');
+   assert.equal(await page.locator('.arrival-section').count(),3);assert.deepEqual(await page.locator('.arrival-destination .library-facts p').allTextContents(),['Sunday · 2:10 PM','Youngil Church · Yangjae']);
+   assert.equal(await page.locator('.arrival-section').nth(1).innerText().then(t=>t.includes('venue has an elevator')),true);
+   assert.equal(await page.locator('.arrival-section').nth(2).innerText().then(t=>t.includes('separate from the Sunday venue')),true);
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+   assert.deepEqual(await page.locator('[aria-label="Venue maps"] a').evaluateAll(a=>a.map(e=>e.href)),['https://kko.kakao.com/htkOT9NBZ8','https://naver.me/5v3PGy4s']);
+   await page.screenshot({path:resolve(output,name+'-visit-detail-full.png'),fullPage:true});
+   await page.locator('[aria-label="Venue maps"] a').first().focus();await page.keyboard.press('Tab');
+   assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('href')),'https://naver.me/5v3PGy4s');
+   await page.screenshot({path:resolve(output,name+'-visit-map-focus.png')});
+   await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('href')),'https://naver.me/SYNTHETIC-PARKING');
+   await page.screenshot({path:resolve(output,name+'-visit-parking-focus.png')});
+   await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('href')),'mailto:contact@freedomvillage.church');
+   await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('href')),'https://pf.kakao.com/_nEAVn');
+   await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+   const ending=await page.locator('.arrival-contact a').last().boundingBox(),overlay=await page.locator('#prompt-composer').boundingBox();assert(ending&&overlay&&ending.y+ending.height<=overlay.y,'Visit closing contact clears the composer');
+   for(const a of await page.locator('.arrival-contact a').all())assert(await contrast(a)>=4.5);assert.equal(await page.locator('.arrival-contact a').last().evaluate(e=>getComputedStyle(e).outlineColor===getComputedStyle(e).color&&parseFloat(getComputedStyle(e).outlineWidth)>=2),true);await page.screenshot({path:resolve(output,name+'-visit-ending-focus.png')});
+   await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="dark"]').click();await page.locator('#settings-close').click();
+   await page.locator('.arrival-contact a').last().hover();assert(await contrast(page.locator('.arrival-contact a').last())>=4.5);await page.locator('[aria-label="Venue maps"] a').first().hover();assert(await contrast(page.locator('[aria-label="Venue maps"] a').first())>=4.5);await page.screenshot({path:resolve(output,name+'-visit-dark-full.png'),fullPage:true});
+   await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
+   await activate(page.locator('.visit-detail > .back'));await page.waitForFunction(y=>location.pathname==='/'&&Math.abs(scrollY-y)<3&&document.activeElement?.getAttribute('href')==='/cards/visit-help',departureY);
+   await page.screenshot({path:resolve(output,name+'-sunday-return.png')});await page.locator('.sunday-entry-actions a').last().focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));await page.locator('.sunday-entry-actions a').last().hover();assert(await contrast(page.locator('.sunday-entry-actions a').last())>=4.5);await page.screenshot({path:resolve(output,name+'-sunday-secondary-hover.png')});assert.equal(providerCalls,0);
+   console.log(JSON.stringify({viewport:name,sundayJourney:'passed',entryInput:name==='mobile'?'emulated-touch':name==='desktop'?'keyboard':'pointer',keyboardMapParkingContactOrder:true,backScrollRestored:true,backFocusRestored:true,providerCallsBeforeSubmit:providerCalls,reducedMotion:'reduce',recording:(await page.video().path()).split('/').at(-1),startSeconds,endSeconds:Number(((performance.now()-recordingStarted)/1000).toFixed(2))}));
+   if(name==='mobile'){
+    const noJs=await browser.newContext({viewport:{width,height},javaScriptEnabled:false});await noJs.route('**/*',serve);const plain=await noJs.newPage();await plain.goto(origin);await plain.locator('.sunday-entry-actions a[href="/cards/visit-help"]').click();assert.equal(new URL(plain.url()).pathname,'/cards/visit-help');assert.equal(await plain.locator('.arrival-section').count(),3);assert.equal(await plain.locator('.arrival-contact a').count(),2);await plain.screenshot({path:resolve(output,'mobile-visit-no-js-full.png'),fullPage:true});await noJs.close();
    }
   }
   await page.locator('#prompt-text').fill('Synthetic review question');await page.locator('#prompt-submit').click();

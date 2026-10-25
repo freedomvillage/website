@@ -1,9 +1,8 @@
 # Three-card craft increment
 
-This pass changes only John’s Gospel (teaching), Sunday gatherings (visit) and Missional Families (community), through record-bound rendering guards. These are custom column presentations: the structural .card hook carries no shared border, radius, background or minimum height. The original background, lockup files, adaptive grid, fonts/palette, ranking and content values remain. Other records use their existing renderer.
+The source-art treatments cover John’s Gospel (teaching) and Missional Families (community), through record-bound rendering guards. Sunday now uses the source-backed invitation/arrival composition documented in SUNDAY-ARRIVAL.md. These are custom column presentations: the structural .card hook carries no shared border, radius, background or minimum height. The original background, lockup files, adaptive grid, fonts/palette, ranking and content values remain. Other records use their existing renderer.
 
 - Teaching isolates the original cover’s lamb illustration with an SVG display crop, avoiding a second poster title. The canonical title/summary lead into a native Watch or listen disclosure with the existing exact platform actions.
-- Sunday uses a small display crop of the original arch mark, visible canonical service facts and a Plan your visit disclosure. It introduces no venue photograph, new schedule or arrival claim.
 - Community uses a people-and-table crop of the existing photograph, a restrained forest/monochrome treatment and a feature-width split composition. Its existing draft/archive disclosure and caption stay visible.
 
 Original source bytes are untouched. A source-image path/dimensions/disclosure change falls back to the normal renderer rather than applying an obsolete crop. Detail artwork reuses the same crop; captions and practical copy remain available.
