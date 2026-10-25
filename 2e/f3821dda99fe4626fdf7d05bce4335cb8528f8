@@ -1,0 +1,45 @@
+src/content/render.mjs
+  s_e2bf1542692bef::t_759cdb04e4af9f 2
+  s_e2bf1542692bef::t_0836e226ed7310 28,48
+src/content/families.mjs
+  s_e2bf1542692bef::t_759cdb04e4af9f 1-25
+src/content/pages.mjs
+  s_e2bf1542692bef::t_759cdb04e4af9f 3
+  s_e2bf1542692bef::t_6351763d4eaf28 16
+tests/fixtures/families.mjs
+  s_e2bf1542692bef::t_290a0cf8ca0d8c 1-18
+tests/families.test.mjs
+  s_e2bf1542692bef::t_290a0cf8ca0d8c 1-26
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_054671d9153ff6 7,18,22,45-46,53-54,77-102,106
+dist/content-view.js
+  s_e2bf1542692bef::t_0836e226ed7310 67-79,110,118
+dist/content-view.css
+  s_e2bf1542692bef::t_836571815cc645 136-159
+dist/feed-history.js
+  s_e2bf1542692bef::t_36ab082501f6dc 11,76
+docs/FAMILIES-JOURNEY.md
+  s_e2bf1542692bef::t_123afe4dbb639c 1-37
+package.json
+  s_e2bf1542692bef::t_8ddc1c79d1619c 7
+source-manifest.json
+  s_e2bf1542692bef::t_80e0cbfab5a75a 102-103,107-109
+tests/feed-history.test.mjs
+  s_e2bf1542692bef::t_4105e96d71424c 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2ef3821dda99fe4626fdf7d05bce4335cb8528f8",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
