@@ -1,0 +1,25 @@
+dist/menu.css
+  s_e2bf1542692bef::t_f39f6e667840e4 4,6
+docs/MENU-INTERACTIONS.md
+  s_e2bf1542692bef::t_128383196ddb46 4,21
+source-manifest.json
+  s_e2bf1542692bef::t_dd85aa6ac9696d 26
+tests/menu-rendered.mjs
+  s_e2bf1542692bef::t_3aaea987fbbb00 40,53,58,66-67,69-70,97-100,108-110,114-117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "50db3663f40ebe805d04c13c68d39bd7a867c2b8",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
