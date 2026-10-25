@@ -1,13 +1,11 @@
-// Three record-bound display treatments. Canonical copy/actions and source files stay intact.
+// Two record-bound display treatments. Canonical copy/actions and source files stay intact.
 function kind(c){
  if(c.id==='johns-gospel'&&c.media?.kind==='image'&&c.media.src==='/media/johns-gospel.jpg'&&c.media.width===1080&&c.media.height===1080&&c.media.disclosure==='source-artwork')return 'teaching';
  if(c.id==='missional-families'&&c.media?.kind==='image'&&c.media.src==='/media/missional-families.jpg'&&c.media.width===1024&&c.media.height===769&&['private-draft','historical'].includes(c.media.disclosure))return 'community';
- if(c.id==='sunday-gatherings'&&c.media===null&&c.actions.some(a=>a.targetId==='visit-help'))return 'visit';
  return null;
 }
 export function renderCraftArt(c,escape){
  const type=kind(c);if(!type)return '';
- if(type==='visit')return '<svg class="craft-visit-mark" viewBox="50 148 65 70" aria-hidden="true" focusable="false"><image href="/church-horizontal-canva.png" width="548" height="365"/></svg>';
  const teaching=type==='teaching',view=teaching?'200 130 680 500':'0 300 850 400';
  const label=teaching?'Lamb illustration from the original John’s Gospel series cover.':c.media.alt;
  const disclosure=teaching?'Source artwork':c.media.disclosure==='historical'?'Archive photograph':'Private image draft';
@@ -32,6 +30,5 @@ export function renderCraftCard(c,helpers){
  const {escape,domId}=helpers,art=renderCraftArt(c,escape);
  // Column-sized units share only semantics/sizing. Each type owns its composition.
  if(type==='teaching')return `<article ${attrs(c,type,domId)}>${art}<header class="teaching-type"><p class="craft-kicker">Teaching series</p>${title(c,helpers)}<p class="teaching-deck">${escape(c.summary)}</p></header>${reveal(c,'Watch here or listen',helpers,false)}</article>`;
- if(type==='visit')return `<article ${attrs(c,type,domId)}><div class="visit-rail">${art}<div class="visit-invitation"><p class="craft-kicker">Gather with us</p>${c.facts.length?`<div class="library-facts visit-time">${c.facts.map(v=>`<p>${escape(v)}</p>`).join('')}</div>`:''}${title(c,helpers)}<p class="visit-deck">${escape(c.summary)}</p>${reveal(c,'Plan your visit',helpers)}</div></div></article>`;
  return `<article ${attrs(c,type,domId)}><div class="community-collage">${art}<div class="community-type"><p class="craft-kicker">Life together</p>${title(c,helpers)}<p class="community-deck">${escape(c.summary)}</p>${reveal(c,'Life in a Missional Family',helpers)}</div></div></article>`;
 }
