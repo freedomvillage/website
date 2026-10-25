@@ -10,6 +10,11 @@ if(process.env.CI!=='true'||process.platform!=='linux')throw Error('Cloud Linux 
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE);
 const origin='https://next.freedomvillage.church',at=Date.parse('2026-10-25T03:00:00Z');
 const output=resolve('rendered-review');await mkdir(output,{recursive:true});
+const contrast=locator=>locator.evaluate(el=>{
+ const rgb=s=>(s.match(/[\d.]+/g)||[]).map(Number),luma=c=>c.slice(0,3).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);
+ const color=rgb(getComputedStyle(el).color);let background=[255,255,255];for(let p=el;p;p=p.parentElement){const value=rgb(getComputedStyle(p).backgroundColor);if(value.length===3||value[3]>=.99){background=value;break;}}
+ const a=luma(color),b=luma(background);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+});
 const browser=await chromium.launch();
 try{
  for(const [name,width,height] of [['desktop',1440,1000],['intermediate',900,900],['breakpoint',720,900],['mobile',390,844],['narrow',320,800]]){
@@ -121,7 +126,7 @@ try{
    assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('href')),'/cards/visit-help');
    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
    const departureY=await page.evaluate(()=>scrollY);
-   await page.screenshot({path:resolve(output,name+'-sunday-entry-focus.png')});
+   assert(await contrast(visitLink)>=4.5);await page.locator('.sunday-entry-actions a').last().hover();assert(await contrast(page.locator('.sunday-entry-actions a').last())>=4.5);await page.screenshot({path:resolve(output,name+'-sunday-entry-focus.png')});
    if(name==='desktop')await page.keyboard.press('Enter');else await activate(visitLink);
    await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/visit-help');
    assert.equal(await page.locator('.arrival-section').count(),3);assert.deepEqual(await page.locator('.arrival-destination .library-facts p').allTextContents(),['Sunday · 2:10 PM','Youngil Church · Yangjae']);
@@ -139,9 +144,9 @@ try{
    await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('href')),'https://pf.kakao.com/_nEAVn');
    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
    const ending=await page.locator('.arrival-contact a').last().boundingBox(),overlay=await page.locator('#prompt-composer').boundingBox();assert(ending&&overlay&&ending.y+ending.height<=overlay.y,'Visit closing contact clears the composer');
-   await page.screenshot({path:resolve(output,name+'-visit-ending-focus.png')});
+   for(const a of await page.locator('.arrival-contact a').all())assert(await contrast(a)>=4.5);assert.equal(await page.locator('.arrival-contact a').last().evaluate(e=>getComputedStyle(e).outlineColor===getComputedStyle(e).color&&parseFloat(getComputedStyle(e).outlineWidth)>=2),true);await page.screenshot({path:resolve(output,name+'-visit-ending-focus.png')});
    await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="dark"]').click();await page.locator('#settings-close').click();
-   await page.locator('.arrival-contact a').last().hover();await page.screenshot({path:resolve(output,name+'-visit-dark-full.png'),fullPage:true});
+   await page.locator('.arrival-contact a').last().hover();assert(await contrast(page.locator('.arrival-contact a').last())>=4.5);await page.locator('[aria-label="Venue maps"] a').first().hover();assert(await contrast(page.locator('[aria-label="Venue maps"] a').first())>=4.5);await page.screenshot({path:resolve(output,name+'-visit-dark-full.png'),fullPage:true});
    await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
    await activate(page.locator('.visit-detail > .back'));await page.waitForFunction(y=>location.pathname==='/'&&Math.abs(scrollY-y)<3&&document.activeElement?.getAttribute('href')==='/cards/visit-help',departureY);
    await page.screenshot({path:resolve(output,name+'-sunday-return.png')});assert.equal(providerCalls,0);
