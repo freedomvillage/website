@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+<!-- Original location-neutral abstract gathering composition; no building or venue is depicted. -->
+<circle cx="570" cy="147" r="73" fill="#DEAD60"/>
+<path d="M0 355Q164 69 373 346T800 321V600H0Z" fill="#A6B8A3"/>
+<path d="M-20 473Q184 187 421 422T828 389V620H-20Z" fill="#557D68"/>
+<path d="M-40 587Q250 289 480 509T840 446V640H-40Z" fill="#284D3C"/>
+<path d="M243 600Q235 405 451 312q57-25 46-81" stroke="#F6EBD6" stroke-width="42"/>
+<path d="m329 361 34-104 113 21-67 121Z" fill="#D87B58"/>
+<path d="m363 257 15 118 31 24 16-112Z" fill="#B65944"/>
+</svg>

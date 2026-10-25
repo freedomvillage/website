@@ -17,8 +17,8 @@ const contrast=locator=>locator.evaluate(el=>{
  const a=luma(color),b=luma(background);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
 });
 const familySupportBounds=async page=>{
- const copy=await page.locator('#collection .sunday-scene-copy').boundingBox(),caption=await page.locator('#collection .sunday-venue figcaption').boundingBox(),tail=await page.locator('#collection .sunday-entry-tail').boundingBox();
- assert(copy&&caption&&tail&&copy.y>=caption.y+caption.height&&copy.y+copy.height<=tail.y+.5,'Families support text flows intrinsically between source caption and actions');
+ const copy=await page.locator('#collection .sunday-scene-copy').boundingBox(),art=await page.locator('#collection .sunday-scene-art').boundingBox(),tail=await page.locator('#collection .sunday-entry-tail').boundingBox();
+ assert(copy&&art&&tail&&copy.y+copy.height<=art.y+.5&&art.y+art.height<=tail.y+.5,'Families support text and neutral art flow intrinsically before actions');
 };
 const completeFamilies=async page=>{
  if(new URL(page.url()).pathname!=='/topics/families'||new URL(page.url()).search)await page.goto(origin+'/topics/families');
@@ -100,23 +100,26 @@ try{
   const privacy=await page.locator('#composer-privacy').boundingBox();assert(privacy&&privacy.width>1&&privacy.height>1);
   assert((await page.locator('#prompt-text').getAttribute('aria-describedby')).includes('composer-privacy'));
   await page.screenshot({path:resolve(output,name+'-composer-draft.png')});assert.equal(providerCalls,0);
-  if(['desktop','intermediate','mobile'].includes(name)){
+  if(true){
    await page.locator('#prompt-text').fill('');await page.locator('#prompt-text').blur();const familyStartSeconds=Number(((performance.now()-recordingStarted)/1000).toFixed(2));
-   await page.screenshot({path:resolve(output,name+'-families-home-full.png'),fullPage:true});
+   await page.screenshot({path:resolve(output,name+'-families-home-full.png'),fullPage:true});await page.locator('.family-entry').screenshot({path:resolve(output,name+'-families-home-scene.png')});
    await activate(page.locator('.family-entry-route'));await page.locator('html[data-site-revealed="true"]').waitFor();
-   assert.equal(new URL(page.url()).pathname,'/topics/families');assert.deepEqual(await page.locator('.family-context nav a').evaluateAll(links=>links.map(a=>({hash:new URL(a.href).hash,present:!!document.getElementById(new URL(a.href).hash.slice(1))}))),[{hash:'#card-freedom-kids',present:true},{hash:'#card-junior-village',present:true}]);const familyOrder=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));assert.deepEqual(familyOrder.slice(0,3),['card-families-growing-together','card-freedom-kids','card-junior-village']);assert(!familyOrder.includes('card-village-youth'),'the initial page must not inject a record selected on the continuation');assert.deepEqual(familyOrder.slice(-2),['card-sunday-gatherings','card-visit-help']);if(width>700){const support=await page.locator('.sunday-scene-entry').boundingBox(),grid=await page.locator('#grid').boundingBox();assert(support.width<grid.width/2,'Families Sunday scene is a supporting column, not the Home feature');}
+   assert.equal(new URL(page.url()).pathname,'/topics/families');assert.deepEqual(await page.locator('.family-context a').evaluateAll(links=>links.map(a=>({hash:new URL(a.href).hash,present:!!document.getElementById(new URL(a.href).hash.slice(1))}))),[{hash:'#card-freedom-kids',present:true},{hash:'#card-junior-village',present:true}]);const familyOrder=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));assert.deepEqual(familyOrder.slice(0,3),['card-families-growing-together','card-freedom-kids','card-junior-village']);assert(!familyOrder.includes('card-village-youth'),'the initial page must not inject a record selected on the continuation');assert.deepEqual(familyOrder.slice(-2),['card-sunday-gatherings','card-visit-help']);if(width>700){const support=await page.locator('.sunday-scene-entry').boundingBox(),grid=await page.locator('#grid').boundingBox();assert(support.width<grid.width/2,'Families Sunday scene is a supporting column, not the Home feature');}
    assert.equal(await page.locator('.family-entry-route').isVisible(),false);const initialFamilyIds=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));await page.locator('.load-more').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelectorAll('#grid > article.card').length===40);const completeFamilyIds=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));assert.equal(new Set(completeFamilyIds).size,40);assert.deepEqual([...completeFamilyIds].sort(),expectedFamilyIds);assert.deepEqual(completeFamilyIds.slice(0,4),['card-families-growing-together','card-freedom-kids','card-junior-village','card-village-youth']);assert.deepEqual(completeFamilyIds.slice(-2),['card-sunday-gatherings','card-visit-help']);assert(completeFamilyIds.includes('card-sample-051'));console.log(JSON.stringify({viewport:name,familiesCollection:'complete',initial:initialFamilyIds.length,appended:completeFamilyIds.length-initialFamilyIds.length,total:40,cursorSelectionUnchanged:true}));
-   await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});await familySupportBounds(page);
+   await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});await page.locator('.family-opening').screenshot({path:resolve(output,name+'-families-opening.png')});await page.locator('.kids-card').screenshot({path:resolve(output,name+'-kids-entry.png')});await familySupportBounds(page);
    const youthLink=page.locator('#card-village-youth a[href="/cards/village-youth"]');await youthLink.focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const youthDepartureY=await page.evaluate(()=>scrollY);
    await page.screenshot({path:resolve(output,name+'-families-youth-loaded.png')});await activate(youthLink);await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/village-youth');assert.equal(await page.locator('#detail h1').innerText(),'Village Youth');await page.screenshot({path:resolve(output,name+'-youth-detail.png')});
    await activate(page.locator('#detail .back'));await page.waitForFunction(y=>location.pathname==='/topics/families'&&document.querySelectorAll('#grid > article.card').length===40&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('#card-village-youth'),youthDepartureY);await page.screenshot({path:resolve(output,name+'-families-youth-return.png')});
    await activate(page.locator('.family-context a[href$="#card-freedom-kids"]'));assert.equal(new URL(page.url()).pathname,'/topics/families');await page.locator('.kids-brand-link').focus();
    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
    const departureY=await page.evaluate(()=>scrollY);
-   await activate(page.locator('.kids-brand-link'));await page.locator('html[data-site-revealed="true"]').waitFor();
+   if(name==='desktop')await page.keyboard.press('Enter');else await activate(page.locator('.kids-brand-link'));await page.locator('html[data-site-revealed="true"]').waitFor();
    assert.equal(new URL(page.url()).pathname,'/cards/freedom-kids');assert.equal(await page.locator('.kids-chapter').count(),3);assert.equal(await page.locator('.kids-question').count(),2);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    await page.screenshot({path:resolve(output,name+'-kids-detail-full.png'),fullPage:true});
+   const sourceKids=familyFixtures().find(([id])=>id==='freedom-kids')[1];assert.deepEqual(await page.locator('.kids-chapter p').allTextContents(),sourceKids.sections.flatMap(s=>s.paragraphs));
+   for(let i=0;i<3;i++){const chapter=page.locator('.kids-chapter').nth(i);await chapter.scrollIntoViewIfNeeded();await page.screenshot({path:resolve(output,name+'-kids-spread-'+i+'-viewport.png')});await chapter.screenshot({path:resolve(output,name+'-kids-spread-'+i+'.png')});assert(await contrast(chapter.locator('p').first())>=4.5);}
+   assert.equal(await page.locator('.family-context').count(),0);
    await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="dark"]').click();await page.locator('#settings-close').click();
    await page.locator('.kids-contents a').first().hover();await page.screenshot({path:resolve(output,name+'-kids-dark-hover-full.png'),fullPage:true});
    await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
@@ -191,7 +194,7 @@ try{
    const startSeconds=Number(((performance.now()-recordingStarted)/1000).toFixed(2));
    await page.goto(origin);await page.locator('html[data-site-revealed="true"]').waitFor();
    await page.screenshot({path:resolve(output,name+'-sunday-home-full.png'),fullPage:true});
-   assert.equal(await page.locator('.sunday-entry details').count(),0);assert.equal(await page.locator('.sunday-scene-entry .sunday-venue img').count(),1);assert.equal(await page.locator('.sunday-venue img').first().evaluate(e=>e.complete&&e.naturalWidth===800),true);
+   assert.equal(await page.locator('.sunday-entry details').count(),0);assert.equal(await page.locator('.sunday-scene-art').count(),1);assert.equal(await page.locator('img[src*="youngil-source"]').count(),0);assert.equal(await page.locator('.sunday-scene-art').evaluate(e=>e.complete&&e.naturalWidth===800),true);
    const visitLink=page.locator('.sunday-entry-actions a[href="/cards/visit-help"]');
    await page.locator('.sunday-entry h2 a').focus();await page.keyboard.press('Tab');
    assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('href')),'/cards/visit-help');
@@ -229,7 +232,7 @@ try{
   if(['breakpoint','narrow'].includes(name)){
    // The Godly Back journey already restored the complete collection here.
    assert.equal(new URL(page.url()).pathname,'/topics/families');assert.deepEqual((await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id))).sort(),expectedFamilyIds);
-   await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});await familySupportBounds(page);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+   await page.screenshot({path:resolve(output,name+'-families-category-full.png'),fullPage:true});await page.locator('.family-opening').screenshot({path:resolve(output,name+'-families-opening.png')});await page.locator('.kids-card').screenshot({path:resolve(output,name+'-kids-entry.png')});await familySupportBounds(page);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    console.log(JSON.stringify({viewport:name,familiesSupport:'intrinsic-flow-passed',completeFamilyRecords:40}));
   }
   await page.locator('#prompt-text').fill('Synthetic review question');await page.locator('#prompt-submit').click();

@@ -21,10 +21,6 @@ test('arrival escapes source fields, does not expose private editorial data and 
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size);
 });
 
-test('Youngil source scene requires the currently supplied eligible venue identity and both canonical map destinations',()=>{
- const [s,c]=cards();const card=renderLibraryCard(s,'',2,[c]);assert(card.includes('sunday-scene-entry size-feature'));assert(card.includes('youngil-source-800.png'));assert(card.includes(c.facts[1]));assert(renderLibraryDetail(c).includes('has-venue'));
- assert(!renderLibraryCard(s).includes('youngil-source-800.png'),'absent eligible venue supplies no stale image');
- for(const changed of [{...c,facts:['A changed venue']},{...c,actions:c.actions.slice(1)},{...c,media:{kind:'brand',src:'https://example.test/new.png',alt:'New source'}}]){
-  assert(!renderLibraryCard(s,'',2,[changed]).includes('youngil-source-800.png'));assert(!renderLibraryDetail(changed).includes('youngil-source-800.png'));
- }
+test('launch invitation uses location-neutral original art without Youngil source imagery or changing canonical facts',()=>{
+ const [s,c]=cards(),snapshot=JSON.stringify([s,c]);const html=renderLibraryCard(s,'',2,[c]);assert(html.includes('sunday-scene-entry size-feature'));assert(html.includes('gathering-paper.svg'));assert(!html.includes('youngil-source'));assert(!renderLibraryDetail(c).includes('youngil-source'));assert(!renderLibraryDetail(c).includes('has-venue'));for(const f of s.facts)assert(html.includes(f));assert.equal(JSON.stringify([s,c]),snapshot);
 });

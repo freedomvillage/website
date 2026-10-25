@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520" fill="none">
+<!-- Original linked paper planes; decorative continuation of the unfolding motif. -->
+<path d="M18 361 169 111 340 213 188 471Z" fill="#F3C845"/>
+<path d="m169 111 52 199-33 161 105-253Z" fill="#E4AD2B"/>
+<path d="m213 279 83-210 222 109-151 228Z" fill="#77A7A5"/>
+<path d="m296 69 53 227 18 110 100-225Z" fill="#426C69"/>
+<path d="m353 390 70-186 199 99-126 190Z" fill="#D84A43"/>
+<path d="m423 204 26 168 47 121 68-190Z" fill="#A72F33"/>
+<path d="M106 385q103-234 271-105t169 105" stroke="#F9F4E7" stroke-width="22"/>
+<circle cx="154" cy="71" r="28" fill="#6D9459"/>
+</svg>
