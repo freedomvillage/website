@@ -1,0 +1,53 @@
+.github/workflows/content-validation.yml
+  s_e2bf1542692bef::t_c04377d2ce7db5 18,42,85-91
+dist/app.js
+  s_e2bf1542692bef::t_cb20a3f9294958 3,6-7
+dist/index.html
+  s_e2bf1542692bef::t_ac76abfc2a326a 2,4-6
+dist/menu.css
+  s_e2bf1542692bef::t_b00c5a21f0fe5a 1-39
+dist/menu.js
+  s_e2bf1542692bef::t_a7d316f7942724 1-115
+dist/social-icons.svg
+  s_e2bf1542692bef::t_1818edb1f0a4fa 1-28
+dist/style.css
+  s_e2bf1542692bef::t_d7df6b9934537c 1,167,172,174-178
+docs/COMPOSER-CONTROLS.md
+  s_e2bf1542692bef::t_a54c92cedef051 3-7,10-13,15-21
+docs/FAMILIES-JOURNEY.md
+  s_e2bf1542692bef::t_8a2039fd8d390b 30
+docs/MENU-INTERACTIONS.md
+  s_e2bf1542692bef::t_898ac3455d9a2b 1-38
+docs/SOCIAL-FOOTER.md
+  s_e2bf1542692bef::t_ee1859c626da94 1-26
+docs/licenses/Manrope-OFL.txt
+  s_e2bf1542692bef::t_9dd081ea1a42cc 1-93
+docs/licenses/Manrope-source.md
+  s_e2bf1542692bef::t_e1e2e61cce507c 1-12
+source-manifest.json
+  s_e2bf1542692bef::t_d6c40bbf89df3f 22,24-28,101-102,109
+src/content/pages.mjs
+  s_e2bf1542692bef::t_5d7432adc614d3 26
+tests/composer.cjs
+  s_e2bf1542692bef::t_514f4936d4255a 30
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_9164732f2c5d19 114-120,128-130,299
+tests/menu-rendered.mjs
+  s_e2bf1542692bef::t_8bc69472108be7 1-125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8fc3a1a8e6eca535bb26bad5f2dfb16bf938c86a",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
