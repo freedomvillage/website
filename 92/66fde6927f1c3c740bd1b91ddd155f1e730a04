@@ -1,0 +1,47 @@
+dist/menu.js
+  s_e2bf1542692bef::t_7d9175603ebd26 1-99
+  s_e2bf1542692bef::t_93d359c0791fec 100-107
+dist/menu.css
+  s_e2bf1542692bef::t_7d9175603ebd26 1-38
+tests/menu-rendered.mjs
+  s_e2bf1542692bef::t_432c4f1200c3b9 1-69
+  s_e2bf1542692bef::t_32a8aa25f18dbc 70-105
+.github/workflows/content-validation.yml
+  s_e2bf1542692bef::t_d2bd295820e630 18,21,27,30-32,42,84-90
+dist/app.js
+  s_e2bf1542692bef::t_f4cf9e959bdca4 3,6-7
+dist/index.html
+  s_e2bf1542692bef::t_ab787d4ac7b136 2,4-6
+dist/style.css
+  s_e2bf1542692bef::t_3f53e9193fe69b 1
+docs/FAMILIES-JOURNEY.md
+  s_e2bf1542692bef::t_3b081da18cbc00 30
+docs/MENU-INTERACTIONS.md
+  s_e2bf1542692bef::t_c2f7cf6c7a8298 1-36
+docs/licenses/Manrope-OFL.txt
+  s_e2bf1542692bef::t_afd843b997ddc5 1-93
+docs/licenses/Manrope-source.md
+  s_e2bf1542692bef::t_32a0a40236e96d 1-12
+source-manifest.json
+  s_e2bf1542692bef::t_d6c9710a410bca 22,25-28,101-102,109
+src/content/pages.mjs
+  s_e2bf1542692bef::t_0f93ef649628f9 26
+tests/composer.cjs
+  s_e2bf1542692bef::t_c3b6a0be5d3a3b 30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9266fde6927f1c3c740bd1b91ddd155f1e730a04",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
