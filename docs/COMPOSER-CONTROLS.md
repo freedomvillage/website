@@ -8,8 +8,8 @@ keyboard operation and focus return remain.
 
 The persistent role=status region stays empty at idle. Pending, error and ranked
 result feedback replaces the social strip while a status is present. The textarea
-retains its privacy description, shown when focused or holding a draft. No verbose
-idle helper sentence is restored. A question is sent only by explicit submission;
+retains its visible label and live status association, with no static helper
+copy on focus or while holding a draft. A question is sent only by explicit submission;
 links and settings never send a draft.
 
 The composer remains fixed at the bottom; measured clearance includes any wrapped

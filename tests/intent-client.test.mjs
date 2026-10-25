@@ -38,6 +38,16 @@ test('bounds, server failures and expired authentication never masquerade as res
  }
 });
 test('composer routes to real handler when installed; API secret and query persistence are absent from client',()=>{
- const composer=fs.readFileSync('dist/composer.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');assert(composer.includes('globalThis.submitVisitorIntent(promptText.value)'));assert(html.includes('<script src="intent.js"></script>'));assert(!/localStorage|sessionStorage|TYPESAFE_API_KEY|api\.typesafe\.ai/.test(source));
+ const composer=fs.readFileSync('dist/composer.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');assert(composer.includes('globalThis.submitVisitorIntent(promptText.value)'));assert(html.includes('<script src="intent.js"></script>'));assert(!/localStorage|sessionStorage|TYPESAFE_API_KEY|api\.typesafe\.ai/.test(source));assert(!html.includes('composer-privacy'));assert(html.includes('aria-describedby="composer-status"'));assert(!html.includes('Your question is sent to Jev.'));
  const view=fs.readFileSync('dist/content-view.js','utf8');assert(view.includes('grid.replaceChildren('));assert(view.includes('if(intentActive)return;'));assert(view.includes('loading||ended||intentActive'));
+});
+
+// Visitor status remains useful without exposing the provider in the interface.
+test('all request failures retain live feedback without provider branding or helper warnings',async()=>{
+ const cases=[['identity-unavailable','No question was sent'],['unconfigured','not configured'],['recovery-failed','paused for review'],['recovery-needs-review','No new request was sent'],['prior-attempt-needs-review','paused after a failed request'],['unknown-failure','No results have been substituted']];
+ for(const [status,expected]of cases){
+  let calls=0;const {context,nodes,rendered}=setup(async()=>{calls++;return Response.json({status},{status:503});});
+  await context.submitVisitorIntent('Synthetic question');const text=nodes['composer-status'].textContent;
+  assert.equal(calls,1);assert.equal(rendered.length,0);assert(text.includes(expected));assert.doesNotMatch(text,/\bJev\b|sensitive (?:data|details)/i);assert.equal(nodes['prompt-submit'].disabled,false);
+ }
 });

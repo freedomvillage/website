@@ -4,7 +4,9 @@ The bottom composer posts a question to `/api/content/intent`. The Worker sends
 only the question and eligible public card titles, summaries and facts to Jev.
 It returns existing canonical cards, not generated church facts or answers.
 Questions are not stored in D1, query strings, browser storage or application logs.
-The composer asks visitors to avoid personal or sensitive details.
+The visitor interface omits provider branding and static helper copy. Its label
+and live request status remain available; data handling and request safeguards
+are unchanged.
 
 The 2026-10-24 authorized recovery is one fixed synthetic two-card check. Its
 immutable `jev-intent-recovery-v1` receipt references the historical failed

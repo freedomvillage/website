@@ -37,7 +37,7 @@
    finally{state.busy=false;more.disabled=pending;more.removeAttribute('aria-busy');if(paging===state&&more.textContent==='Loading…')more.textContent='More ranked resources ↓';}
   });
  }
- const messages={'identity-unavailable':'Your private session could not be verified. No question was sent to Jev. Please reload.','rate-limited':'Please wait a moment before another question.','pending-or-interrupted':'Another request is pending. It will not be retried automatically.','development-budget-exhausted':'The development test limit has been reached. Browse the collections for now.','unconfigured':'Jev is not configured yet. Browse the collections for now.','recovery-failed':'The one-time Jev check failed. Further requests are paused for review.','recovery-needs-review':'The earlier Jev check needs review. No new request was sent.','prior-attempt-needs-review':'Jev is paused after a failed request. Browse the collections for now.'};
+ const messages={'identity-unavailable':'Your private session could not be verified. No question was sent. Please reload.','rate-limited':'Please wait a moment before another question.','pending-or-interrupted':'Another request is pending. It will not be retried automatically.','development-budget-exhausted':'The development test limit has been reached. Browse the collections for now.','unconfigured':'Questions are not configured yet. Browse the collections for now.','recovery-failed':'The one-time check failed. Further requests are paused for review.','recovery-needs-review':'The earlier check needs review. No new request was sent.','prior-attempt-needs-review':'Requests are paused after a failed request. Browse the collections for now.'};
  input.maxLength=500;button.setAttribute('aria-label','Find relevant church content');
  status.textContent='';
  globalThis.submitVisitorIntent=async query=>{
@@ -52,7 +52,7 @@
    const response=await fetch('/api/content/intent',{method:'POST',credentials:'same-origin',cache:'no-store',redirect:'error',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({query:query.trim(),requestId}),signal:AbortSignal.timeout(65000)});
    if(!response.headers.get('Content-Type')?.includes('application/json'))throw Error('Session or service unavailable');
    const result=await response.json();
-   if(!response.ok||result.status!=='ok'){status.textContent=messages[result.status]||'Jev could not complete this request. No results have been substituted. Please browse the collections.';return;}
+   if(!response.ok||result.status!=='ok'){status.textContent=messages[result.status]||'This request could not be completed. No results have been substituted. Please browse the collections.';return;}
    const selection=validate(result);if(selection.after!=='')throw Error('Invalid first page');
    globalThis.contentView.showIntent(result.html,{selection});installPaging(result);
    status.textContent=resourceStatus(selection)+' These are existing resources, not a generated answer.';
