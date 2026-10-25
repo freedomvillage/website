@@ -2,7 +2,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {publicCard} from '../src/content/catalog.mjs';
 import {renderLibraryCard,renderLibraryDetail} from '../src/content/render.mjs';
-import {renderFamilyContext,familyCollectionItems} from '../src/content/families.mjs';
+import {renderFamilyContext,familyCollectionItems,familyDetailIds} from '../src/content/families.mjs';
 import {familyFixtures} from './fixtures/families.mjs';
 const cards=()=>familyFixtures().map(([id,content])=>publicCard({id,content_json:JSON.stringify(content)}));
 test('family gateway links to the category and preserves canonical actions; category context jumps only to present eligible records',()=>{
@@ -23,6 +23,27 @@ test('authored output escapes source text, never spreads private fields and keep
  const all=cards(),kids=all.find(c=>c.id==='freedom-kids');kids.title='<script>BAD()</script>';kids.sections[0].paragraphs=['<img src=x onerror=BAD()>'];kids.editorial='PRIVATE_SENTINEL';
  const html=renderLibraryDetail(kids)+renderLibraryCard(kids,'embedded',3);assert(!html.includes('<script>BAD()'));assert(!html.includes('<img src=x'));assert(!html.includes('PRIVATE_SENTINEL'));assert(html.includes('&lt;script&gt;'));assert(html.includes('id="embedded-card-freedom-kids"'));
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size);
+});
+
+test('Godly Play keeps the complete source sequence and eligible contextual parent separate from its related content',()=>{
+ const all=cards(),godly=all.find(c=>c.id==='godly-play'),kids=all.find(c=>c.id==='freedom-kids'),related=all.filter(c=>godly.related.includes(c.id));
+ godly.facts=['SYNTHETIC_GODLY_FACT'];godly.detail.push('A third complete source paragraph is also retained.');godly.actions=[{label:'Canonical next step',targetId:'connect-card'}];
+ const snapshot=JSON.stringify(godly),html=renderLibraryDetail(godly,related,[...related,kids]);
+ assert(html.includes('godly-detail'));assert(renderLibraryCard(godly).includes('godly-card'));assert(html.includes('SYNTHETIC_GODLY_FACT'));assert(html.includes('Canonical next step'));assert(html.includes('href="/connect"'));
+ for(const p of [godly.summary,...godly.detail])assert.equal(html.split(p).length-1,1);assert(html.indexOf(godly.detail[0])<html.indexOf(godly.detail[1]));
+ assert(html.includes('godly-parent'));assert(html.includes('href="/cards/freedom-kids"'));for(const c of related)assert(html.includes('href="/cards/'+c.id+'"'));
+ assert.deepEqual(familyDetailIds(godly),['freedom-kids']);assert.deepEqual(familyDetailIds(kids),[]);assert.equal(JSON.stringify(godly),snapshot);
+ assert(!renderLibraryDetail(godly,related,related).includes('godly-parent'));assert(renderLibraryDetail(godly,related,related).includes(godly.detail[1]));
+ const changedParent={...kids,media:null};assert(!renderLibraryDetail(godly,related,[changedParent]).includes('godly-parent'));
+});
+
+test('Godly source changes retain the complete generic contract, including new sections and embedded records',()=>{
+ const all=cards(),godly=all.find(c=>c.id==='godly-play'),kids=all.find(c=>c.id==='freedom-kids');
+ for(const changed of [{...godly,media:null},{...godly,detail:[godly.summary]},{...godly,sections:[{heading:'New source section',paragraphs:['New canonical paragraph.'],links:[{label:'New source action',href:'https://example.org/source'}],cardIds:['freedom-kids']}]}]){
+  const html=renderLibraryDetail(changed,[],[kids]);assert(!html.includes('godly-detail'));for(const p of changed.detail)assert(html.includes(p));assert.deepEqual(familyDetailIds(changed),[]);
+  if(changed.sections){assert(html.includes('New source section'));assert(html.includes('New canonical paragraph.'));assert(html.includes('href="https://example.org/source"'));assert(html.includes('embedded-godly-play-0-card-freedom-kids'));}
+ }
+ godly.title='<script>BAD()</script>';godly.detail[0]='<img src=x onerror=BAD()>';godly.editorial='PRIVATE_SENTINEL';const html=renderLibraryDetail(godly);assert(!html.includes('<script>BAD()'));assert(!html.includes('<img src=x'));assert(!html.includes('PRIVATE_SENTINEL'));assert(html.includes('&lt;img'));
 });
 
 test('Families presentation leads with current ministries and keeps arrival supporting without changing membership, source order or other contexts',()=>{

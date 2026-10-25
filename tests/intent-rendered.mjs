@@ -123,6 +123,31 @@ try{
     await noJs.close();assert.equal(providerCalls,0);
    }
   }
+  {
+   const startSeconds=Number(((performance.now()-recordingStarted)/1000).toFixed(2));
+   await page.goto(origin+'/topics/families');await page.locator('html[data-site-revealed="true"]').waitFor();await page.locator('.load-more').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelectorAll('#grid > article.card').length===40);
+   const entry=page.locator('#card-godly-play .godly-card-link');await entry.focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const departureY=await page.evaluate(()=>scrollY);
+   await page.screenshot({path:resolve(output,name+'-godly-entry-focus.png')});if(name==='desktop')await page.keyboard.press('Enter');else await activate(entry);
+   await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/godly-play');assert.equal(await page.locator('.godly-reading p').count(),2);
+   assert.deepEqual(await page.locator('.godly-reading p').allTextContents(),familyFixtures().find(([id])=>id==='godly-play')[1].detail);assert.equal(await page.locator('.godly-heading .kids-source-mark').evaluate(e=>e.complete&&e.naturalWidth===398),true);
+   assert.equal(await page.locator('.godly-parent a').getAttribute('href'),'/cards/freedom-kids');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+   await page.screenshot({path:resolve(output,name+'-godly-detail-full.png'),fullPage:true});
+   await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="dark"]').click();await page.locator('#settings-close').click();await page.locator('.godly-parent a').hover();assert(await contrast(page.locator('.godly-parent a'))>=4.5);await page.screenshot({path:resolve(output,name+'-godly-dark-full.png'),fullPage:true});
+   await page.locator('#scene-settings').click();await page.locator('[data-scene-mode="light"]').click();await page.locator('#settings-close').click();
+   await page.locator('.godly-parent a').focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));const readerDepartureY=await page.evaluate(()=>scrollY),ending=await page.locator('.godly-parent a').boundingBox(),composer=await page.locator('#prompt-composer').boundingBox();assert(ending&&composer&&ending.y+ending.height<=composer.y,'Godly closing parent route clears the composer');await page.screenshot({path:resolve(output,name+'-godly-parent-focus.png')});
+   if(name==='desktop')await page.keyboard.press('Enter');else await activate(page.locator('.godly-parent a'));await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,'/cards/freedom-kids');assert.equal(await page.locator('.kids-detail > .back').innerText(),'← Back');await page.screenshot({path:resolve(output,name+'-godly-kids-parent.png')});
+   await activate(page.locator('.kids-detail > .back'));await page.waitForFunction(y=>location.pathname==='/cards/godly-play'&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('.godly-parent'),readerDepartureY);await page.screenshot({path:resolve(output,name+'-godly-parent-return.png')});
+   await activate(page.locator('.godly-detail > .back'));await page.waitForFunction(y=>location.pathname==='/topics/families'&&document.querySelectorAll('#grid > article.card').length===40&&Math.abs(scrollY-y)<3&&document.activeElement?.closest('#card-godly-play'),departureY);await page.screenshot({path:resolve(output,name+'-godly-families-return.png')});assert.equal(providerCalls,0);
+   console.log(JSON.stringify({viewport:name,godlyJourney:'passed',sourceParagraphsRetained:2,parentRoute:'/cards/freedom-kids',input:name==='mobile'?'emulated-touch':name==='desktop'?'keyboard':'pointer',backFocusAndScrollRestored:true,restoredLoadedRecords:40,reducedMotion:'reduce',providerCallsBeforeSubmit:providerCalls,recording:(await page.video().path()).split('/').at(-1),startSeconds,endSeconds:Number(((performance.now()-recordingStarted)/1000).toFixed(2))}));
+   if(name==='mobile'){
+    for(const unavailable of ['held','expired']){
+     if(unavailable==='held')db.prepare("UPDATE content_cards SET status='held' WHERE id='freedom-kids'").run();else db.prepare("UPDATE content_cards SET status='draft',expires_at='2026-10-24T00:00:00Z' WHERE id='freedom-kids'").run();
+     await page.goto(origin+'/cards/godly-play');await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(await page.locator('.godly-parent').count(),0);assert.equal(await page.locator('.godly-reading p').count(),2);
+    }
+    await page.screenshot({path:resolve(output,'mobile-godly-ineligible-parent.png'),fullPage:true});db.prepare("UPDATE content_cards SET status='draft',expires_at=NULL WHERE id='freedom-kids'").run();
+    const noJs=await browser.newContext({viewport:{width,height},javaScriptEnabled:false});await noJs.route('**/*',serve);const plain=await noJs.newPage();await plain.goto(origin+'/cards/godly-play');assert.equal(await plain.locator('.godly-reading p').count(),2);assert.equal(await plain.locator('.godly-parent a').getAttribute('href'),'/cards/freedom-kids');await plain.screenshot({path:resolve(output,'mobile-godly-no-js-full.png'),fullPage:true});await plain.locator('.godly-parent a').click();assert.equal(new URL(plain.url()).pathname,'/cards/freedom-kids');await noJs.close();
+   }
+  }
   if(['desktop','intermediate','mobile'].includes(name)){
    const startSeconds=Number(((performance.now()-recordingStarted)/1000).toFixed(2));
    await page.goto(origin);await page.locator('html[data-site-revealed="true"]').waitFor();
