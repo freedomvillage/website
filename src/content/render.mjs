@@ -23,12 +23,12 @@ function genericArt(c,detail=false){
  return motif(c.design.motif);
 }
 const genericFacts=c=>c.facts.length?`<div class="library-facts">${c.facts.map(v=>`<p>${escape(v)}</p>`).join('')}</div>`:'';
-export function renderLibraryCard(c,namespace='',headingLevel=2,companions=[]){
+export function renderLibraryCard(c,namespace='',headingLevel=2,companions=[],context={}){
  const heading=headingLevel===3?'h3':'h2';
  namespace=typeof namespace==='string'?namespace:'';
  const domId=escape((namespace?namespace+'-':'')+'card-'+c.id);
  const sunday=renderSundayCard(c,{escape,cardPath,heading,domId,facts:genericFacts,companions});if(sunday)return sunday;
- const family=renderFamilyCard(c,{escape,cardPath,heading,domId,facts:genericFacts});if(family)return family;
+ const family=renderFamilyCard(c,{escape,cardPath,heading,domId,facts:genericFacts,companions,context});if(family)return family;
  const crafted=renderCraftCard(c,{escape,cardPath,heading,domId});if(crafted)return crafted;
  if(['actions','utility'].includes(c.template))return `<article class="card library-card practical-card theme-${c.design.theme}" id="${domId}"><div class="library-copy"><${heading}><a href="${cardPath(c)}">${escape(c.title)}</a></${heading}>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div><div class="practical-actions">${c.actions.map(a=>`<a ${actionAttrs(a)}>${escape(a.label)} <span aria-hidden="true">↗</span></a>`).join('')}</div></article>`;
  const motion=c.design.motion==='gradient',art=genericArt(c);

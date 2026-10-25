@@ -100,14 +100,18 @@
     "dist/scene-bootstrap.js": "988e71208ae9f5170c3baba601f4a95def1e0050f08d3bd8643a85cd494d4a6c",
     "dist/scene-clock.js": "d2898bf2e4b94e9f78c8b9d046da6c472f2f90895f02d19b25dc2bcc72e3b3d3",
     "dist/content-view.js": "c37f89a57a5955c5904fd213bfb1088017a668b8a30fccee52620b6d0f17044d",
-    "dist/content-view.css": "f55fff519ad5276b7068c9cf1293498f1a5ecd6d6fcf3f56ea7409d97c0c223b",
+    "dist/content-view.css": "176749605c9401a44900788a4798d46e4841c0724c92c5a0fdb0ab5054e3971c",
     "dist/composer.js": "73dece20e4fc508902b814691ae2f2519da4c0f07e2a9ebc268f524166ff3507",
     "dist/style.css": "4252e76ffe65faee2b1063f64c5a69b0f73d70d71830add887d784700f9edf75",
     "dist/intent.js": "18d492173576358b5d319cd3173139270a623aebdc243511b8a95cef8e1dc4af",
     "dist/feed-history.js": "6be40560a33ac39badcf0cd1a10ea76cf7dda3735fe02bbabdab6fbf6218e49c",
     "dist/freedom-kids-source.png": "81183de937be8a441711f8e50cf001b0e5202002770782784e5f6efc37a12893",
-    "dist/youngil-source-800.png": "0837bf85fdda0c954e6a98aacb9ce74eefc91f3c7f9cb3e4fc77f157d5ca80db",
-    "dist/village-youth-source.svg": "80e06d9e4447e23f6832c218c6e7e1ef4f011177968ea56bac865cbb75500e73"
+    "dist/village-youth-source.svg": "80e06d9e4447e23f6832c218c6e7e1ef4f011177968ea56bac865cbb75500e73",
+    "dist/gathering-paper.svg": "de682854d7ca150cdd569e6bc363d779ca04375232f589e1c5fe8bc6b58fc5ba",
+    "dist/families-shared-story.webp": "3a785871d48b7a580e1a39551e8d980e82971fc0e673fa9133c99a2dc8bbc548",
+    "dist/kids-story-discovery.webp": "57111e0d8c6700b9a7621d5898a6f8c6bb3363541f47b6e0b546f7b0f9c5cb61",
+    "dist/kids-learning-together.webp": "c4876bf44ac26715f9d097875830a32119a2c311e075961fbad2209aff851aed",
+    "dist/kids-faith-home.webp": "ecc859cc9d1685231c605faf91327e69d4ad1651b7804cda537bceb36a05dee4"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
   "adaptation": "Shared night-only air-quality cache and one-hour observation limit, reconciled with approved UI runtime and artwork overlays; original paintings unchanged.",
@@ -116,6 +120,46 @@
       "source": "Approved original Canva DAHWLR-KSV8 page 1 PBkzhN3QHfSXYFSM",
       "sha256": "811a9fa5aadced22499398a33a46a908634821509388089bb808b39003700c72",
       "integration": "Original PNG used as a cropped SVG luminance mask for the mobile lockup; desktop vertical logo unchanged."
+    },
+    "dist/families-shared-story.webp": {
+      "source": "Original generated editorial illustration for Freedom Village; no reference artwork or private media used.",
+      "purpose": "Shared story path across different family stages",
+      "representation": "Decorative illustration, not documentary photography or a claim about actual people, buildings or ministry arrangements.",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "encoding": "WebP quality86; original dimensions and transparency retained."
+    },
+    "dist/kids-story-discovery.webp": {
+      "source": "Original generated editorial illustration for Freedom Village; no reference artwork or private media used.",
+      "purpose": "Open book unfolding into a world of discovery",
+      "representation": "Decorative illustration, not documentary photography or a claim about actual people, buildings or ministry arrangements.",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "encoding": "WebP quality86; original dimensions and transparency retained."
+    },
+    "dist/kids-learning-together.webp": {
+      "source": "Original generated editorial illustration for Freedom Village; no reference artwork or private media used.",
+      "purpose": "Different hands connecting a shared idea",
+      "representation": "Decorative illustration, not documentary photography or a claim about actual people, buildings or ministry arrangements.",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "encoding": "WebP quality86; original dimensions and transparency retained."
+    },
+    "dist/kids-faith-home.webp": {
+      "source": "Original generated editorial illustration for Freedom Village; no reference artwork or private media used.",
+      "purpose": "Book, light and a quiet home reading scene",
+      "representation": "Decorative illustration, not documentary photography or a claim about actual people, buildings or ministry arrangements.",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "encoding": "WebP quality86; original dimensions and transparency retained."
     }
   },
   "localAdaptations": [

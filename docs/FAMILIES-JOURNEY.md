@@ -1,64 +1,37 @@
-# Families journey increment
+# Families visual journey
 
-This increment implements three connected pieces within the retained shell:
-- The canonical family-discipleship record gets a larger, unframed gateway with its existing ministry/contact actions and an explicit Families collection link.
-- The Families collection opens with context from that same eligible record and direct jumps to currently present ministry cards.
-- Freedom Kids gets a source-branded card with a useful native reading disclosure and an authored detail sequence: introduction, local contents, complete source sections, existing eligible parent questions and next actions.
+Frozen baseline: reviewed head09ba890dc4584728dde303b37f868c8e167c29ba (PR44).
+Existing content is unchanged. Home's gateway uses its own broader shared-family
+story illustration; prominent authentic Kids branding belongs to the Kids module. Families integrates the existing
+summary, context paragraph and current-page ministry jumps into the canonical
+family article rather than repeating introductions outside masonry. Its ID,
+canonical actions, continuation membership and detail route remain. Secondary
+actions use a native disclosure. Kids leads; Junior/Youth retain their identities.
 
-Copy, facts, section headings and destinations come from the validated records.
-No ages, schedules, operational claims or new ministry prose are inserted. Youngil
-facts are unchanged. The existing Kids logo is copied byte for byte from the
-current site's public source (398×216, 15,446 bytes):
-https://cdn.prod.website-files.com/60e0035471e8115799a8640b/615a16d6ad04b5b28a15036a_Freedom-Kids-Logo.png
-SHA256: 81183de937be8a441711f8e50cf001b0e5202002770782784e5f6efc37a12893
+Kids has three distinct spreads: unfolding split composition, connected horizontal
+composition and a home-window silhouette ending. All source paragraphs, facts, sections,
+links, actions and eligible embedded/related records remain in order. Future extra
+sections get complete plain reading blocks. The exact logo-identity guard remains;
+changed media uses the complete generic renderer. No source-content writes.
 
-Kids composition is guarded by the canonical ID and exact source media identity;
-changed media falls back to the ordinary renderer. Category context and jump
-links use only records on the current eligible catalog page. Supporting questions
-use the route's existing eligibility-checked related records. Missing records do
-not produce invented replacement copy. All source text is escaped.
+The original broad Families illustration joins different hands around a shared
+story path. Kids uses distinct book/discovery, collaborative learning and home
+reading illustrations. They are generated editorial artwork with no reference or
+private assets, not documentary photographs or claims about people/facilities.
+Only the actual Kids module retains prominent Kids branding. WebP encoding
+retains native dimensions/transparency; provenance and hashes are in the manifest.
+Authentic Kids logo bytes are unchanged: SHA256
+81183de937be8a441711f8e50cf001b0e5202002770782784e5f6efc37a12893.
 
-Native disclosures and anchors provide useful reading and navigation without
-JavaScript. Enhanced Kids contents links replace the current fragment and focus
-the real section, preserving a single return step to the originating category.
-Fragment links retain the current route (and collection cursor), independently
-of the shell’s base URL; native no-JavaScript links remain in the correct page. Existing masonry remeasurement enhances the card disclosure. The
-canonical card hash is now an allowed navigation hint so Back can retain the
-category jump's position and card focus. No question, content or response is
-cached. Intent rendering removes the category introduction before displaying the
-full ranked resources; Jev eligibility, order and paid-call behavior are unchanged.
+Native disclosures and explicit local anchors supply purposeful interaction. No
+scroll animation, universal fades, selectors or client state were added. Static
+reduced-motion and no-JavaScript reading remain complete. Existing fragment
+replacement retains a single Back to the source feed. Original scenery, logo,
+masonry and sticky gear-only composer remain; Jev eligibility/ranking is unchanged.
 
-The public repository contains synthetic prose for cloud fixtures, not a private
-source-content export. Cloud captures and recordings cover home → Families →
-Kids, local navigation, disclosure, Back focus/position, narrow layouts and the
-existing ranking/composer regressions. A no-JavaScript capture covers native
-reading controls. Fixture results establish mechanics and composition; live copy
-and media remain a separate read-only verification after protected deployment.
-
-This is a scoped source-backed increment, not selection or transplantation of the
-private R8 package and not a claim that the full site design contract is complete.
-
-
-## Contextual collection hierarchy
-
-The Families collection presents the currently eligible page with family
-introduction/ministry records first, other family resources in their existing
-relative order, and Sunday/arrival information last. Appended pages merge using
-server presentation metadata without moving existing nodes or losing focus. Sunday retains its source
-image and all direct actions in a supporting column. Text takes intrinsic height
-beneath its image/caption, including narrow two-column layouts. The family gateway gains a
-quiet reading surface; its original subject accents and varied ministry cards
-remain. Home keeps the generous Sunday scene, including on mobile.
-
-This is presentation of the current page, not a new catalog or model ranking.
-Every supplied eligible record remains present once. API membership, source
-priority values, cursor selection and pagination are unchanged; native continuation pages are
-curated from their own eligible records, while appended pages preserve the
-combined loaded hierarchy. The source array is not mutated. Global
-Jev rendering removes the category context and does not use this display order.
-No facts, source actions, media identity/disclosure guards or data are changed.
-
-Cloud acceptance extends the synthetic Families collection to40 eligible records
-within the same71-record catalog. It checks complete appended membership and
-hierarchy, Back restoration, a native no-JavaScript continuation page, and actual
-720/320px support text fit as well as the desktop/intermediate/mobile journeys.
+Cloud Ubuntu CI captures full-page Home/category/Kids at390/900/1440 plus narrow
+checks, individual spreads and actual disclosure/navigation/contents/Back behavior
+using fixed synthetic fixtures. The supplied reference-image request was denied;
+no alternate route or authentication was attempted. A fresh BibleProject pixel
+comparison is not verified. Test counts cannot supply visual acceptance; independent
+product, rendered-design and technical gates judge the final revision before merge.
