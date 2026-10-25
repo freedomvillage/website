@@ -1,0 +1,25 @@
+dist/content-view.css
+  s_e2bf1542692bef::t_06c23b92514c72 227-232
+source-manifest.json
+  s_e2bf1542692bef::t_8f417d9a6ba462 103
+src/content/children-worship.mjs
+  s_e2bf1542692bef::t_1fde6927a3a0a8 1-15
+src/content/render.mjs
+  s_e2bf1542692bef::t_1fab94a3a0765a 2,31,53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "698ecb134dc9cbd1e53353767c4a8d34a4fb3e19",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
