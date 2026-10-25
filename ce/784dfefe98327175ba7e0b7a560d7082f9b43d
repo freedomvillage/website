@@ -1,0 +1,31 @@
+dist/index.html
+  s_e2bf1542692bef::t_4cb43a16c1223e 6
+dist/social-icons.svg
+  s_e2bf1542692bef::t_d8624204de1af1 1-28
+dist/style.css
+  s_e2bf1542692bef::t_eff4381e237898 167,172,174-178
+docs/COMPOSER-CONTROLS.md
+  s_e2bf1542692bef::t_c8691c192470b1 3-7,10-13,15-21
+docs/SOCIAL-FOOTER.md
+  s_e2bf1542692bef::t_2da4534e1abc33 1-26
+source-manifest.json
+  s_e2bf1542692bef::t_223234d396965c 22,24-25
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_5d8c463bc437bd 114-120,128-130,299
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ce784dfefe98327175ba7e0b7a560d7082f9b43d",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
