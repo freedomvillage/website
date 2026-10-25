@@ -1,0 +1,40 @@
+src/content/render.mjs
+  s_e2bf1542692bef::t_3ba8855a87643b 4,51
+docs/VILLAGE-YOUTH.md
+  s_e2bf1542692bef::t_da61a19d29e9f8 1-18
+tests/families.test.mjs
+  s_e2bf1542692bef::t_da61a19d29e9f8 49-63
+dist/content-view.css
+  s_e2bf1542692bef::t_3ba8855a87643b 208-215
+tests/fixtures/families.mjs
+  s_e2bf1542692bef::t_da61a19d29e9f8 14-15
+src/content/youth.mjs
+  s_e2bf1542692bef::t_3ba8855a87643b 1-14
+dist/feed-history.js
+  s_e2bf1542692bef::t_3ba8855a87643b 8
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_2dd94fc51692bf 23-27,34,64-66,135,158-179
+  s_e2bf1542692bef::t_cb788e8cc0b23e 180
+dist/village-youth-source.svg
+  s_e2bf1542692bef::t_c0bc1eecfe4424 1-66
+source-manifest.json
+  s_e2bf1542692bef::t_1bbadfae87b891 103,107,109-110
+tests/feed-history.test.mjs
+  s_e2bf1542692bef::t_ff7efe1e39bf96 37-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ef23a7e54e0630191469381dd5ed8a056bcf78dd",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
