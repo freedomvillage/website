@@ -43,3 +43,13 @@ jobs:
           name: rendered-review
           path: rendered-review/
           if-no-files-found: ignore
+      - name: Save focused Kids entry review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kids-entry-review
+          path: |
+            rendered-review/*-home-kids-entry-*.png
+            rendered-review/*-families-kids-entry-*.png
+            rendered-review/journey-recordings/*.webm
+          if-no-files-found: ignore
