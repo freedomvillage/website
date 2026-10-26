@@ -1,0 +1,35 @@
+.github/workflows/content-validation.yml
+  s_e2bf1542692bef::t_a6cba38c3840b3 42,52-58
+README.md
+  s_e2bf1542692bef::t_2df82fc0fbfffc 11
+dist/app.js
+  s_e2bf1542692bef::t_d1ed180e31df9d 130,133
+dist/index.html
+  s_e2bf1542692bef::t_c664cc016db888 2
+dist/preloader.css
+  s_e2bf1542692bef::t_2b24326cebde73 1-11
+dist/preloader.js
+  s_e2bf1542692bef::t_9a92ef1caaf5af 1-96
+docs/preloader.md
+  s_e2bf1542692bef::t_de057c8d096cb1 1-33
+source-manifest.json
+  s_e2bf1542692bef::t_00d07ad8958f6c 101-102,118-120
+tests/preloader-rendered.mjs
+  s_e2bf1542692bef::t_1b1e58509ccefd 1-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8515908d2faee856ff8da09561c7d1a5e7cc99ff",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
