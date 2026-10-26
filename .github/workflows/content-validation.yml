@@ -39,6 +39,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/fvc-render" --no-save --ignore-scripts playwright@1.64.1
           "$RUNNER_TEMP/fvc-render/node_modules/.bin/playwright" install chromium
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/fvc-render/node_modules/playwright/index.mjs" node tests/intent-rendered.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/fvc-render/node_modules/playwright/index.mjs" node tests/preloader-rendered.mjs
           CONTENT_BASELINE_DIR="$RUNNER_TEMP/fvc-before" PLAYWRIGHT_MODULE="$RUNNER_TEMP/fvc-render/node_modules/playwright/index.mjs" node tests/menu-rendered.mjs
           CONTENT_BASELINE_DIR="$RUNNER_TEMP/fvc-before" PLAYWRIGHT_MODULE="$RUNNER_TEMP/fvc-render/node_modules/playwright/index.mjs" node tests/worship-rendered.mjs
       - name: Save rendered review evidence
@@ -47,6 +48,13 @@ jobs:
         with:
           name: rendered-review
           path: rendered-review/
+          if-no-files-found: ignore
+      - name: Save preloader-only review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preloader-review
+          path: preloader-review/
           if-no-files-found: ignore
       - name: Save focused Kids entry review
         if: always()

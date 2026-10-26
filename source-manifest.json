@@ -98,8 +98,8 @@
     }
   ],
   "adaptedFiles": {
-    "dist/app.js": "04a4db932493ee850649604d7cf5e5da0d90d2dcec41a21595da3363abef0687",
-    "dist/index.html": "1416a0b645a67b3980dca726f13628a30a8e0080c6584cd21f570e9ef594ddbe",
+    "dist/app.js": "fa957f329efb2222fa4bff54f2dc50c5b3cdcf469dde664105378d2e4fcc09f6",
+    "dist/index.html": "c44ad6c7c0fdd341cf704dd1e9dacc317d1fec6566b6d038a197588bcdfec1c0",
     "dist/air-quality.js": "6b6d4943437566d35a59b1c917da9ac923117f13eea03e79ad6f0985931d401d",
     "dist/scene-bootstrap.js": "988e71208ae9f5170c3baba601f4a95def1e0050f08d3bd8643a85cd494d4a6c",
     "dist/scene-clock.js": "d2898bf2e4b94e9f78c8b9d046da6c472f2f90895f02d19b25dc2bcc72e3b3d3",
@@ -115,7 +115,9 @@
     "dist/families-shared-story.webp": "3a785871d48b7a580e1a39551e8d980e82971fc0e673fa9133c99a2dc8bbc548",
     "dist/kids-story-discovery.webp": "57111e0d8c6700b9a7621d5898a6f8c6bb3363541f47b6e0b546f7b0f9c5cb61",
     "dist/kids-learning-together.webp": "c4876bf44ac26715f9d097875830a32119a2c311e075961fbad2209aff851aed",
-    "dist/kids-faith-home.webp": "ecc859cc9d1685231c605faf91327e69d4ad1651b7804cda537bceb36a05dee4"
+    "dist/kids-faith-home.webp": "ecc859cc9d1685231c605faf91327e69d4ad1651b7804cda537bceb36a05dee4",
+    "dist/preloader.js": "d409b7d385738c419ebeb786eaf7613a383dac91bc5e7e757518b3973af33eb7",
+    "dist/preloader.css": "ed3ab5d838259ea22eaa83da597d9a349009a0e150d48aefdcc0f687ac91901b"
   },
   "adaptationBase": "freedomvillage/website@d41a37b",
   "adaptation": "Shared night-only air-quality cache and one-hour observation limit, reconciled with approved UI runtime and artwork overlays; original paintings unchanged.",

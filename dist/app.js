@@ -127,10 +127,10 @@ async function updateSceneSeason(manual=true){
   await Promise.all(imgs.map(im=>bounded(im.decode(),SCENE_DECODE_TIMEOUT,'Scene decode')));if(request!==seasonRequest)return;
   // Atomic commit only after all three light keyframes are ready for latest request.
   back.replaceWith(candidate);back=candidate;if(!sceneHasLoaded)back.style.transition='none';void back.offsetWidth;back.classList.add('visible');front.classList.remove('visible');[front,back]=[back,front];
-  appliedSeason=index;appliedSolarDate=date;appliedSolarTimes=seoulSolarTimes(...date);appliedDateIsManual=dateIsManual;globalThis.sceneClock?.syncSolarDate();updateSceneTime();document.documentElement.dataset.sceneReady='true';document.documentElement.dataset.siteRevealed='true';if(!sceneHasLoaded){sceneHasLoaded=true;const initial=front;setTimeout(()=>{if(initial.style)initial.style.transition='';},0);}document.documentElement.dataset.season=text.toLowerCase();status.textContent=`${text} ready.`;
+  appliedSeason=index;appliedSolarDate=date;appliedSolarTimes=seoulSolarTimes(...date);appliedDateIsManual=dateIsManual;globalThis.sceneClock?.syncSolarDate();updateSceneTime();document.documentElement.dataset.sceneReady='true';if(globalThis.scenePresentation)globalThis.scenePresentation.ready();else document.documentElement.dataset.siteRevealed='true';if(!sceneHasLoaded){sceneHasLoaded=true;const initial=front;setTimeout(()=>{if(initial.style)initial.style.transition='';},0);}document.documentElement.dataset.season=text.toLowerCase();status.textContent=`${text} ready.`;
  }catch(error){
   if(request!==seasonRequest)return;
-  document.documentElement.dataset.siteRevealed='true';
+  if(globalThis.scenePresentation)globalThis.scenePresentation.failed();else document.documentElement.dataset.siteRevealed='true';
   // A decode failure must not poison retries, including already cached resources.
   sceneAssets[index].forEach(src=>assetCache.delete(src));
   status.textContent=sceneHasLoaded?`Could not load ${text.toLowerCase()}. Still showing ${seasonNames[appliedSeason].toLowerCase()}. Retry or choose another season.`:`Could not load the initial ${text.toLowerCase()} scene. Retry or choose another season.`;retry.hidden=false;
