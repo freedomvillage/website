@@ -129,7 +129,7 @@
   // Keep the original grid node used by masonry sizing; no generated JS executes.
   const copies=articles.filter(el=>!append||!document.getElementById(el.id)).map(el=>document.importNode(el,true));
   if(append)grid.append(...copies);else grid.replaceChildren(...copies);
-  collection.hidden=false;grid.hidden=false;detail.hidden=true;document.body.classList.remove('content-detail');
+  collection.hidden=false;grid.hidden=false;grid.classList.add('grid');detail.hidden=true;document.body.classList.remove('content-detail');
   let heading=collection.querySelector('h1');if(!heading){heading=document.createElement('h1');collection.insertBefore(heading,grid);}heading.className='topic-title';heading.textContent='For your question';heading.tabIndex=-1;
   if(!document.getElementById('collection-label')){
    const meta=document.createElement('div');meta.className='collection-meta';
