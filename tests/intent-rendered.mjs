@@ -70,7 +70,7 @@ const helperFree=async(page,state)=>{
  assert.equal(await page.locator('#composer-status').getAttribute('role'),'status');
  console.log(JSON.stringify({viewport:page.viewportSize().width,helperCopyAbsent:state,path:new URL(page.url()).pathname,labelAndLiveStatusPreserved:true}));
 };
-const browser=await chromium.launch();
+const browser=await chromium.launch({args:['--disable-features=BackForwardCache']});
 try{
  for(const [name,width,height] of [['desktop',1440,1000],['intermediate',900,900],['breakpoint',720,900],['mobile',390,844],['narrow',320,800]]){
   const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE content_cards(id TEXT PRIMARY KEY,status TEXT,content_json TEXT,expires_at TEXT);CREATE TABLE content_checks(id TEXT PRIMARY KEY,result_json TEXT,created_at TEXT)');
@@ -89,7 +89,7 @@ try{
     run:async()=>({meta:{changes:Number(s.run(...args).changes)}})
    };}};
   }};
-  let providerCalls=0,zero=false,failPage=false,forcedIntentStatus=null;
+  let intentPosts=0,intentGets=0,providerCalls=0,zero=false,failPage=false,forcedIntentStatus=null;
   const worker=createWorker({now:()=>at,resolveIntentOwner:async()=> 'a'.repeat(64),fetchUpstream:async(_,options)=>{
    providerCalls++;const body=JSON.parse(options.body);
    return Response.json({model:'jev-1.14.0',usage:{input_tokens:100,output_tokens:20},answers:Object.fromEntries(body.state.candidates.map((c,i)=>{
@@ -106,7 +106,7 @@ try{
   const context=await browser.newContext({viewport:{width,height},hasTouch:['mobile','narrow'].includes(name),reducedMotion:'reduce',recordVideo:{dir:resolve(output,'journey-recordings'),size:{width,height}}});
   const activate=locator=>name==='mobile'?locator.tap():locator.click();
   const serve=async route=>{
-   const r=route.request(),url=new URL(r.url());
+   const r=route.request(),url=new URL(r.url());if(url.pathname==='/api/content/intent'){if(r.method()==='POST')intentPosts++;else intentGets++;}
    if(url.href==='https://cdn.prod.website-files.com/60e0035471e8115799a8640b/64e0f1446e4ab5692426f843_Village-Youth-Logo.svg'){await new Promise(resolve=>setTimeout(resolve,250));return route.fulfill({status:200,contentType:'image/svg+xml',body:await readFile(resolve('dist/village-youth-source.svg'))});}
    if(url.origin!==origin)return route.abort();
    if(forcedIntentStatus&&url.pathname==='/api/content/intent'&&r.method()==='POST')return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({status:forcedIntentStatus})});
@@ -117,6 +117,7 @@ try{
    await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});
   };
   await context.route('**/*',serve);
+  await context.addInitScript(()=>addEventListener('pageshow',event=>{globalThis.__restoredFromBfcache=event.persisted;}));
   const page=await context.newPage(),recordingStarted=performance.now();await page.clock.install({time:new Date(at)});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin);await page.locator('html[data-site-revealed="true"]').waitFor({timeout:30000});
@@ -320,11 +321,29 @@ try{
   await page.screenshot({path:resolve(output,name+'-ranked-tail.png')});
   const composer=await page.locator('#prompt-composer').boundingBox();assert(composer&&composer.y>=0&&composer.y+composer.height<=height+1);
   const last=await page.locator('#grid > article.card').last().boundingBox();console.log(JSON.stringify({viewport:name,rankedTail:{lastBottom:last?.y+last?.height,composerTop:composer?.y,...await page.evaluate(()=>({scrollY,height:innerHeight,scrollHeight:document.documentElement.scrollHeight}))}}));assert(last&&last.y+last.height<=composer.y,'final resource clears the bottom composer');
+  // Combined ranked discovery journey: the reconstructed document restores
+  // this exact owned receipt/progress through GET, never a new POST/inference.
+  const targetId=ids.at(-1),target=page.locator('#'+targetId+' a[href]').first();await target.focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+  const departureY=await page.evaluate(()=>scrollY),departurePath=new URL(page.url()).pathname,detailPath=await target.getAttribute('href'),beforeBackPosts=intentPosts,beforeBackGets=intentGets;
+  await page.keyboard.press('Enter');await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,detailPath);
+  await page.locator('#detail .detail-shell > .back').click();await page.waitForFunction(({id,path})=>location.pathname===path&&document.querySelector('#count')?.textContent==='71 ranked resources loaded'&&document.activeElement?.closest('article')?.id===id,{id:targetId,path:departurePath});
+  assert.equal(await page.evaluate(()=>globalThis.__restoredFromBfcache),false);assert(Math.abs(await page.evaluate(()=>scrollY)-departureY)<3);assert.deepEqual(await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id)),ids);
+  const historyCapture=await page.evaluate(()=>({url:location.href,state:history.state,local:Object.keys(localStorage),session:Object.keys(sessionStorage)}));assert(!JSON.stringify(historyCapture).includes('Synthetic review question'));assert(!JSON.stringify(historyCapture).includes('<article'));assert(!historyCapture.url.includes('receipt'));assert.equal(historyCapture.state.fvcFeedRestore.intent.pages,3);
+  await page.screenshot({path:resolve(output,name+'-ranked-back.png')});
+  const bounds=await target.boundingBox(),overlay=await page.locator('#prompt-composer').boundingBox();assert(bounds.y>=0);assert(bounds.y<overlay.y,'restored target starts above the sticky composer');
+  await page.goForward();await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,detailPath);
+  const storedTarget=JSON.parse(db.prepare('SELECT content_json FROM content_cards WHERE id=?').get(targetId.slice(5)).content_json);storedTarget.hold=true;db.prepare('UPDATE content_cards SET content_json=? WHERE id=?').run(JSON.stringify(storedTarget),targetId.slice(5));
+  await page.goBack();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='70 ranked resources loaded'&&document.activeElement===document.querySelector('#collection h1'));
+  assert.equal(await page.locator('#'+targetId).count(),0);assert.equal(new Set(await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id))).size,70);assert.equal(intentPosts,beforeBackPosts);assert.equal(providerCalls,calls);assert(intentGets>=beforeBackGets+2);
+  await page.screenshot({path:resolve(output,name+'-ranked-back-held.png')});
+  console.log(JSON.stringify({viewport:name,rankedDetailBack:'passed',bfcache:false,traversedPages:[24,24,23],reconstructedEligible:70,exactReceipt:true,backPosts:intentPosts-beforeBackPosts,backProviderCalls:providerCalls-calls,focusFallback:true,queryAbsentFromHistory:true,reducedMotion:'reduce'}));
+  // Restore only this isolated synthetic fixture for the independent all-zero case.
+  storedTarget.hold=false;db.prepare('UPDATE content_cards SET content_json=? WHERE id=?').run(JSON.stringify(storedTarget),targetId.slice(5));
   // A fresh synthetic database state enables one new all-zero fixture query.
   // This is not a runtime recovery or spend reset mechanism.
   db.prepare("UPDATE content_checks SET result_json=json_set(result_json,'$.lastStartedAt',0) WHERE id='jev-intent-runtime-v1'").run();zero=true;
   await page.locator('#prompt-text').fill('Synthetic no-close question');await page.locator('#prompt-submit').click();
-  await page.waitForFunction(()=>document.querySelector('#composer-status')?.textContent.startsWith('No close matches.'));
+  await page.waitForFunction(()=>document.querySelector('#composer-status')?.textContent.startsWith('No close matches in this saved result.'));
   assert.equal(await page.locator('#grid > article.card').count(),24);await helperFree(page,'no-close-results');await page.screenshot({path:resolve(output,name+'-no-close.png')});assert.deepEqual(errors,[]);
   console.log(JSON.stringify({viewport:name,candidateCount:71,rendered:ids.length,weakSecond:true,noCloseRetained:24,continuationProviderCalls,composerWithinViewport:true,pageErrors:errors}));
   const beforeFailureCalls=providerCalls;forcedIntentStatus='unconfigured';

@@ -14,7 +14,7 @@ const req=path=>new Request('https://next.freedomvillage.church'+path,{headers:{
 const asset='<!doctype html><html><head><title>Old</title><meta name="description" content="Old"></head><body><a href="#main">Skip to content</a><nav aria-label="Explore the community" id="filters"></nav><main id="main"></main><script src="content-view.js"></script></body></html>';
 test('structured projection rejects held/synthetic/untrusted content and never exposes editorial fields',()=>{
  const row=c=>({id:'sample-story',content_json:JSON.stringify(c)}),c=publicCard(row({...sample(),editorial:'PRIVATE_FIXTURE',sourceUrl:'PRIVATE_SOURCE'}));assert(c);assert(!JSON.stringify(c).includes('PRIVATE'));
- for(const extra of [{isSynthetic:true},{isSynthetic:undefined},{hold:true},{sourceStatus:'pending'},{actions:[{label:'Unsafe',href:'javascript:alert(1)'}]},{categories:['unknown']},{media:{kind:'brand',src:'https://evil.invalid/logo.svg',alt:'Bad'}},{related:['../bad']},{homePriority:1000}])assert.equal(publicCard(row(sample(extra))),null);
+ for(const extra of [{isSynthetic:true},{isSynthetic:undefined},{hold:true},{sourceStatus:'pending'},{actions:[{label:'Unsafe',href:'javascript:alert(1)'}]},{categories:['unknown']},{media:{kind:'brand',src:'https://evil.invalid/logo.svg',alt:'Bad'}},{related:['../bad']}])assert.equal(publicCard(row(sample(extra))),null);
 });
 test('real SQL keyset pagination has stable priority order without duplicate/missing cards',async()=>{
  const {db,add,adapter}=database();try{for(let i=0;i<29;i++)add('sample-'+String(i).padStart(2,'0'),sample({homePriority:i<3?90:50}));
@@ -131,4 +131,36 @@ test('persistent Connect and Give actions remain same-tab internal navigation',a
  const links=[...html.matchAll(/<a\b[^>]*href="\/(?:connect|give)"[^>]*>[^<]*<\/a>/g)].map(m=>m[0]);
  assert.equal(links.length,4);
  for(const link of links){assert(!link.includes('target="_blank"'));assert(!link.includes('↗'));}
+});
+
+test('optional presentation falls back neutrally without weakening factual/action/media validation',async()=>{
+ const row=extra=>({id:'sample-fallback',content_json:JSON.stringify(sample(extra))});
+ for(const design of [undefined,null,{}, {theme:'untrusted',layout:'<script>',motif:'bad',motion:'bad',size:'bad'}, {...sample().design,layout:'image'}]){
+  const c=publicCard(row({design,editorial:'PRIVATE_NOTE'}));assert(c);assert(c.presentationFallback);assert.deepEqual(c.design,{theme:'paper',layout:'text',motif:'none',motion:'none',size:'regular'});assert.equal(c.detail[0],'A complete readable paragraph.');assert(!JSON.stringify(c).includes('PRIVATE'));
+ }
+ for(const extra of [{hold:true},{isSynthetic:true},{sourceStatus:'pending'},{actions:[{label:'Unsafe',href:'javascript:alert(1)'}]},{media:{kind:'image',src:'/media/other.jpg'}}])assert.equal(publicCard(row({design:null,...extra})),null);
+ const {db,add,adapter}=database();try{add('sample-fallback',sample({design:null,homePriority:999}));const env={CONTENT_DB:adapter,CONTENT_PILOT_ENABLED:'true',ASSETS:{fetch:async()=>new Response(asset)}};
+ assert.equal((await readCatalog(adapter)).items[0].id,'sample-fallback');const detail=await(await handleContentPage(req('/cards/sample-fallback'),env)).text();assert(detail.includes('A complete readable paragraph.'));assert(detail.includes('theme-paper'));assert(!detail.includes('has-motion'));
+ }finally{db.close();}
+});
+test('SQL and projected priority normalize identically through empty raw pages and every cursor is usable',async()=>{
+ const {db,add,adapter}=database();try{
+ // More than one raw page of invalid factual rows, including a fully empty
+ // projected page, must not terminate traversal before safe fallback records.
+ for(let i=0;i<49;i++)add('invalid-'+String(i).padStart(3,'0'),sample({title:'',homePriority:90}));
+ const priorities=[undefined,'70',70.5,-1,999,null,true,0,100,50];
+ const expected=[];for(let i=0;i<75;i++){const id='safe-'+String(i).padStart(3,'0');expected.push(id);add(id,sample({homePriority:priorities[i%priorities.length],design:i%2?null:sample().design}));}
+ let after='',ids=[],emptyPages=0;const cursors=new Set();
+ do{const page=await readCatalog(adapter,{after});if(!page.items.length)emptyPages++;for(const c of page.items){ids.push(c.id);assert(c.homePriority>=0&&c.homePriority<=100&&Number.isInteger(c.homePriority));}
+ after=page.nextCursor;if(after){assert(validCursor(after));assert(!cursors.has(after));cursors.add(after);}
+ }while(after);
+ assert(emptyPages>=1);assert(cursors.size>2);assert.equal(ids.length,75);assert.equal(new Set(ids).size,75);assert.deepEqual(ids.sort(),expected.sort());
+ }finally{db.close();}
+});
+
+test('raw JSON integer-valued real/exponent priority follows JS numeric semantics in SQL and projection',async()=>{
+ const {db,adapter}=database();try{
+ for(const [id,value] of [['real','70.0'],['exponent','7e1'],['fraction','70.5'],['string','"70"']])db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(sample()).replace('"homePriority":50','"homePriority":'+value),null);
+ const result=await readCatalog(adapter);assert.deepEqual(result.items.map(c=>[c.id,c.homePriority]),[['exponent',70],['real',70],['fraction',50],['string',50]]);
+ }finally{db.close();}
 });

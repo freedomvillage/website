@@ -3,7 +3,9 @@ const source=fs.readFileSync('dist/intent.js','utf8');
 function setup(fetch){
  const node=()=>({dataset:{},attrs:{},handlers:{},setAttribute(k,v){this.attrs[k]=v;},removeAttribute(k){delete this.attrs[k];},focus(){this.focused=true;},addEventListener(k,v){this.handlers[k]=v;},remove(){this.removed=true;}});
  const nodes=Object.fromEntries(['prompt-composer','prompt-text','prompt-submit','composer-status','grid'].map(id=>[id,node()]));nodes.grid.after=el=>{nodes[el.id]=el;};
- const rendered=[],context={document:{getElementById:id=>nodes[id],createElement:node},fetch,URLSearchParams,crypto:{randomUUID:()=> '11111111-1111-4111-8111-111111111111'},AbortSignal,contentView:{showIntent:(html,options)=>rendered.push({html,options})}};
+ let uuid=0;
+ const reflectedFetch=async(url,options)=>{const response=await fetch(url,options);if(options.method==='POST'&&response.headers.get('Content-Type')?.includes('application/json')){const value=await response.json();if(value.receipt)value.receipt.requestId=JSON.parse(options.body).requestId;return Response.json(value,{status:response.status});}return response;};
+ const rendered=[],context={document:{getElementById:id=>nodes[id],createElement:node},fetch:reflectedFetch,URLSearchParams,crypto:{randomUUID:()=> (++uuid===1?'11111111-1111-4111-8111-111111111111':'22222222-2222-4222-8222-222222222222')},AbortSignal,contentView:{showIntent:(html,options)=>rendered.push({html,options})}};
  vm.createContext(context);vm.runInContext(source,context);return {context,nodes,rendered};
 }
 const result=(selection={})=>{const s={version:2,selectedIds:['connect-card'],after:'',nextCursor:null,totalCount:1,closeMatchCount:1,...selection};return {status:'ok',selectedIds:s.selectedIds,html:'<article class="card">Connect</article>',renderSelection:s,receipt:{status:'ok',requestId:'jev-intent-request:11111111-1111-4111-8111-111111111111'}};};
@@ -50,4 +52,16 @@ test('all request failures retain live feedback without provider branding or hel
   await context.submitVisitorIntent('Synthetic question');const text=nodes['composer-status'].textContent;
   assert.equal(calls,1);assert.equal(rendered.length,0);assert(text.includes(expected));assert.doesNotMatch(text,/\bJev\b|sensitive (?:data|details)/i);assert.equal(nodes['prompt-submit'].disabled,false);
  }
+});
+
+test('confirmed success creates a fresh same-text claim and visibly labels the next submission as a new search',async()=>{
+ const requests=[],{context,nodes}=setup(async(_,options)=>{requests.push(JSON.parse(options.body));return ok();});await context.submitVisitorIntent('Same question');assert(nodes['composer-status'].textContent.includes('start a new search'));assert.equal(nodes['prompt-submit'].attrs['aria-label'],'Start a new search');await context.submitVisitorIntent('Same question');assert.notEqual(requests[0].requestId,requests[1].requestId);
+});
+test('reconstructed replay is exact owned GET, with bounded progress and no POST/question body',async()=>{
+ let optionsSeen,urlSeen;const {context,rendered}=setup(async(url,options)=>{urlSeen=url;optionsSeen=options;return ok();});
+ assert(await context.restoreVisitorIntent({receipt:'jev-intent-request:11111111-1111-4111-8111-111111111111',pages:3}));assert(urlSeen.includes('replay=first'));assert(urlSeen.includes('pages=3'));assert(!urlSeen.includes('latest'));assert.equal(optionsSeen.body,undefined);assert.equal(optionsSeen.method,undefined);assert.equal(rendered[0].options.quiet,true);assert.equal(context.visitorIntentState().pages,3);
+});
+test('a new query supersedes pending GET replay without late overwrite',async()=>{
+ let release;const wait=new Promise(r=>release=r);const {context,rendered}=setup(async(url)=>{if(url.includes('?')){await wait;return ok();}return ok();});
+ const replay=context.restoreVisitorIntent({receipt:'jev-intent-request:11111111-1111-4111-8111-111111111111',pages:3});await context.submitVisitorIntent('New question');release();assert.equal(await replay,false);assert.equal(rendered.length,1);
 });

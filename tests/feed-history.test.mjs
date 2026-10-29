@@ -41,7 +41,7 @@ test('the authored readers restore bounded single-page hints without enabling ot
   const returned=harness({path,state,navigation:'back_forward'});returned.link(id,href);const controller=returned.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('Reader must not re-fetch pages');},measure(){}});assert(controller.willRestore());await controller.restore();assert.deepEqual(returned.focused,[id]);assert.equal(returned.scrolls.at(-1).top,9169);
   state.fvcFeedRestore.pages=2;assert(!harness({path,state,navigation:'back_forward'}).context.createFeedHistory({}).willRestore());
  }
- for(const unsupported of ['/cards/freedom-kids#PRIVATE','/cards/freedom-kids?query=PRIVATE','/cards/other-reader','/cards/godly-play?query=PRIVATE','/cards/godly-play?after=50%3Ax','/cards/village-youth?question=PRIVATE','/cards/village-youth?after=50%3Ax'])assert.equal(harness({path:unsupported}).context.createFeedHistory({}),null);
+ for(const unsupported of ['/cards/freedom-kids#PRIVATE','/cards/freedom-kids?query=PRIVATE','/cards/godly-play?query=PRIVATE','/cards/godly-play?after=50%3Ax','/cards/village-youth?question=PRIVATE','/cards/village-youth?after=50%3Ax'])assert.equal(harness({path:unsupported}).context.createFeedHistory({}),null);
 });
 test('reconstructed Kids return reopens only the departed native question before measurement without storing prose',async()=>{
  const path='/cards/freedom-kids#kids-freedom-kids-2',state=saved(path,1);state.fvcFeedRestore.focus={cardId:'kids-reader',href:'/cards/godly-play'};
@@ -97,4 +97,33 @@ test('artwork-delayed reveal retries Back focus, unless the user has intervened'
   const controller=h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore:async()=>false,measure(){}});await controller.restore();assert.equal(h.focused.length,0);assert.equal(h.scrolls.at(-1).top,9169);assert(callback);
   if(cancel)h.emit('keydown');visible=true;h.context.document.documentElement.dataset.siteRevealed='true';callback();assert.equal(h.focused.length,cancel?0:1);assert(disconnected);assert.equal(h.scrolls.at(-1).top,9169);
  }
+});
+
+test('ranked departure stores only bounded receipt/progress/focus hints and reconstructs through GET replay callback',async()=>{
+ const h=harness(),hint={receipt:'jev-intent-request:11111111-1111-4111-8111-111111111111',pages:3};
+ h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>true,intentState:()=>hint,loadMore(){throw Error('No ordinary feed replay');},measure(){}});h.click(h.link());h.emit('pagehide');
+ const value=h.context.history.state.fvcFeedRestore;assert.equal(value.version,2);assert.deepEqual(value.intent,hint);assert(!JSON.stringify(value).includes('question'));assert(!JSON.stringify(value).includes('<article'));assert.equal(h.context.location.search,'');
+ const returned=harness({state:h.context.history.state,navigation:'back_forward'});returned.link();let restores=0;
+ await returned.context.createFeedHistory({pageCount:()=>1,isIntent:()=>false,loadMore(){throw Error('Wrong replay');},async restoreIntent(saved){assert.deepEqual(JSON.parse(JSON.stringify(saved)),hint);restores++;return true;},measure(){}}).restore();assert.equal(restores,1);assert.equal(returned.scrolls.at(-1).top,9169);assert.deepEqual(returned.focused,['card-village-youth']);
+});
+test('malformed ranked hints and unavailable owned replay safely retain ordinary browsing',async()=>{
+ for(const intent of [{receipt:'latest',pages:3},{receipt:'jev-intent-request:11111111-1111-4111-8111-111111111111',pages:12}]){
+ const state=saved();state.fvcFeedRestore.version=2;state.fvcFeedRestore.intent=intent;const h=harness({state,navigation:'back_forward'});assert(!h.context.createFeedHistory({}).willRestore());
+ }
+ const state=saved();state.fvcFeedRestore.version=2;state.fvcFeedRestore.intent={receipt:'jev-intent-request:11111111-1111-4111-8111-111111111111',pages:3};const h=harness({state,navigation:'back_forward'});
+ await h.context.createFeedHistory({loadMore(){throw Error('Wrong path');},restoreIntent:async()=>false,measure(){throw Error('No failed placement');}}).restore();assert.equal(h.scrolls.length,0);assert.equal(h.focused.length,0);
+});
+
+test('removed ranked focus target waits for scene reveal before safe heading fallback',async()=>{
+ const state=saved('/topics/families',1);state.fvcFeedRestore.version=2;state.fvcFeedRestore.intent={receipt:'jev-intent-request:11111111-1111-4111-8111-111111111111',pages:3};
+ const h=harness({state,navigation:'back_forward'});let callback,visible=false,focused=false;const heading={focus(){focused=true;}};
+ h.context.document.querySelector=()=>heading;h.context.document.documentElement={};h.context.getComputedStyle=()=>({visibility:visible?'visible':'hidden'});h.context.MutationObserver=class{constructor(fn){callback=fn;}observe(){}disconnect(){}};
+ await h.context.createFeedHistory({restoreIntent:async()=>true,measure(){}}).restore();assert.equal(focused,false);assert(callback);visible=true;callback();assert.equal(focused,true);
+});
+
+test('successful new intent releases stalled restoration before departure writes its own exact receipt and focus',async()=>{
+ const state=saved();state.fvcFeedRestore.version=2;state.fvcFeedRestore.intent={receipt:'jev-intent-request:11111111-1111-4111-8111-111111111111',pages:3};
+ const h=harness({state,navigation:'back_forward'});let release,active=false;const wait=new Promise(r=>release=r),newHint={receipt:'jev-intent-request:22222222-2222-4222-8222-222222222222',pages:1};
+ const controller=h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>active,intentState:()=>newHint,restoreIntent:async()=>{await wait;return false;},measure(){}}),oldRestore=controller.restore();
+ active=true;controller.write(true);h.click(h.link());h.emit('pagehide');assert.equal(h.context.history.state.fvcFeedRestore.intent.receipt,newHint.receipt);assert.equal(h.context.history.state.fvcFeedRestore.focus.cardId,'card-village-youth');release();await oldRestore;assert.equal(h.context.history.state.fvcFeedRestore.intent.receipt,newHint.receipt);
 });

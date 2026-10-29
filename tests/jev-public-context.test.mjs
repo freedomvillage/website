@@ -26,3 +26,22 @@ test('invalid public context fails locally rather than leaking arbitrary objects
  for(const extra of [{categories:['PRIVATE_CATEGORY']},{detail:[{private:'PRIVATE_NOTE'}]},{detail:Array(13).fill('x')},{sections:Array(11).fill({heading:'x',paragraphs:['x']})},{sections:[{heading:'x',paragraphs:Array(4).fill('x')}]},{actions:[{label:{private:'PRIVATE_NOTE'}}]}])assert.throws(()=>rankingRequest('A question',[{...card,...extra}]));
  assert.throws(()=>intentBatches('A question',[{...card,detail:[42]}]));
 });
+
+test('stable dataset fingerprints cover exact provider-visible fields while synthetic identity attributes query, clock, model and rubric',async()=>{
+ const {rankingDatasetFingerprint,rankingSnapshot,RANKING_MODEL,RANKING_RUBRIC_VERSION}=await import('../src/content/jev.mjs');
+ const {evaluationPlan}=await import('../src/content/evaluation.mjs');
+ const base=await rankingDatasetFingerprint([card]),mutations=[{title:'Changed title'},{summary:'Changed summary'},{detail:['Changed detail']},{categories:['community']},{sections:[{heading:'Changed section',paragraphs:['Changed body']}]},{actions:[{label:'Changed action'}]}];
+ for(const extra of mutations)assert.notEqual(await rankingDatasetFingerprint([{...card,...extra}]),base);
+ assert.equal(await rankingDatasetFingerprint([{...card,private_notes:['OTHER_PRIVATE'],media:null,homePriority:99,design:{theme:'clay'}}]),base);
+ const fixture={id:'sample-case',query:'Synthetic question',expectedUsefulIds:[]},at=Date.parse('2026-10-29T00:00:00Z');
+ const a=await evaluationPlan(fixture,[card],at),b=await evaluationPlan({...fixture,query:'Other synthetic question'},[card],at),c=await evaluationPlan(fixture,[card],at+1000);
+ assert.equal(a.snapshot.datasetSha256,b.snapshot.datasetSha256);assert.equal(a.snapshot.datasetSha256,c.snapshot.datasetSha256);assert.notEqual(a.executionSha256,b.executionSha256);assert.notEqual(a.executionSha256,c.executionSha256);
+ assert.equal(a.snapshot.model,RANKING_MODEL);assert.equal(a.snapshot.rubric,RANKING_RUBRIC_VERSION);assert.notEqual(a.snapshot.contractSha256,c.snapshot.contractSha256);
+ assert(!JSON.stringify(a.snapshot).includes(fixture.query));assert.equal((await rankingSnapshot([card],a.batches,a.context)).datasetSha256,base);
+});
+test('Korean byte limits, duplicate IDs and malformed candidates fail before dispatch',()=>{
+ const query='질문'.repeat(250),cards=Array.from({length:71},(_,i)=>({...card,id:'sample-'+i,title:'한'.repeat(160),summary:'글'.repeat(600),facts:Array(6).fill('가'.repeat(160))}));
+ const batches=intentBatches(query,cards);assert.equal(batches.flat().length,71);
+ for(const batch of batches)assert(new TextEncoder().encode(JSON.stringify(rankingRequest(query,batch,'jev-1.14.0'))).length<=40000);
+ assert.throws(()=>intentBatches(query,[cards[0],cards[0]]));assert.throws(()=>intentBatches(query,[{...cards[0],summary:42}]));
+});

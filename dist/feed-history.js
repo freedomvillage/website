@@ -1,5 +1,5 @@
 // Navigation hints live only in this tab's history entry. Never cache content,
-// composer text, Jev results, personal fields, credentials or private responses.
+// composer text, result HTML, personal fields, credentials or private responses.
 (function(root){
  const KEY='fvcFeedRestore',MAX_PAGES=32,TTL=30*60*1000;
  const number=(n,max)=>Number.isFinite(n)&&n>=0&&n<=max;
@@ -13,24 +13,29 @@
   }catch{return null;}
  }
  const destination=value=>{try{const u=new URL(value,root.location.href);return u.origin===root.location.origin&&!u.username&&!u.password&&!u.search&&!u.hash&&(/^\/(?:cards|events|studies)\/[a-z][a-z0-9-]{0,79}$/.test(u.pathname)||['/connect','/give','/prayer','/resources'].includes(u.pathname))?u.pathname:null;}catch{return null;}};
- function valid(value,path){return value?.version===1&&value.path===path&&Number.isInteger(value.pages)&&value.pages>=1&&value.pages<=MAX_PAGES&&(!path.startsWith('/cards/')||value.pages===1)&&number(value.y,10000000)&&number(Date.now()-value.at,TTL)&&
+ const intentPath=value=>{try{const u=new URL(value,root.location.href);return !u.search&&(!u.hash||u.hash==='#main')&&destination(u.origin+u.pathname)?u.pathname+u.hash:null;}catch{return null;}};
+ function valid(value,path){return [1,2].includes(value?.version)&&value.path===path&&Number.isInteger(value.pages)&&value.pages>=1&&value.pages<=MAX_PAGES&&(!path.startsWith('/cards/')||value.pages===1)&&number(value.y,10000000)&&number(Date.now()-value.at,TTL)&&
+  (value.version===1||(value.intent&&/^jev-intent-request:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value.intent.receipt)&&Number.isInteger(value.intent.pages)&&value.intent.pages>=1&&value.intent.pages<=11))&&
   (value.focus===null||(typeof value.focus?.cardId==='string'&&/^[a-zA-Z0-9_-]{1,180}$/.test(value.focus.cardId)&&destination(value.focus.href)===value.focus.href));}
- root.createFeedHistory=function({pageCount,isIntent,loadMore,measure}){
-  const path=sourcePath(root.location.href);if(!path||!root.history?.replaceState)return null;
+ root.createFeedHistory=function({pageCount,isIntent,loadMore,measure,intentState=()=>null,restoreIntent=async()=>false}){
+  const ordinaryPath=sourcePath(root.location.href),path=ordinaryPath||intentPath(root.location.href);if(!path||!root.history?.replaceState)return null;
   let saved;try{saved=root.history.state?.[KEY];}catch{}
-  if(!valid(saved,path))saved=null;
+  if(!valid(saved,path)||(!ordinaryPath&&saved?.version!==2))saved=null;
   let focus=null,cancelled=false,restoring=false,finished=false,revealObserver=null;
   const navigation=root.performance?.getEntriesByType?.('navigation')?.[0]?.type;
   if(navigation&& !['back_forward','reload'].includes(navigation))saved=null;
-  function write(){
-   if(restoring||isIntent())return;
-   const currentPath=sourcePath(root.location.href);if(!currentPath)return;
+  function write(supersede=false){
+   if(supersede){cancelled=true;restoring=false;saved=null;focus=null;revealObserver?.disconnect();}
+   if(restoring)return;
+   const currentPath=sourcePath(root.location.href)||intentPath(root.location.href);if(!currentPath)return;
    const pages=pageCount();if(!Number.isInteger(pages)||pages<1||pages>MAX_PAGES)return;
-   const value={version:1,path:currentPath,pages,y:Math.max(0,Math.min(10000000,root.scrollY||0)),focus,at:Date.now()};
+   const intent=isIntent()?intentState():null;if(isIntent()&&!intent)return;
+   if(!ordinaryPath&&!intent)return;
+   const value={version:intent?2:1,path:currentPath,pages,y:Math.max(0,Math.min(10000000,root.scrollY||0)),focus,at:Date.now(),...(intent?{intent}: {})};
    try{root.history.replaceState({...root.history.state,[KEY]:value},'');}catch{/* Storage-disabled history remains native navigation. */}
   }
   root.document.addEventListener('click',event=>{
-   if(event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||(event.button!==undefined&&event.button!==0)||isIntent())return;
+   if(event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||(event.button!==undefined&&event.button!==0))return;
    const link=event.target?.closest?.('main a[href]'),href=link&&destination(link.href);if(!href||link.target==='_blank'||link.hasAttribute('download'))return;
    const card=link.closest('section[data-history-anchor][id]')||link.closest('details[data-history-anchor][id]')||link.closest('article[id]');focus=card&&/^[a-zA-Z0-9_-]{1,180}$/.test(card.id)?{cardId:card.id,href}:null;write();
   });
@@ -40,14 +45,15 @@
   function place(){
    if(!saved||cancelled)return;
    const card=saved.focus&&root.document.getElementById(saved.focus.cardId),link=card&&[...card.querySelectorAll('a[href]')].find(a=>destination(a.href)===saved.focus.href);
-   if(link&&root.getComputedStyle?.(link).visibility==='hidden'){
+   const target=link||(saved.intent?root.document.querySelector('#collection h1'):null);
+   if(target&&root.getComputedStyle?.(target).visibility==='hidden'){
     // The scene loader temporarily hides content; focus() cannot succeed yet.
     // Retry after reveal, without caching content or stealing focus after input.
     if(!revealObserver&&root.MutationObserver&&root.document.documentElement){
      revealObserver=new root.MutationObserver(()=>{if(!cancelled)place();});
      revealObserver.observe(root.document.documentElement,{attributes:true,attributeFilter:['data-site-revealed']});
     }
-   }else{revealObserver?.disconnect();revealObserver=null;link?.focus({preventScroll:true});}
+   }else{revealObserver?.disconnect();revealObserver=null;target?.focus({preventScroll:true});}
    root.scrollTo({top:saved.y,left:0,behavior:'instant'});
   }
   // Native bfcache already has the full DOM. Only reconstructed documents need
@@ -58,7 +64,8 @@
    const signal=root.AbortSignal?.timeout?.(20000),started=Date.now();
    let original;try{original=root.history.scrollRestoration;root.history.scrollRestoration='manual';}catch{}
    try{
-    for(let page=1;page<saved.pages&&!cancelled&&Date.now()-started<20000;page++)if(!await loadMore(signal))break;
+    if(saved.intent){if(!await restoreIntent(saved.intent,signal))return;}
+    else for(let page=1;page<saved.pages&&!cancelled&&Date.now()-started<20000;page++)if(!await loadMore(signal))break;
     if(cancelled)return;
     // A reconstructed Kids reader must reopen the native source question before
     // measuring its saved departure position. The hint stores only a route/ID.
@@ -71,7 +78,7 @@
     place();finished=true;
    }catch{/* Keep the current canonical feed usable if restoration cannot finish. */}
    finally{restoring=false;try{if(['auto','manual'].includes(original))root.history.scrollRestoration=original;}catch{}}
-  }};
+  },write};
  };
  root.keepContentFocusVisible=function(target){
   if(!target?.closest?.('main')||target.closest('[hidden]'))return;

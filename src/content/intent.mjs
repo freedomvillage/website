@@ -1,13 +1,13 @@
-import {privateNextRequest,readCatalog,json} from './catalog.mjs';
-import {rankingRequest,rankPublishedCards,RANKING_INPUT_VERSION} from './jev.mjs';
+import {privateNextRequest,readRankingCatalog,json} from './catalog.mjs';
+import {rankingRequest,rankPublishedCards,RANKING_INPUT_VERSION,RANKING_MODEL,rankingBatches,rankingSnapshot,rankingDatasetFingerprint} from './jev.mjs';
 import {renderCard,cardPath} from './pages.mjs';
 import {resolveIntentOwner} from './intent-owner.mjs';
 
 // Explicit recovery approved on 2026-10-24 after review of the failed evaluation.
 // Historical evaluation rows are never updated, deleted or treated as successful.
 export const INTENT_STATE='jev-intent-runtime-v1',RECOVERY='jev-intent-recovery-v1';
-const MODEL='jev-1.14.0';
-const RESERVE_USD=.003,BUDGET_USD=.10,MIN_INTERVAL=10000,MAX_BATCHES=24;
+const MODEL=RANKING_MODEL;
+const RESERVE_USD=.003,BUDGET_USD=.10,MIN_INTERVAL=10000;
 const FIXED_QUERY='We are visiting with children and would like to get connected.';
 const error=(status,http=409,extra={})=>json({status,...extra},http);
 const parse=row=>row?.result_json?JSON.parse(row.result_json):null;
@@ -15,30 +15,8 @@ async function get(db,id){return db.prepare('SELECT result_json FROM content_che
 async function save(db,id,value){await db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').bind(JSON.stringify(value),id).run();}
 async function claim(db,id,at,initial){return (await db.prepare('INSERT OR IGNORE INTO content_checks(id,result_json,created_at) VALUES(?,?,?)').bind(id,JSON.stringify(initial),new Date(at).toISOString()).run()).meta?.changes===1;}
 
-export async function intentCatalog(db,now){
- const cards=[],ids=new Set(),cursors=new Set();let after='';
- for(let page=0;page<32;page++){
-  const result=await readCatalog(db,{after,now});
-  for(const c of result.items){if(ids.has(c.id))throw Error('Duplicate catalog ID');ids.add(c.id);cards.push(c);}
-  if(cards.length>256)throw Error('Catalog limit');
-  if(!result.nextCursor)return cards;
-  if(cursors.has(result.nextCursor))throw Error('Repeated cursor');
-  cursors.add(result.nextCursor);after=result.nextCursor;
- }
- throw Error('Catalog limit');
-}
-export function intentBatches(query,cards){
- if(!cards.length||cards.length>256)throw Error('Catalog limit');
- if(new Set(cards.map(c=>c.id)).size!==cards.length)throw Error('Duplicate candidate');
- const batches=[];let current=[];
- for(const card of cards){
-  try{rankingRequest(query,[...current,card],MODEL);current.push(card);}
-  catch{if(!current.length)throw Error('Invalid candidate');batches.push(current);current=[card];rankingRequest(query,current,MODEL);}
- }
- if(current.length)batches.push(current);
- if(batches.length>MAX_BATCHES)throw Error('Batch limit');
- return batches;
-}
+export const intentCatalog=readRankingCatalog;
+export const intentBatches=rankingBatches;
 async function body(request){
  const reader=request.body?.getReader();if(!reader)throw Error('Missing body');
  const decoder=new TextDecoder('utf-8',{fatal:true});let bytes=0,text='',timer;
@@ -48,17 +26,17 @@ async function body(request){
 }
 function publicReceipt(r){return {requestId:r.requestId,status:r.status,model:r.model||null,requestedModel:r.requestedModel||null,candidateCount:r.candidateIds.length,candidateIds:r.candidateIds,batches:r.batches,
  inputProjection:r.inputProjection||'summary-facts-v1',candidateInputs:r.candidateInputs||null,candidateInputScope:r.batchPlan?'attempted-or-transport-uncertain':'legacy-delivery-not-established',batchPlan:r.batchPlan||null,rankedBeforeEligibility:r.rankedBeforeEligibility||null,selection:r.selection||null,
- usage:r.usage,knownUsage:r.knownUsage||r.usage,usageComplete:r.usageComplete??Boolean(r.usage),estimatedCostUsd:r.estimatedCostUsd,ranked:r.ranked||[],failure:r.failure||null,completedAt:r.completedAt};}
-function selectionFor(receipt,cards,now,after=''){
+ snapshot:r.snapshot||null,usage:r.usage,knownUsage:r.knownUsage||r.usage,usageComplete:r.usageComplete??Boolean(r.usage),estimatedCostUsd:r.estimatedCostUsd,ranked:r.ranked||[],failure:r.failure||null,completedAt:r.completedAt};}
+function selectionFor(receipt,cards,now,after='',limit=24){
  const byId=new Map(cards.map(c=>[c.id,c])),ranked=receipt.rankedBeforeEligibility||receipt.ranked||[];
  const index=after?ranked.findIndex(r=>r.id===after):-1;
  if(after&&index<0)return null;
  // Advance in the immutable ranking, not a freshly filtered list: expiry or
  // removal before the cursor must never skip an unseen resource.
- const eligible=ranked.filter(r=>byId.has(r.id)),remaining=ranked.slice(index+1).filter(r=>byId.has(r.id)),selected=remaining.slice(0,24);
- return {version:2,noticeMinimumScore:1,scoreRange:[0,2],limit:24,after,totalCount:eligible.length,closeMatchCount:eligible.filter(r=>r.score>=1).length,
-  nextCursor:remaining.length>24?selected.at(-1).id:null,evaluatedAt:new Date(now).toISOString(),selectedIds:selected.map(r=>r.id),selectedPaths:selected.map(r=>cardPath(byId.get(r.id))),
-  belowThresholdIds:eligible.filter(r=>r.score<1).map(r=>r.id),unavailableIds:ranked.filter(r=>!byId.has(r.id)).map(r=>r.id),remainingIds:remaining.slice(24).map(r=>r.id)};
+ const eligible=ranked.filter(r=>byId.has(r.id)),remaining=ranked.slice(index+1).filter(r=>byId.has(r.id)),selected=remaining.slice(0,limit);
+ return {version:2,noticeMinimumScore:1,scoreRange:[0,2],limit,after,totalCount:eligible.length,closeMatchCount:eligible.filter(r=>r.score>=1).length,
+  nextCursor:remaining.length>limit?selected.at(-1).id:null,evaluatedAt:new Date(now).toISOString(),selectedIds:selected.map(r=>r.id),selectedPaths:selected.map(r=>cardPath(byId.get(r.id))),
+  belowThresholdIds:eligible.filter(r=>r.score<1).map(r=>r.id),unavailableIds:ranked.filter(r=>!byId.has(r.id)).map(r=>r.id),remainingIds:remaining.slice(limit).map(r=>r.id)};
 }
 async function inspectReceipt(receipt,db,now){
  const value=publicReceipt(receipt);if(receipt.status!=='ok')return value;
@@ -70,12 +48,16 @@ async function inspectReceipt(receipt,db,now){
    }))}};
  }catch{return {...value,currentInspection:{status:'unavailable',scope:'current-eligible-catalog-not-original-render'}};}
 }
-async function results(receipt,db,now,{persistSelection=false,after=''}={}){
+async function results(receipt,db,now,{persistSelection=false,after='',limit=24}={}){
  if(receipt.status!=='ok')return error('ranking-failed',503,{receipt:publicReceipt(receipt)});
  if(receipt.model!==MODEL||!Array.isArray(receipt.batches)||receipt.batches.some(b=>b.status!=='ok'||b.model!==MODEL))return error('model-receipt-needs-review');
  const cards=await intentCatalog(db,now),byId=new Map(cards.map(c=>[c.id,c]));
- const selection=selectionFor(receipt,cards,now,after);
+ const selection=selectionFor(receipt,cards,now,after,limit);
  if(!selection)return error('invalid-cursor',400);
+ const datasetSha256=await rankingDatasetFingerprint(cards),ageMs=Date.parse(receipt.completedAt)<=now?now-Date.parse(receipt.completedAt):null;
+ selection.snapshot={version:1,completedAt:receipt.completedAt||null,ageMs,
+  state:!receipt.snapshot?'unverified':receipt.snapshot.datasetSha256!==datasetSha256?'changed':ageMs===null||ageMs>30*60*1000?'older':'current',
+  scope:'eligible-resources-in-saved-ranking',addedCount:cards.filter(c=>!receipt.candidateIds.includes(c.id)).length};
  const html=selection.selectedIds.map(id=>renderCard(byId.get(id),cards)).join('');
  const saved=persistSelection?{...receipt,selection}:receipt;
  if(persistSelection)await save(db,receipt.requestId,saved);
@@ -91,9 +73,9 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
  const db=env.CONTENT_DB;
  try{
   if(request.method==='GET'){
-   const params=new URL(request.url).searchParams,id=params.get('receipt'),after=params.get('after');
-   if([...params.keys()].some(k=>!['receipt','after'].includes(k))||params.getAll('receipt').length>1||params.getAll('after').length>1||(id&&id!=='latest'&&!/^jev-intent-request:[0-9a-f-]{36}$/.test(id))||
-    (after!==null&&(!id||id==='latest'||!/^[a-z][a-z0-9-]{0,79}$/.test(after))))return error('invalid-receipt',400);
+   const params=new URL(request.url).searchParams,id=params.get('receipt'),after=params.get('after'),replay=params.get('replay'),pages=params.get('pages');
+   if([...params.keys()].some(k=>!['receipt','after','replay','pages'].includes(k))||params.getAll('receipt').length>1||params.getAll('after').length>1||params.getAll('replay').length>1||params.getAll('pages').length>1||(id&&id!=='latest'&&!/^jev-intent-request:[0-9a-f-]{36}$/.test(id))||
+    (after!==null&&(!id||id==='latest'||!/^[a-z][a-z0-9-]{0,79}$/.test(after)))||(replay!==null&&(replay!=='first'||!id||id==='latest'||after!==null))||(pages!==null&&(replay!=='first'||! /^(?:[1-9]|1[01])$/.test(pages))))return error('invalid-receipt',400);
    if(id){
     const row=id==='latest'?await db.prepare("SELECT id,result_json FROM content_checks WHERE id LIKE ? AND json_extract(result_json,'$.ownerScope')=? ORDER BY created_at DESC,id DESC LIMIT 1").bind('jev-intent-request:%',ownerScope).first():await get(db,id),value=parse(row);
     // Legacy/unowned rows stay intact, but cannot be retroactively claimed by
@@ -102,7 +84,7 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
     if(value.status==='pending')return error('pending-or-interrupted',409,{requestId:value.requestId,...(value.batchPlan?{batchPlan:value.batchPlan}:{})});
     // Continuation only reads this user's saved scores; it cannot enter the
     // provider, reservation, recovery, or receipt-write path below.
-    if(after!==null)return await results(value,db,now(),{after});
+    if(after!==null||replay==='first')return await results(value,db,now(),{after:after||'',limit:pages?Number(pages)*24:24});
     return json(await inspectReceipt(value,db,now()));
    }
    const recovery=await get(db,RECOVERY),state=parse(await get(db,INTENT_STATE));
@@ -130,7 +112,8 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    if(instant-state.lastStartedAt<MIN_INTERVAL)return error('rate-limited',429);
    const recoveryRow=await get(db,RECOVERY),recovery=parse(recoveryRow);
    if(recoveryRow&&(recovery?.status!=='ok'||recovery.model!==MODEL))return error('recovery-needs-review');
-   let cards,batches;try{cards=await intentCatalog(db,instant);batches=intentBatches(query,cards);}catch{return error('catalog-unavailable',503);}
+   const context={referenceTime:new Date(instant).toISOString()};
+   let cards,batches,snapshot;try{cards=await intentCatalog(db,instant);batches=intentBatches(query,cards,MODEL,context);snapshot=await rankingSnapshot(cards,batches,context);}catch{return error('catalog-unavailable',503);}
    const diagnosticCards=['freedom-kids','connect-card'].map(id=>cards.find(c=>c.id===id));
    if(!recovery&&diagnosticCards.some(c=>!c))return error('recovery-candidates-unavailable',503);
    const reservation=(batches.length+(recovery?0:1))*RESERVE_USD;
@@ -139,7 +122,7 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    const started=now(),deadline=started+55000,receipts=[];
    const run=async(q,batch)=>{
     if(now()>=deadline)return {status:'unavailable',dispatch:'not-sent',ranked:[],failure:{version:1,stage:'transport',code:'request-deadline'}};
-    return rankPublishedCards(q,batch,env,{fetchUpstream,model:MODEL,signal:AbortSignal.timeout(Math.max(1,deadline-now()))});
+    return rankPublishedCards(q,batch,env,{fetchUpstream,model:MODEL,context,signal:AbortSignal.timeout(Math.max(1,deadline-now()))});
    };
    let actualCost=0,unknownUsage=false;
    const account=result=>{if(result.usage)actualCost+=result.usage.inputTokens*.042/1000000;else unknownUsage=true;};
@@ -155,10 +138,10 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    const candidateInputs=[],candidateIds=cards.map(c=>c.id),batchPlan=batches.map((batch,index)=>({index,candidateIds:batch.map(c=>c.id),dispatch:'not-attempted'}));
    for(const [index,batch] of batches.entries()){
     batchPlan[index].dispatch='pending-or-uncertain';
-    await save(db,requestId,{status:'pending',ownerScope,requestId,inputProjection:RANKING_INPUT_VERSION,candidateIds,batches:receipts,batchPlan,candidateInputs});
+    await save(db,requestId,{status:'pending',ownerScope,requestId,inputProjection:RANKING_INPUT_VERSION,snapshot,candidateIds,batches:receipts,batchPlan,candidateInputs});
     const result=await run(query,batch);account(result);
     const dispatch=result.dispatch||'transport-uncertain';batchPlan[index].dispatch=dispatch;
-    if(dispatch!=='not-sent')candidateInputs.push(...rankingRequest(query,batch,MODEL).state.candidates);
+    if(dispatch!=='not-sent')candidateInputs.push(...rankingRequest(query,batch,MODEL,context).state.candidates);
     receipts.push({status:result.status,dispatch,candidateIds:batch.map(c=>c.id),model:result.model||null,usage:result.usage||null,failure:result.failure||null,validation:result.validation||null});
     if(result.usage){usage.inputTokens+=result.usage.inputTokens;usage.outputTokens+=result.usage.outputTokens;}
     if(result.status!=='ok'){failed=result;break;}
@@ -172,7 +155,7 @@ export async function handleIntent(request,env,{fetchUpstream=fetch,now=Date.now
    const current=failed?[]:await intentCatalog(db,now()),eligible=new Set(current.map(c=>c.id));
    ranked=ranked.filter(r=>eligible.has(r.id));
    const usageComplete=receipts.every(r=>r.usage);
-   const receipt={requestId,ownerScope,status:failed?'unavailable':'ok',model:failed?null:MODEL,requestedModel:MODEL,inputProjection:RANKING_INPUT_VERSION,candidateIds,candidateInputs,batchPlan,batches:receipts,ranked,rankedBeforeEligibility,usage:usageComplete?usage:null,knownUsage:usage,usageComplete,
+   const receipt={requestId,ownerScope,status:failed?'unavailable':'ok',model:failed?null:MODEL,requestedModel:MODEL,inputProjection:RANKING_INPUT_VERSION,snapshot,candidateIds,candidateInputs,batchPlan,batches:receipts,ranked,rankedBeforeEligibility,usage:usageComplete?usage:null,knownUsage:usage,usageComplete,
     estimatedCostUsd:receipts.every(r=>r.usage)?receipts.reduce((sum,r)=>sum+r.usage.inputTokens*.042/1000000,0):null,elapsedMs:Math.max(0,now()-started),completedAt:new Date(now()).toISOString(),...(failed?{failure:failed.failure||null}:{})};
    await save(db,requestId,receipt);
    if(!unknownUsage)state.spent=Math.max(0,state.spent-reservation+actualCost);

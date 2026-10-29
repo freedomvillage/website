@@ -48,7 +48,7 @@ export function createWorker({fetchUpstream=fetch,now=Date.now,resolveIntentOwne
    if(url.pathname==='/api/content')return handleCatalogRequest(request,env,{now:now()});
    if(url.pathname==='/api/content/intent')return handleIntent(request,env,{fetchUpstream,now,...(resolveIntentOwner?{resolveOwner:resolveIntentOwner}:{})});
    if(url.pathname==='/api/content/jev-check')return handleJevCheck(request,env);
-   if(url.pathname==='/api/content/evaluation')return handleRankingEvaluation(request,env);
+   if(url.pathname==='/api/content/evaluation')return handleRankingEvaluation(request,env,{now});
    if(url.pathname.startsWith('/media/'))return handleMediaRequest(request,env,{now:now()});
    if(url.pathname.startsWith('/studies/'))return handleStudyRequest(request,env,{now:now()});
    if(!url.pathname.startsWith('/api/')){
