@@ -3,7 +3,7 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 const script=fs.readFileSync('dist/feed-history.js','utf8'),origin='https://next.freedomvillage.church',instant=Date.parse('2026-10-24T15:00:00Z');
 function harness({path='/topics/families',state=null,navigation='navigate'}={}){
  const events={},documentEvents={},cards=new Map(),scrolls=[],focused=[];
- const context={URL,location:new URL(origin+path),innerHeight:400,scrollY:9169,performance:{getEntriesByType:()=>[{type:navigation}]},Date:class extends Date{static now(){return instant;}},requestAnimationFrame(fn){fn();},
+ const context={URL,AbortController,AbortSignal,location:new URL(origin+path),innerHeight:400,scrollY:9169,performance:{getEntriesByType:()=>[{type:navigation}]},Date:class extends Date{static now(){return instant;}},requestAnimationFrame(fn){fn();},
   history:{state,scrollRestoration:'auto',replaceState(value){this.state=JSON.parse(JSON.stringify(value));}},
   addEventListener(type,fn){(events[type]??=[]).push(fn);},scrollTo(value){scrolls.push(value);this.scrollY=value.top;},scrollBy(value){scrolls.push(value);},
   document:{activeElement:null,addEventListener(type,fn){(documentEvents[type]??=[]).push(fn);},getElementById(id){return cards.get(id)||null;}}};
@@ -133,5 +133,12 @@ test('searches started on core or generic detail routes restore intent hints wit
  const ordinary=harness({path,state:saved(path,1),navigation:'back_forward'}).context.createFeedHistory({});assert(ordinary);assert(!ordinary.willRestore());
  const h=harness({path}),hint={receipt:'jev-intent-request:11111111-1111-4111-8111-111111111111',pages:2};h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>true,intentState:()=>hint});h.click(h.link());h.emit('pagehide');assert.equal(h.context.history.state.fvcFeedRestore.path,path);
  const back=harness({path,state:h.context.history.state,navigation:'back_forward'});back.link();let reads=0;await back.context.createFeedHistory({restoreIntent:async actual=>{reads++;assert.equal(actual.receipt,hint.receipt);return true;},measure(){}}).restore();assert.equal(reads,1);assert.deepEqual(back.focused,['card-village-youth']);
+ }
+});
+
+test('user interaction aborts pending owned replay and closes its DOM commit gate before it resolves',async()=>{
+ for(const event of ['keydown','pointerdown','wheel','touchstart']){
+ const state=saved();state.fvcFeedRestore.version=2;state.fvcFeedRestore.intent={receipt:'jev-intent-request:11111111-1111-4111-8111-111111111111',pages:3};const h=harness({state,navigation:'back_forward'});let release,commit=false;const wait=new Promise(r=>release=r);let signal;
+ const restoring=h.context.createFeedHistory({async restoreIntent(hint,incoming,canCommit){signal=incoming;await wait;commit=canCommit()&&!incoming.aborted;return commit;},measure(){throw Error('No canceled measurement');}}).restore();h.emit(event);assert(signal.aborted);release();await restoring;assert.equal(commit,false);assert.equal(h.scrolls.length,0);assert.equal(h.focused.length,0);
  }
 });

@@ -22,10 +22,11 @@
   let saved;try{saved=root.history.state?.[KEY];}catch{}
   if(!valid(saved,path)||(!ordinaryPath&&saved?.version!==2))saved=null;
   let focus=null,cancelled=false,restoring=false,finished=false,revealObserver=null;
+  const cancellation=root.AbortController?new root.AbortController():null;
   const navigation=root.performance?.getEntriesByType?.('navigation')?.[0]?.type;
   if(navigation&& !['back_forward','reload'].includes(navigation))saved=null;
   function write(supersede=false){
-   if(supersede){cancelled=true;restoring=false;saved=null;focus=null;revealObserver?.disconnect();}
+   if(supersede){cancelled=true;cancellation?.abort();restoring=false;saved=null;focus=null;revealObserver?.disconnect();}
    if(restoring)return;
    const currentPath=sourcePath(root.location.href)||intentPath(root.location.href);if(!currentPath)return;
    const pages=pageCount();if(!Number.isInteger(pages)||pages<1||pages>MAX_PAGES)return;
@@ -40,7 +41,7 @@
    const card=link.closest('section[data-history-anchor][id]')||link.closest('details[data-history-anchor][id]')||link.closest('article[id]');focus=card&&/^[a-zA-Z0-9_-]{1,180}$/.test(card.id)?{cardId:card.id,href}:null;write();
   });
   root.addEventListener('pagehide',()=>{write();revealObserver?.disconnect();});
-  const cancel=()=>{cancelled=true;revealObserver?.disconnect();};
+  const cancel=()=>{cancelled=true;cancellation?.abort();revealObserver?.disconnect();};
   for(const event of ['wheel','touchstart','pointerdown','keydown'])root.addEventListener(event,cancel,{passive:true});
   function place(){
    if(!saved||cancelled)return;
@@ -61,10 +62,10 @@
   root.addEventListener('pageshow',event=>{if(finished&&!event.persisted)place();});
   return {willRestore:()=>Boolean(saved),async restore(){
    if(!saved)return;restoring=true;
-   const signal=root.AbortSignal?.timeout?.(20000),started=Date.now();
+   const timeout=root.AbortSignal?.timeout?.(20000),signal=cancellation?(timeout&&root.AbortSignal?.any?root.AbortSignal.any([cancellation.signal,timeout]):cancellation.signal):timeout,started=Date.now();
    let original;try{original=root.history.scrollRestoration;root.history.scrollRestoration='manual';}catch{}
    try{
-    if(saved.intent){if(!await restoreIntent(saved.intent,signal))return;}
+    if(saved.intent){if(!await restoreIntent(saved.intent,signal,()=>!cancelled))return;}
     else for(let page=1;page<saved.pages&&!cancelled&&Date.now()-started<20000;page++)if(!await loadMore(signal))break;
     if(cancelled)return;
     // A reconstructed Kids reader must reopen the native source question before
@@ -78,7 +79,10 @@
     place();finished=true;
    }catch{/* Keep the current canonical feed usable if restoration cannot finish. */}
    finally{restoring=false;try{if(['auto','manual'].includes(original))root.history.scrollRestoration=original;}catch{}}
-  },write};
+  },write,clear(){
+   cancel();restoring=false;saved=null;focus=null;
+   try{const value={...root.history.state};delete value[KEY];root.history.replaceState(value,'');}catch{}
+  }};
  };
  root.keepContentFocusVisible=function(target){
   if(!target?.closest?.('main')||target.closest('[hidden]'))return;

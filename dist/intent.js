@@ -51,11 +51,12 @@
  }
  // Only opaque navigation hints; neither question text nor result HTML is saved.
  globalThis.visitorIntentState=()=>owned?{receipt:owned.receipt,pages:owned.pages}:null;
- globalThis.restoreVisitorIntent=async(hint,signal)=>{
+ globalThis.restoreVisitorIntent=async(hint,signal,canCommit=()=>true)=>{
+  if(signal?.aborted||!canCommit())return false;
   const epoch=++generation;
   try{
    const result=await read('/api/content/intent?'+new URLSearchParams({receipt:hint.receipt,replay:'first',pages:String(hint.pages)}),signal||AbortSignal.timeout(15000));
-   if(epoch!==generation||pending||result.receipt.requestId!==hint.receipt||result.renderSelection.after!=='')return false;
+   if(signal?.aborted||!canCommit()||epoch!==generation||pending||result.receipt.requestId!==hint.receipt||result.renderSelection.after!=='')return false;
    owned={receipt:hint.receipt,pages:hint.pages};
    globalThis.contentView.showIntent(result.html,{selection:result.renderSelection,quiet:true});installPaging(result);
    status.textContent=resourceStatus(result.renderSelection);form.dataset.receipt=hint.receipt;return true;
@@ -101,6 +102,12 @@
  document.addEventListener?.('click',event=>{
   const link=event.target?.closest?.('a[href]');
   if(!link||event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||link.target==='_blank')return;
+  if(link.id==='intent-return'){
+   event.preventDefault();invalidate();owned=null;paging?.button.remove();paging=null;globalThis.contentView.clearNavigation?.();
+   // Clearing only the fragment is same-document navigation. Replace the URL
+   // and reload canonical server HTML so no ranked DOM or stale hint survives.
+   globalThis.history.replaceState(globalThis.history.state,'',location.pathname+location.search);location.reload();return;
+  }
   try{const url=new URL(link.href,location.href);if(url.origin===location.origin&&(url.pathname!==location.pathname||url.search!==location.search||link.id==='intent-return'))invalidate();}catch{}
  });
 })();

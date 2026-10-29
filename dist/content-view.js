@@ -109,14 +109,14 @@
  document.addEventListener('visibilitychange',motionState);
  root.contentView={render(){if(legacyLink())return;if(!started){started=true;enhance();detailBack();connectDraft();
   kidsContents();let paging;
-  const history=feedHistory=root.createFeedHistory?.({pageCount:()=>pagesLoaded,isIntent:()=>intentActive,intentState:()=>root.visitorIntentState?.()||null,restoreIntent:(hint,signal)=>root.restoreVisitorIntent?.(hint,signal)||false,loadMore:signal=>paging?.load(false,true,signal)||false,measure:()=>{if(typeof sizeCards==='function')sizeCards();}});
+  const history=feedHistory=root.createFeedHistory?.({pageCount:()=>pagesLoaded,isIntent:()=>intentActive,intentState:()=>root.visitorIntentState?.()||null,restoreIntent:(hint,signal,canCommit)=>root.restoreVisitorIntent?.(hint,signal,canCommit)||false,loadMore:signal=>paging?.load(false,true,signal)||false,measure:()=>{if(typeof sizeCards==='function')sizeCards();}});
   restoring=history?.willRestore()||false;paging=pagination();
   if(history)void history.restore().finally(()=>{restoring=false;paging?.observe();});
- }},saveNavigation({supersede=false}={}){feedHistory?.write(supersede);},showIntent(html,{append=false,selection,quiet=false}={}){
+ }},saveNavigation({supersede=false}={}){feedHistory?.write(supersede);},clearNavigation(){feedHistory?.clear();},showIntent(html,{append=false,selection,quiet=false}={}){
   const grid=document.getElementById('grid'),collection=document.getElementById('collection'),detail=document.getElementById('detail');if(!grid||!collection||!detail)throw Error('Results view unavailable');
   const parsed=new DOMParser().parseFromString('<div>'+html+'</div>','text/html'),articles=[...parsed.body.firstElementChild.children];
   if(articles.some(el=>!el.matches('article.card')))throw Error('Invalid results');
-  if(!append){document.querySelector('.collection-context')?.remove();collection.removeAttribute('data-topic');}
+  if(!append){document.querySelector('.collection-context')?.remove();collection.removeAttribute('data-topic');for(const section of collection.querySelectorAll('.study-heading,.design-alternative'))section.remove();}
   if(append&&!intentActive)throw Error('Results view changed');
   intentActive=true;document.querySelector('.load-more:not(#intent-more)')?.remove();
   let removedFocus=false;
@@ -129,8 +129,12 @@
   // Keep the original grid node used by masonry sizing; no generated JS executes.
   const copies=articles.filter(el=>!append||!document.getElementById(el.id)).map(el=>document.importNode(el,true));
   if(append)grid.append(...copies);else grid.replaceChildren(...copies);
-  collection.hidden=false;detail.hidden=true;document.body.classList.remove('content-detail');
-  const heading=collection.querySelector('h1');if(heading){heading.className='topic-title';heading.textContent='For your question';heading.tabIndex=-1;}
+  collection.hidden=false;grid.hidden=false;detail.hidden=true;document.body.classList.remove('content-detail');
+  let heading=collection.querySelector('h1');if(!heading){heading=document.createElement('h1');collection.insertBefore(heading,grid);}heading.className='topic-title';heading.textContent='For your question';heading.tabIndex=-1;
+  if(!document.getElementById('collection-label')){
+   const meta=document.createElement('div');meta.className='collection-meta';
+   for(const id of ['collection-label','count']){const span=document.createElement('span');span.id=id;if(id==='count')span.setAttribute('aria-live','polite');meta.append(span);}collection.insertBefore(meta,grid);
+  }
   document.getElementById('collection-label').textContent=root.rankedResourceStatus?.(selection)||(selection.totalCount?'Saved ranked church resources':'No eligible resources remain in this saved result.');
   document.getElementById('count').textContent=grid.children.length+' ranked resources loaded';
   if(!document.getElementById('intent-return')){const back=document.createElement('a');back.id='intent-return';back.href=location.pathname+location.search;back.textContent='Return to browsing';collection.insertBefore(back,grid);}

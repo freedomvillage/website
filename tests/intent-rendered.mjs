@@ -82,6 +82,8 @@ try{
    db.prepare('INSERT INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
   }
   for(const [id,card] of [...familyFixtures(),...sundayFixtures()])db.prepare('INSERT OR REPLACE INTO content_cards VALUES(?,?,?,?)').run(id,'draft',JSON.stringify(card),null);
+  const study={version:1,isDesignStudy:true,title:'Synthetic family comparison',summary:'Cloud-only authored study fixture.',alternatives:[{id:'ministry-first',label:'Ministry first',description:'Synthetic arrangement.',groups:[{title:'Source ministries',cardIds:['freedom-kids','godly-play']}]},{id:'questions-first',label:'Questions first',description:'Second synthetic arrangement.',groups:[{title:'Source reading',cardIds:['freedom-kids']}]}]};
+  db.prepare('INSERT INTO content_checks VALUES(?,?,?)').run('design-study:families',JSON.stringify(study),new Date(at).toISOString());
   const adapter={prepare(sql){
    const s=db.prepare(sql);
    return {bind(...args){return {
@@ -90,7 +92,7 @@ try{
     run:async()=>({meta:{changes:Number(s.run(...args).changes)}})
    };}};
   }};
-  let intentPosts=0,intentGets=0,providerCalls=0,zero=false,failPage=false,forcedIntentStatus=null;
+  let delayedReplay=null,intentPosts=0,intentGets=0,providerCalls=0,zero=false,failPage=false,forcedIntentStatus=null;
   const worker=createWorker({now:()=>at,resolveIntentOwner:async()=> 'a'.repeat(64),fetchUpstream:async(_,options)=>{
    providerCalls++;const body=JSON.parse(options.body);
    return Response.json({model:'jev-1.14.0',usage:{input_tokens:100,output_tokens:20},answers:Object.fromEntries(body.state.candidates.map((c,i)=>{
@@ -115,7 +117,11 @@ try{
    const headers=new Headers(r.headers());headers.set('Cf-Access-Jwt-Assertion','SYNTHETIC_FIXTURE');if(r.method()==='POST')headers.set('Origin',origin);
    const response=await worker.fetch(new Request(r.url(),{method:r.method(),headers,...(r.postData()?{body:r.postData()}: {})}),env);
    if(url.pathname==='/api/content/intent'){const value=await response.clone().json();console.log(JSON.stringify({viewport:name,method:r.method(),httpStatus:response.status,status:value.status,selected:value.selectedIds?.length,nextCursor:value.renderSelection?.nextCursor}));}
-   await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});
+   const gate=delayedReplay&&url.pathname==='/api/content/intent'&&url.searchParams.get('replay')==='first'?delayedReplay:null;
+   if(gate){delayedReplay=null;gate.hit();await gate.wait;}
+   try{await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});}
+   catch(error){if(!gate||!r.failure())throw error;}finally{gate?.done();}
+
   };
   await context.route('**/*',serve);
   await context.addInitScript(()=>addEventListener('pageshow',event=>{globalThis.__restoredFromBfcache=event.persisted;}));
@@ -358,6 +364,27 @@ try{
   const previouslyLoaded=await page.locator('#grid > article.card').first().getAttribute('id'),heldId=previouslyLoaded.slice(5),held=JSON.parse(db.prepare('SELECT content_json FROM content_cards WHERE id=?').get(heldId).content_json);held.hold=true;db.prepare('UPDATE content_cards SET content_json=? WHERE id=?').run(JSON.stringify(held),heldId);
   const prunePosts=intentPosts;await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='47 ranked resources loaded');assert.equal(await page.locator('#'+previouslyLoaded).count(),0);assert.equal(intentPosts,prunePosts);assert.equal(providerCalls,beforeFailureCalls);assert.equal(new Set(await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id))).size,47);await page.screenshot({path:resolve(output,name+'-ranked-pruned.png')});console.log(JSON.stringify({viewport:name,continuationPrunesHeld:true,remainingLoaded:47,posts:intentPosts-prunePosts,providerCalls:providerCalls-beforeFailureCalls}));
 
+  if(['desktop','narrow'].includes(name)){
+   // A slow owned GET must not replace the canonical feed after real keyboard
+   // intervention, even if the intercepted transport later releases its body.
+   let releaseReplay,hitReplay,finishReplay;const replayHit=new Promise(r=>hitReplay=r),replayDone=new Promise(r=>finishReplay=r);
+   delayedReplay={wait:new Promise(r=>releaseReplay=r),hit:hitReplay,done:finishReplay};
+   const departure=page.locator('#grid > article.card a[href]').first();await departure.focus();await page.keyboard.press('Enter');await page.locator('html[data-site-revealed="true"]').waitFor();
+   const cancellationPosts=intentPosts,cancellationCalls=providerCalls;await page.goBack({waitUntil:'domcontentloaded'});await replayHit;await page.locator('html[data-site-revealed="true"]').waitFor();
+   const canonicalIds=await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id));const canonicalLink=page.locator('#grid > article.card a[href]').first();await canonicalLink.focus();await page.keyboard.press('ArrowDown');const canonicalFocus=await page.evaluate(()=>({id:document.activeElement?.closest('article')?.id,href:document.activeElement?.getAttribute('href')}));
+   releaseReplay();await replayDone;await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+   assert.deepEqual(await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id)),canonicalIds);assert.deepEqual(await page.evaluate(()=>({id:document.activeElement?.closest('article')?.id,href:document.activeElement?.getAttribute('href')})),canonicalFocus);assert.equal(intentPosts,cancellationPosts);assert.equal(providerCalls,cancellationCalls);assert.equal(await page.locator('#intent-return').count(),0);await page.screenshot({path:resolve(output,name+'-replay-canceled.png')});
+   forcedIntentStatus=null;
+   for(const [label,path] of [['main','/#main'],['study','/studies/families#study-ministry-first'],['kids','/cards/freedom-kids#kids-freedom-kids-2']]){
+    await page.goto(origin+path);await page.locator('html[data-site-revealed="true"]').waitFor();db.prepare("UPDATE content_checks SET result_json=json_set(result_json,'$.lastStartedAt',0) WHERE id='jev-intent-runtime-v1'").run();
+    await page.locator('#prompt-text').fill('Synthetic fragment return '+label);await page.locator('#prompt-submit').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='24 ranked resources loaded');
+    const returnPosts=intentPosts,returnCalls=providerCalls,returnGets=intentGets;await page.locator('#intent-return').click();await page.locator('html[data-site-revealed="true"]').waitFor();await page.waitForFunction(()=>!document.getElementById('intent-return'));
+    assert.equal(new URL(page.url()).pathname,path.split('#')[0]);assert.equal(new URL(page.url()).hash,'');assert.equal(new URL(page.url()).search,'');assert.equal(intentPosts,returnPosts);assert.equal(providerCalls,returnCalls);assert.equal(intentGets,returnGets);assert.equal(await page.evaluate(()=>history.state?.fvcFeedRestore?.intent),undefined);
+    if(label==='study'){assert.equal(await page.locator('.design-alternative').count(),2);assert.equal(await page.locator('.study-heading h1').textContent(),study.title);}else if(label==='kids')assert.equal(await page.locator('#detail .kids-detail').count(),1);else assert.notEqual(await page.locator('#collection h1').textContent(),'For your question');
+    await page.screenshot({path:resolve(output,name+'-canonical-return-'+label+'.png')});console.log(JSON.stringify({viewport:name,fragmentReturn:label,canonicalDocument:true,posts:0,providerCalls:0,staleReplay:false}));
+   }
+   console.log(JSON.stringify({viewport:name,delayedReplayCanceled:true,canonicalGridAndFocusPreserved:true,posts:0,providerCalls:0}));
+  }
   await context.close();db.close();
  }
 }finally{await browser.close();}

@@ -98,3 +98,16 @@ are not evidence of a successful real request. Runtime acceptance requires the
 actual recovery outcome, model/usage, complete candidate coverage, returned IDs,
 rendered results and truthful failure behavior through a legitimate private
 session. No automated Mac tests or Access bypass should be used to obtain it.
+
+
+Return to browsing explicitly clears the intent history hint, removes the fragment
+from the ordinary URL and reloads canonical server HTML, including from study and
+Kids fragment origins. A same-document hash change cannot act as an escape from
+the ranked DOM. Wheel, touch, pointer and keyboard intervention abort pending
+restoration and close a commit gate checked immediately before any grid replacement.
+Normal navigation and new queries also invalidate late replay responses.
+
+Cloud browser coverage disables bfcache to prove reconstructed ranked Back. A
+focused event-capable unit fixture separately exercises departure masking,
+`pageshow.persisted` reload and exact GET reconstruction after withholding a
+result; it does not establish that a native browser admitted a bfcache entry.
