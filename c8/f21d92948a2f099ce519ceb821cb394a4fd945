@@ -1,0 +1,69 @@
+src/worker.mjs
+  s_e2bf1542692bef::t_48383e3276990d 51
+dist/intent.js
+  s_e2bf1542692bef::t_2b0107f2ab799d 82
+  s_e2bf1542692bef::t_033ae6df4fc685 1,5-14,19,24-28,37,40-42,44,47,51-62,64,68-69,71-74,78,80-81,83,85-86,88-104
+src/content/catalog.mjs
+  s_e2bf1542692bef::t_c3a71b01990a25 19-21,30,43,53-54,57,86-87
+  s_e2bf1542692bef::t_ac93bbb6558818 88-89
+  s_e2bf1542692bef::t_4ea7b4c4e2f447 101-112
+src/content/render.mjs
+  s_e2bf1542692bef::t_adf34b0264b761 17,31-34,53-57
+src/content/jev.mjs
+  s_e2bf1542692bef::t_01de5df54dc66a 5-6,50,71-74,79-112,165,170
+src/content/intent.mjs
+  s_e2bf1542692bef::t_0a396e0e762d16 2,9-10,18-19,29-30,36-39,51,55,57-60,76-77
+  s_e2bf1542692bef::t_e8b7a30544cc73 1,78,87,115-116,125,141,144,158
+dist/content-view.js
+  s_e2bf1542692bef::t_2b0107f2ab799d 115
+  s_e2bf1542692bef::t_761c59875d0757 3,112,127,130
+dist/feed-history.js
+  s_e2bf1542692bef::t_a3916990414027 2,17-18,20,29,32,34,38,67-68,81
+  s_e2bf1542692bef::t_2b0107f2ab799d 27-28
+  s_e2bf1542692bef::t_48383e3276990d 16,21,23,30,33
+  s_e2bf1542692bef::t_ac93bbb6558818 48-49,56
+README.md
+  s_e2bf1542692bef::t_548a9d2f3bbddd 9
+dist/index.html
+  s_e2bf1542692bef::t_6c9a1fd3fd126b 6
+docs/JEV-PUBLIC-CONTEXT.md
+  s_e2bf1542692bef::t_2d62e29f308c37 43-56
+docs/JEV-VISITOR-INTENT.md
+  s_e2bf1542692bef::t_ff03d7568ee5ed 4,56-85
+docs/RANKING-EVALUATION.md
+  s_e2bf1542692bef::t_864c27f04c12da 11-29
+source-manifest.json
+  s_e2bf1542692bef::t_0d93a88fc9d321 102,106,110-111
+src/content/evaluation.mjs
+  s_e2bf1542692bef::t_ca8d763e15d795 1-2,6-7,23-25,28-57,62-66,68-72
+tests/content-intent.test.mjs
+  s_e2bf1542692bef::t_f46db33e69a1f9 213-237
+tests/content-library.test.mjs
+  s_e2bf1542692bef::t_97834ddddd5c12 17,135-166
+tests/feed-history.test.mjs
+  s_e2bf1542692bef::t_c3bb2104235574 44,101-129
+tests/intent-client.test.mjs
+  s_e2bf1542692bef::t_1553eaa391d2c7 6-8,56-67
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_72c4c3729adfd1 73,92,109,120,324-341,346
+tests/jev-public-context.test.mjs
+  s_e2bf1542692bef::t_e2b9ebe2d52a44 29-47
+tests/ranking-evaluation.test.mjs
+  s_e2bf1542692bef::t_a412b024a9f0ad 3,31-34,37-41,44-60,83,89,92,166-173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c8f21d92948a2f099ce519ceb821cb394a4fd945",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
