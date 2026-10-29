@@ -1,0 +1,27 @@
+dist/content-view.js
+  s_e2bf1542692bef::t_1a4a5a3ed937b8 122-128,137
+dist/intent.js
+  s_e2bf1542692bef::t_1a4a5a3ed937b8 21
+source-manifest.json
+  s_e2bf1542692bef::t_6cf961318e9388 106,110
+tests/intent-client.test.mjs
+  s_e2bf1542692bef::t_ec54f4fff6f8ad 11,31
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_a2944f45e90445 327,358-360
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "03a62f7ab0bedabb771f5fa43c875e3f51f2a75b",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
