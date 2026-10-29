@@ -1,0 +1,33 @@
+dist/intent.js
+  s_e2bf1542692bef::t_f6c9bfe54ca269 54-55,59,105-110
+dist/content-view.js
+  s_e2bf1542692bef::t_f6c9bfe54ca269 112,115,119,132-137
+dist/feed-history.js
+  s_e2bf1542692bef::t_f6c9bfe54ca269 25,29,44,65,68,82-85
+docs/JEV-VISITOR-INTENT.md
+  s_e2bf1542692bef::t_0ddec49ce6d53a 101-113
+source-manifest.json
+  s_e2bf1542692bef::t_0506dbf4200af9 106,110-111
+tests/feed-history.test.mjs
+  s_e2bf1542692bef::t_ff53d19368f990 6,138-144
+tests/intent-client.test.mjs
+  s_e2bf1542692bef::t_52b106c1ee15a4 4-6,9-11,70-91
+tests/intent-rendered.mjs
+  s_e2bf1542692bef::t_927275da86e612 85-86,95,120-124,367-387
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c89b420d3de4839d30fd380a650a31bff0892b3d",
+  "prompts": {},
+  "sessions": {
+    "s_e2bf1542692bef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16efa-ce5b-7992-b75e-ff055ea41c41",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Paul Falgout <2028470+paulfalgout@users.noreply.github.com>"
+    }
+  }
+}
