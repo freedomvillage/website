@@ -14,7 +14,7 @@ function motif(name){
  return shapes[name]?`<svg class="library-motif" viewBox="0 0 200 200" aria-hidden="true" focusable="false">${shapes[name]}</svg>`:'';
 }
 function genericArt(c,detail=false){
- if(detail){const crafted=renderCraftArt(c,escape);if(crafted)return crafted;}
+ if(detail&&!c.presentationFallback){const crafted=renderCraftArt(c,escape);if(crafted)return crafted;}
  if(c.media?.kind==='image'){
   const m=c.media,label={synthetic:'Concept artwork · synthetic portraits',historical:'Archive photograph','private-draft':'Private image draft','source-artwork':'Source artwork'}[m.disclosure];
   return `<figure class="library-image"><div class="library-image-frame" style="aspect-ratio:${m.ratio.replace(':','/')}"><img src="${escape(m.src)}" alt="${escape(m.alt)}" width="${m.width}" height="${m.height}" loading="lazy" decoding="async" style="object-fit:${m.fit};object-position:${m.focalPoint.x}% ${m.focalPoint.y}%"></div><figcaption>${escape(label)} · ${escape(m.caption)}</figcaption></figure>`;
@@ -28,10 +28,10 @@ export function renderLibraryCard(c,namespace='',headingLevel=2,companions=[],co
  const heading=headingLevel===3?'h3':'h2';
  namespace=typeof namespace==='string'?namespace:'';
  const domId=escape((namespace?namespace+'-':'')+'card-'+c.id);
- const worship=renderWorshipCard(c,{escape,cardPath,heading,domId,facts:genericFacts,actionAttrs});if(worship)return worship;
- const sunday=renderSundayCard(c,{escape,cardPath,heading,domId,facts:genericFacts,companions});if(sunday)return sunday;
- const family=renderFamilyCard(c,{escape,cardPath,heading,domId,facts:genericFacts,companions,context});if(family)return family;
- const crafted=renderCraftCard(c,{escape,cardPath,heading,domId});if(crafted)return crafted;
+ const worship=!c.presentationFallback&&renderWorshipCard(c,{escape,cardPath,heading,domId,facts:genericFacts,actionAttrs});if(worship)return worship;
+ const sunday=!c.presentationFallback&&renderSundayCard(c,{escape,cardPath,heading,domId,facts:genericFacts,companions});if(sunday)return sunday;
+ const family=!c.presentationFallback&&renderFamilyCard(c,{escape,cardPath,heading,domId,facts:genericFacts,companions,context});if(family)return family;
+ const crafted=!c.presentationFallback&&renderCraftCard(c,{escape,cardPath,heading,domId});if(crafted)return crafted;
  if(['actions','utility'].includes(c.template))return `<article class="card library-card practical-card theme-${c.design.theme}" id="${domId}"><div class="library-copy"><${heading}><a href="${cardPath(c)}">${escape(c.title)}</a></${heading}>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div><div class="practical-actions">${c.actions.map(a=>`<a ${actionAttrs(a)}>${escape(a.label)} <span aria-hidden="true">↗</span></a>`).join('')}</div></article>`;
  const motion=c.design.motion==='gradient',art=genericArt(c);
  return `<article class="card library-card theme-${c.design.theme} layout-${c.design.layout} size-${c.design.size}${motion?' has-motion':''}" id="${domId}"><a class="library-card-link" href="${cardPath(c)}"><div class="library-copy"><${heading}>${escape(c.title)}</${heading}>${genericFacts(c)}<p class="library-excerpt">${escape(c.summary)}</p></div>${art}</a></article>`;
@@ -50,11 +50,11 @@ function connectDraft(c){
  return `<section class="connect-draft" data-connect-draft hidden aria-labelledby="connect-draft-title"><h2 id="connect-draft-title">What would you like to explore?</h2><p>Choose any interests for an email draft. Nothing is sent from this page.</p><fieldset><legend class="visually-hidden">Interests to include in your email</legend>${options}</fieldset><div class="connect-draft-action"><a class="pilot-action" data-connect-email href="${escape(draft.email)}">Open email draft</a><p data-connect-status aria-live="polite">Add a question in your email app, then review and send.</p></div></section>`;
 }
 export function renderLibraryDetail(c,related=[],embedded=[]){
- const worship=renderWorshipDetail(c,related,{escape,renderCard:renderLibraryCard,facts:genericFacts,actionAttrs});if(worship)return worship;
- const youth=renderYouthDetail(c,related,{escape,renderCard:renderLibraryCard,actionAttrs,facts:genericFacts});if(youth)return youth;
- const godly=renderGodlyDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(godly)return godly;
- const visit=renderVisitDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(visit)return visit;
- const kids=renderKidsDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(kids)return kids;
+ const worship=!c.presentationFallback&&renderWorshipDetail(c,related,{escape,renderCard:renderLibraryCard,facts:genericFacts,actionAttrs});if(worship)return worship;
+ const youth=!c.presentationFallback&&renderYouthDetail(c,related,{escape,renderCard:renderLibraryCard,actionAttrs,facts:genericFacts});if(youth)return youth;
+ const godly=!c.presentationFallback&&renderGodlyDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(godly)return godly;
+ const visit=!c.presentationFallback&&renderVisitDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(visit)return visit;
+ const kids=!c.presentationFallback&&renderKidsDetail(c,related,embedded,{escape,cardPath,renderCard:renderLibraryCard,facts:genericFacts});if(kids)return kids;
  const video=c.media?.kind==='youtube'?`<div class="video-player" data-video="${c.media.videoId}"><button type="button" class="video-load" data-video-title="${escape(c.media.title)}">▶ Load video</button><p>Video loads from YouTube when selected.</p><a href="https://www.youtube.com/watch?v=${c.media.videoId}" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a></div>`:'';
  return `<article class="detail-shell library-detail theme-${c.design.theme}${c.design.motion==='gradient'?' has-motion':''}${c.media?.kind==='image'?' has-image':''}${c.media?.kind==='brand'?' has-brand':''}${c.id==='missional-families'?' has-community-photo':''}${c.media?.disclosure==='source-artwork'?' has-source-artwork':''}"><a class="back" href="/">← Back</a><header class="library-detail-heading"><div><h1 tabindex="-1">${escape(c.title)}</h1>${genericFacts(c)}</div>${genericArt(c,true)}</header><div class="detail-body"><p class="detail-intro">${escape(c.summary)}</p>${connectDraft(c)}${c.actions.length?`<nav class="detail-actions" aria-label="Next steps">${c.actions.map(a=>`<a class="pilot-action" ${actionAttrs(a)}>${escape(a.label)} ↗</a>`).join('')}</nav>`:''}${c.detail.filter(p=>p!==c.summary).map(p=>`<p>${escape(p)}</p>`).join('')}${authoredSections(c,embedded)}${video}</div></article>${related.length?`<section class="related-content" aria-labelledby="related-title"><h2 id="related-title">Related</h2><div class="related-grid">${related.map(renderLibraryCard).join('')}</div></section>`:''}`;
 }

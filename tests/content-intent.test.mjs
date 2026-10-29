@@ -210,3 +210,28 @@ test('failed and uncertain batches never claim future planned inputs were sent',
  const attemptedIds=value.receipt.batches.flatMap(b=>b.candidateIds),inputIds=value.receipt.candidateInputs.map(c=>c.id);assert.deepEqual(inputIds,attemptedIds);assert(inputIds.length<value.receipt.candidateCount);assert(value.receipt.batchPlan.slice(2).flatMap(b=>b.candidateIds).every(id=>!inputIds.includes(id)));
  }finally{db.close();}}
 });
+
+test('explicit same-text new claim gets current dataset; old immutable snapshot visibly marks changed content and age',async()=>{
+ const {db,env,put}=setup(2);try{let time=instant;const seen=[],options={now:()=>time,fetchUpstream:provider(seen)},first=await(await handleIntent(request(),env,options)).json();
+ assert.equal(first.renderSelection.snapshot.state,'current');assert.equal(first.receipt.snapshot.version,1);assert.equal(first.receipt.snapshot.context.referenceTime,new Date(instant).toISOString());
+ const saved=db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(first.receipt.requestId).result_json,calls=seen.length;
+ put('added-resource');const value=JSON.parse(db.prepare('SELECT content_json FROM content_cards WHERE id=?').get('freedom-kids').content_json);value.detail=['Changed public body.'];value.summary='Changed public summary.';db.prepare('UPDATE content_cards SET content_json=? WHERE id=?').run(JSON.stringify(value),'freedom-kids');
+ const get=(receipt,pages=1,headers={})=>new Request('https://next.freedomvillage.church/api/content/intent?'+new URLSearchParams({receipt,replay:'first',pages:String(pages)}),{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS',...headers}});
+ const replay=await(await handleIntent(get(first.receipt.requestId),env,options)).json();assert.equal(replay.renderSelection.snapshot.state,'changed');assert.equal(replay.renderSelection.snapshot.addedCount,1);assert(!replay.selectedIds.includes('added-resource'));assert(replay.html.includes('Changed public summary.'));assert.equal(seen.length,calls);
+ assert.equal(db.prepare('SELECT result_json FROM content_checks WHERE id=?').get(first.receipt.requestId).result_json,saved);
+ time+=11000;const freshInput={query:'I would like community.',requestId:'jev-intent-request:22222222-2222-4222-8222-222222222222'},fresh=await(await handleIntent(request(freshInput),env,options)).json();assert(fresh.selectedIds.includes('added-resource'));assert.notEqual(fresh.receipt.snapshot.datasetSha256,first.receipt.snapshot.datasetSha256);assert(seen.length>calls);
+ time+=1800001;const older=await(await handleIntent(get(fresh.receipt.requestId),env,options)).json();assert.equal(older.renderSelection.snapshot.state,'older');
+ const row=JSON.parse(saved);delete row.snapshot;db.prepare('UPDATE content_checks SET result_json=? WHERE id=?').run(JSON.stringify(row),first.receipt.requestId);assert.equal((await(await handleIntent(get(first.receipt.requestId),env,options)).json()).renderSelection.snapshot.state,'unverified');
+ }finally{db.close();}
+});
+test('first-page GET replay restores all traversed pages, rechecks eligibility and ownership, and never mutates state/spends',async()=>{
+ const {db,env}=setup();try{const seen=[],options={now:()=>instant,fetchUpstream:provider(seen)},first=await(await handleIntent(request(),env,options)).json(),id=first.receipt.requestId,calls=seen.length;
+ const saved=db.prepare('SELECT * FROM content_checks ORDER BY id').all();
+ const get=(params,headers={})=>new Request('https://next.freedomvillage.church/api/content/intent?'+params,{headers:{'Cf-Access-Jwt-Assertion':'SYNTHETIC_ACCESS',...headers}});
+ const params=new URLSearchParams({receipt:id,replay:'first',pages:'3'}),replayed=await(await handleIntent(get(params),{...env,JEV_ENABLED:'false'},options)).json();assert.equal(replayed.selectedIds.length,71);assert.deepEqual(replayed.selectedIds,first.receipt.ranked.map(r=>r.id));assert.deepEqual(db.prepare('SELECT * FROM content_checks ORDER BY id').all(),saved);
+ assert.equal((await handleIntent(get(params,{'X-Fixture-User':'second'}),env,options)).status,404);assert.equal((await realHandleIntent(get(params),env,{...options,resolveOwner:async()=>null})).status,403);
+ for(const changed of first.receipt.ranked.slice(65).map(r=>r.id))db.prepare('DELETE FROM content_cards WHERE id=?').run(changed);
+ const current=await(await handleIntent(get(params),env,options)).json();assert.equal(current.selectedIds.length,65);assert.equal(current.renderSelection.nextCursor,null);assert.equal(seen.length,calls);
+ for(const invalid of ['receipt=latest&replay=first','receipt='+id+'&replay=first&pages=12','receipt='+id+'&pages=3','receipt='+id+'&replay=first&after=connect-card','receipt='+id+'&replay=first&pages=3&pages=3'])assert.equal((await handleIntent(get(invalid),env,options)).status,400);
+ }finally{db.close();}
+});

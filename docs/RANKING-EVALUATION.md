@@ -8,4 +8,22 @@ Follow with a clearly labeled hybrid candidate-recall simulation before spending
 
 Current official model documentation (https://docs.typesafe.ai/models, read 2026-10-23) lists jev-1.14.0 at $0.042 per million input tokens, output free. Pin the evaluation model for reproducibility and record its returned version. This is a unit-price estimate, not an invoice or a claim about remaining account credits. Verify the actual console balance before approving the bounded fixture run; no recharge or plan change.
 
-No real visitor query logging or generated public answers are introduced. Staff diagnostic results remain behind existing next-site Access. Public production eligibility, no-information fallback and visual-promotion thresholds still require calibration on reviewed examples.
+No real visitor query logging or generated public answers are introduced. Staff diagnostic results remain behind existing next-site Access. Model relevance quality still requires separately authorized representative evaluation; mocked pipeline coverage establishes mechanics only.
+
+
+The canonical planner is now `synthetic-ranking-evaluation-v2`, sharing visitor
+projection, model/rubric versions, 256-candidate limit, 64-card/40,000-byte batches
+and 24-batch maximum. A 257th candidate, duplicate ID or invalid public projection
+fails before dispatch. Fixed synthetic execution identity hashes the actual
+requests (including the synthetic question, time context and batch plan), while
+the stable public dataset fingerprint excludes questions and private metadata.
+The injected server clock controls eligibility and Asia/Seoul reference context.
+
+New evaluation execution is disabled unconditionally in the HTTP handler. Prior
+fixture approval cannot authorize this new contract. GET and POST do not create
+locks/claims, update historical rows, reset budgets, alter credit verification or
+call a provider. Historical failed/null claims remain untouched and stop further
+execution. A separately bounded paid authorization and reviewed execution path
+are required before enabling any new experiment. The explicitly injected
+`evaluateSyntheticFixture` transport exists for cloud mocked parity tests; the
+HTTP handler never calls it. There is no automatic execution on test discovery.

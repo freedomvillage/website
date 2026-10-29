@@ -16,6 +16,9 @@ const validAction=a=>text(a?.label,80)&&((typeof a.targetId==='string'&&ID.test(
 const projectAction=a=>a.targetId?{label:a.label,targetId:a.targetId}:{label:a.label,href:a.href};
 const categories=new Set(['events','families','community','faith','prayer','watch-listen','next-steps']);
 const designs=new Set(['paper','ink','forest','clay','youth','outline','sermon']);
+export const normalizePriority=value=>Number.isSafeInteger(value)&&value>=0&&value<=100?value:50;
+const fallbackDesign=Object.freeze({theme:'paper',layout:'text',motif:'none',motion:'none',size:'regular'});
+function validDesign(d){return designs.has(d?.theme)&&['text','date','brand','graphic','image'].includes(d?.layout)&&['none','star','hills','rings'].includes(d?.motif)&&['none','gradient'].includes(d?.motion)&&['regular','feature'].includes(d?.size);}
 const sourceAsset=v=>{try{const u=new URL(v);return u.origin==='https://cdn.prod.website-files.com'&&u.pathname.startsWith('/60e0035471e8115799a8640b/')&&/\.(png|jpe?g|webp|svg)$/i.test(u.pathname)&&!u.search&&!u.hash;}catch{return false;}};
 function versionTwo(row,c){
  if(!ID.test(row.id)||c.hold===true||c.isSynthetic!==false||c.sourceStatus!=='draft'||
@@ -24,10 +27,7 @@ function versionTwo(row,c){
  !Array.isArray(c.facts)||c.facts.length>6||!c.facts.every(p=>text(p,160))||
  !Array.isArray(c.categories)||c.categories.length<1||c.categories.length>7||!c.categories.every(x=>categories.has(x))||new Set(c.categories).size!==c.categories.length||
  !Array.isArray(c.actions)||c.actions.length>6||!c.actions.every(validAction)||
- !Array.isArray(c.related)||c.related.length>6||!c.related.every(x=>ID.test(x))||
- !designs.has(c.design?.theme)||!['text','date','brand','graphic','image'].includes(c.design?.layout)||!['none','star','hills','rings'].includes(c.design?.motif)||
- !['none','gradient'].includes(c.design?.motion)||!['regular','feature'].includes(c.design?.size)||
- !Number.isSafeInteger(c.homePriority)||c.homePriority<0||c.homePriority>100)return null;
+ !Array.isArray(c.related)||c.related.length>6||!c.related.every(x=>ID.test(x)))return null;
  if(['actions','utility'].includes(c.template)&&c.actions.length===0)return null;
  let sections=[];
  if(c.sections!==undefined){
@@ -40,7 +40,7 @@ function versionTwo(row,c){
   if(new Set(sections.flatMap(s=>s.cardIds)).size>16)return null;
  }
  let media=null;
- if(c.media!==null){
+ if(c.media!==null&&c.media!==undefined){
   if(c.media?.kind==='brand'&&sourceAsset(c.media.src)&&text(c.media.alt,300))media={kind:'brand',src:c.media.src,alt:c.media.alt};
   else if(c.media?.kind==='youtube'&&/^[A-Za-z0-9_-]{11}$/.test(c.media.videoId)&&text(c.media.title,160))media={kind:'youtube',videoId:c.media.videoId,title:c.media.title};
   else if(c.media?.kind==='image'&&imagePath.exec(c.media.src||'')?.[1]===row.id&&text(c.media.alt,300)&&text(c.media.caption,200)&&
@@ -50,10 +50,11 @@ function versionTwo(row,c){
    media={kind:'image',src:c.media.src,alt:c.media.alt,caption:c.media.caption,width:c.media.width,height:c.media.height,disclosure:c.media.disclosure,fit:c.media.fit,ratio:c.media.ratio,focalPoint:{x:c.media.focalPoint.x,y:c.media.focalPoint.y}};
   else return null;
  }
- if(c.design.layout==='image'&&media?.kind!=='image')return null;
+ const presentationFallback=!validDesign(c.design)||(c.design.layout==='image'&&media?.kind!=='image');
+ const design=presentationFallback?fallbackDesign:c.design;
  return {id:row.id,schemaVersion:2,template:c.template,title:c.title,summary:c.summary,detail:[...c.detail],facts:[...c.facts],...(sections.length?{sections}:{}),
  categories:[...c.categories],actions:c.actions.map(projectAction),related:[...c.related],media,
- design:{theme:c.design.theme,layout:c.design.layout,motif:c.design.motif,motion:c.design.motion,size:c.design.size},homePriority:c.homePriority,isSynthetic:false};
+ design:{theme:design.theme,layout:design.layout,motif:design.motif,motion:design.motion,size:design.size},...(presentationFallback?{presentationFallback:true}:{}),homePriority:normalizePriority(c.homePriority),isSynthetic:false};
 }
 export function publicCard(row){
  let c;try{c=JSON.parse(row.content_json);}catch{return null;}
@@ -82,7 +83,10 @@ export function validCursor(value){if(value==='')return true;const m=/^(\d{1,3})
 export async function readCatalog(db,{after='',topic='',now=Date.now()}={}){
  if(!validCursor(after)||(topic!==''&&!Object.hasOwn(TOPICS,topic)))throw new TypeError('Invalid query');
  const [rank,id]=after?after.split(':'):['101',''];
- const order="CAST(COALESCE(json_extract(content_json,'$.homePriority'),50) AS INTEGER)";
+ // Match normalizePriority exactly, before pagination. A cast would accept
+ // numeric strings/fractions and let out-of-range values escape the cursor.
+ const value="json_extract(content_json,'$.homePriority')";
+ const order=`CASE WHEN json_type(content_json,'$.homePriority') IN ('integer','real') AND ${value} BETWEEN 0 AND 100 AND ${value}=CAST(${value} AS INTEGER) THEN CAST(${value} AS INTEGER) ELSE 50 END`;
  const result=await db.prepare(`SELECT id,content_json,${order} AS sort_rank FROM content_cards WHERE status='draft'
  AND (expires_at IS NULL OR expires_at>?) AND COALESCE(json_extract(content_json,'$.hold'),0)=0
  AND COALESCE(json_extract(content_json,'$.isSynthetic'),0)=0
@@ -93,6 +97,18 @@ export async function readCatalog(db,{after='',topic='',now=Date.now()}={}){
  const page=result.results.slice(0,PAGE_SIZE),last=page.at(-1);
  return {status:'ok',schemaVersion:1,items:page.map(publicCard).filter(Boolean),topic,
  nextCursor:result.results.length>PAGE_SIZE?`${last.sort_rank??50}:${last.id}`:null};
+}
+export async function readRankingCatalog(db,now){
+ const cards=[],ids=new Set(),cursors=new Set();let after='';
+ for(let page=0;page<32;page++){
+  const result=await readCatalog(db,{after,now});
+  for(const card of result.items){if(ids.has(card.id))throw Error('Duplicate catalog ID');ids.add(card.id);cards.push(card);}
+  if(cards.length>256)throw Error('Catalog limit');
+  if(!result.nextCursor)return cards;
+  if(cursors.has(result.nextCursor))throw Error('Repeated cursor');
+  cursors.add(result.nextCursor);after=result.nextCursor;
+ }
+ throw Error('Catalog limit');
 }
 export async function handleCatalogRequest(request,env,{now=Date.now()}={}){
  if(!privateNextRequest(request,env))return json({error:'Not found'},404);

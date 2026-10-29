@@ -1,7 +1,7 @@
 # Protected visitor intent
 
 The bottom composer posts a question to `/api/content/intent`. The Worker sends
-only the question and eligible public card titles, summaries and facts to Jev.
+only the question and the versioned eligible public retrieval projection to Jev: titles, summaries, facts, categories, record types, bounded detail/section excerpts and action labels. Explicit server reference time and Asia/Seoul identify temporal context; unknown dates and availability remain unknown.
 It returns existing canonical cards, not generated church facts or answers.
 Questions are not stored in D1, query strings, browser storage or application logs.
 The visitor interface omits provider branding and static helper copy. Its label
@@ -53,6 +53,36 @@ with no caller-supplied owner identity accepted. Responses are private/no-store/
 are fixed and redirects are not followed.
 
 Client-generated random request IDs make uncertain-outcome replay idempotent.
+After a confirmed successful result, submitting again intentionally creates a new
+claim even for identical text, with a visible new-search label. An uncertain
+submission retains its ID for an explicit retry in that document. No timeout,
+reload, navigation, continuation or replay automatically starts a paid request.
+Generation guards discard late POST/GET responses after another intent or navigation.
+
+New receipts bind immutable scores to `public-ranking-plan-v1`, the exact stable
+public-dataset SHA256, pinned model, rubric/projection versions, reference time and
+contract SHA256. They never contain a visitor-query hash. Dataset identity hashes
+exact provider-visible projected fields in canonical ID order; presentation,
+private editorial fields, URLs and media metadata do not enter it. Replay compares
+current eligible public input, reports changed/older/unverified snapshots, and
+shows completion time in Seoul. Older means more than 30 minutes; it does not
+rerank. Legacy receipts without fingerprints remain explicitly unverified.
+Current eligible bodies may be displayed with the visible changed-content notice;
+added records remain outside the saved score order until a new explicit search.
+No-close notices refer only to resources in the saved result.
+
+`GET /api/content/intent?receipt=<exact owned ID>&replay=first&pages=3` reconstructs
+up to the first three traversed pages in one fresh eligibility read. `pages` is
+bounded to 1–11. This is distinct from read-only diagnostic inspection and never
+uses `latest`. Ownership, model and current eligibility are checked before HTML
+is rendered. The client stores only receipt/progress plus the existing bounded
+path, offset, focus route/ID and timestamp in `history.state` for at most 30
+minutes. No receipt enters ordinary document URLs, outgoing links or referrers.
+No questions, copied HTML or unrelated drafts enter history or browser storage.
+A missing/foreign/unavailable receipt leaves canonical browsing usable; a removed
+return target falls back to the collection heading. Cached result documents hide
+on departure and reconstruct by GET on return, rather than trusting cached eligibility.
+
 Stored receipts contain candidate IDs, typed scores, model, safe failure
 classification and token usage, never the visitor question or raw provider body.
 `GET /api/content/intent` reads readiness without invoking Jev; its `receipt`
@@ -68,3 +98,16 @@ are not evidence of a successful real request. Runtime acceptance requires the
 actual recovery outcome, model/usage, complete candidate coverage, returned IDs,
 rendered results and truthful failure behavior through a legitimate private
 session. No automated Mac tests or Access bypass should be used to obtain it.
+
+
+Return to browsing explicitly clears the intent history hint, removes the fragment
+from the ordinary URL and reloads canonical server HTML, including from study and
+Kids fragment origins. A same-document hash change cannot act as an escape from
+the ranked DOM. Wheel, touch, pointer and keyboard intervention abort pending
+restoration and close a commit gate checked immediately before any grid replacement.
+Normal navigation and new queries also invalidate late replay responses.
+
+Cloud browser coverage disables bfcache to prove reconstructed ranked Back. A
+focused event-capable unit fixture separately exercises departure masking,
+`pageshow.persisted` reload and exact GET reconstruction after withholding a
+result; it does not establish that a native browser admitted a bfcache entry.

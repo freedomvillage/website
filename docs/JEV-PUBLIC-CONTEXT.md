@@ -40,3 +40,17 @@ and complementary resources. Fixture passes establish mechanics, not model
 relevance quality; ranking errors can still put unrelated resources near the top.
 
 Official Score contract: https://docs.typesafe.ai/primitives/score
+
+
+Both visitor and inert synthetic evaluation paths now use the same pure planner
+and stable exact-projection fingerprint. Reference time, rubric and Asia/Seoul
+context are separately versioned in the ranking contract. Fingerprints cover what
+was actually projected, including detail/sections/action labels; they do not imply
+that omitted paragraph tails were sent. Evidence-preserving retrieval summaries
+or typed schedule/status facts need reviewed source data as a subsequent slice;
+this change does not expand private records or infer new operational facts.
+
+Optional presentation enums and home priority no longer decide factual eligibility.
+Invalid/missing design uses a neutral paper/text/static renderer; priority defaults
+to 50 in both SQL and projection. Unsafe actions/media or invalid public factual
+shape still fail closed. Valid authored renderers and source media remain unchanged.
