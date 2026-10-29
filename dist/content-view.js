@@ -119,6 +119,13 @@
   if(!append){document.querySelector('.collection-context')?.remove();collection.removeAttribute('data-topic');}
   if(append&&!intentActive)throw Error('Results view changed');
   intentActive=true;document.querySelector('.load-more:not(#intent-more)')?.remove();
+  let removedFocus=false;
+  if(append){
+   const unavailable=new Set(selection.unavailableIds);
+   for(const card of [...grid.children])if(card.matches('article.card')&&unavailable.has(card.id.replace(/^card-/,''))){
+    removedFocus ||= card.contains(document.activeElement);observer?.unobserve(card);motionItems.delete(card);card.remove();
+   }
+  }
   // Keep the original grid node used by masonry sizing; no generated JS executes.
   const copies=articles.filter(el=>!append||!document.getElementById(el.id)).map(el=>document.importNode(el,true));
   if(append)grid.append(...copies);else grid.replaceChildren(...copies);
@@ -127,6 +134,6 @@
   document.getElementById('collection-label').textContent=root.rankedResourceStatus?.(selection)||(selection.totalCount?'Saved ranked church resources':'No eligible resources remain in this saved result.');
   document.getElementById('count').textContent=grid.children.length+' ranked resources loaded';
   if(!document.getElementById('intent-return')){const back=document.createElement('a');back.id='intent-return';back.href=location.pathname+location.search;back.textContent='Return to browsing';collection.insertBefore(back,grid);}
-  enhance(grid);if(!quiet){if(append)copies[0]?.querySelector('a')?.focus({preventScroll:true});else heading?.focus();}
+  enhance(grid);if(!quiet){if(append){const target=copies[0]?.querySelector('a');if(target)target.focus({preventScroll:true});else if(removedFocus||document.activeElement?.id==='intent-more')heading?.focus();}else heading?.focus();}
  }};
 })(globalThis);

@@ -18,6 +18,7 @@
    !/^jev-intent-request:[0-9a-f-]{36}$/.test(result.receipt.requestId||'')||s?.version!==2||!Array.isArray(s.selectedIds)||
    s.selectedIds.length!==result.selectedIds.length||new Set(result.selectedIds).size!==result.selectedIds.length||s.selectedIds.some((id,i)=>id!==result.selectedIds[i]||!/^[a-z][a-z0-9-]{0,79}$/.test(id))||
    !Number.isInteger(s.totalCount)||s.totalCount<result.selectedIds.length||!Number.isInteger(s.closeMatchCount)||s.closeMatchCount<0||s.closeMatchCount>s.totalCount||
+   !Array.isArray(s.unavailableIds)||s.unavailableIds.length>256||s.unavailableIds.some(id=>!/^[a-z][a-z0-9-]{0,79}$/.test(id)||result.selectedIds.includes(id))||
    !(s.nextCursor===null||(/^[a-z][a-z0-9-]{0,79}$/.test(s.nextCursor)&&s.nextCursor===result.selectedIds.at(-1))))throw Error('Invalid result');
   return s;
  }

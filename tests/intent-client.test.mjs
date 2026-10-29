@@ -8,7 +8,7 @@ function setup(fetch){
  const rendered=[],context={document:{getElementById:id=>nodes[id],createElement:node},fetch:reflectedFetch,URLSearchParams,crypto:{randomUUID:()=> (++uuid===1?'11111111-1111-4111-8111-111111111111':'22222222-2222-4222-8222-222222222222')},AbortSignal,contentView:{showIntent:(html,options)=>rendered.push({html,options})}};
  vm.createContext(context);vm.runInContext(source,context);return {context,nodes,rendered};
 }
-const result=(selection={})=>{const s={version:2,selectedIds:['connect-card'],after:'',nextCursor:null,totalCount:1,closeMatchCount:1,...selection};return {status:'ok',selectedIds:s.selectedIds,html:'<article class="card">Connect</article>',renderSelection:s,receipt:{status:'ok',requestId:'jev-intent-request:11111111-1111-4111-8111-111111111111'}};};
+const result=(selection={})=>{const s={version:2,selectedIds:['connect-card'],after:'',nextCursor:null,totalCount:1,closeMatchCount:1,unavailableIds:[],...selection};return {status:'ok',selectedIds:s.selectedIds,html:'<article class="card">Connect</article>',renderSelection:s,receipt:{status:'ok',requestId:'jev-intent-request:11111111-1111-4111-8111-111111111111'}};};
 const ok=()=>Response.json(result());
 test('actual query goes only to the same-origin POST and returned cards render; no automatic second request',async()=>{
  let calls=0;const {context,nodes,rendered}=setup(async(url,options)=>{calls++;assert.equal(url,'/api/content/intent');assert.equal(options.method,'POST');assert.equal(options.credentials,'same-origin');assert.equal(options.redirect,'error');assert.equal(JSON.parse(options.body).query,'Children and community');return ok();});
@@ -28,7 +28,7 @@ test('continuation failure can retry the same saved page; a new question discard
  assert.equal(requests[1],requests[2]);assert.equal(rendered.length,2);assert(rendered.every(r=>!r.options.append));assert.equal(old.removed,true);assert.equal(nodes['prompt-submit'].disabled,false);
 });
 test('invalid paging metadata never replaces existing results',async()=>{
- for(const selection of [{version:1},{totalCount:-1},{closeMatchCount:2},{nextCursor:'other-card'}]){const {context,rendered}=setup(async()=>Response.json(result(selection)));await context.submitVisitorIntent('Question');assert.equal(rendered.length,0);}
+ for(const selection of [{version:1},{totalCount:-1},{closeMatchCount:2},{nextCursor:'other-card'},{unavailableIds:['../bad']},{unavailableIds:['connect-card']}]){const {context,rendered}=setup(async()=>Response.json(result(selection)));await context.submitVisitorIntent('Question');assert.equal(rendered.length,0);}
 });
 test('pending submit is single flight and uncertain retry reuses the exact claim',async()=>{
  let release;const wait=new Promise(r=>release=r),requests=[];const {context,nodes}=setup(async(_,options)=>{requests.push(JSON.parse(options.body));await wait;throw Error('Unconfirmed outcome');});

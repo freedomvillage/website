@@ -324,7 +324,7 @@ try{
   const last=await page.locator('#grid > article.card').last().boundingBox();console.log(JSON.stringify({viewport:name,rankedTail:{lastBottom:last?.y+last?.height,composerTop:composer?.y,...await page.evaluate(()=>({scrollY,height:innerHeight,scrollHeight:document.documentElement.scrollHeight}))}}));assert(last&&last.y+last.height<=composer.y,'final resource clears the bottom composer');
   // Combined ranked discovery journey: the reconstructed document restores
   // this exact owned receipt/progress through GET, never a new POST/inference.
-  const targetId=ids.at(-1),target=page.locator('#'+targetId+' a[href]').first();await target.focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+  const targetId='card-sample-070';assert(ids.indexOf(targetId)>=48);const target=page.locator('#'+targetId+' a[href]').first();await target.focus();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
   const departureY=await page.evaluate(()=>scrollY),departurePath=new URL(page.url()).pathname,detailPath=await target.getAttribute('href'),beforeBackPosts=intentPosts,beforeBackGets=intentGets;
   await page.keyboard.press('Enter');await page.locator('html[data-site-revealed="true"]').waitFor();assert.equal(new URL(page.url()).pathname,detailPath);assert.equal(await page.locator('#detail .theme-paper').count(),1);await page.screenshot({path:resolve(output,name+'-ranked-fallback-detail.png'),fullPage:true});
   await page.locator('#detail .detail-shell > .back').click();await page.waitForFunction(({id,path})=>location.pathname===path&&document.querySelector('#count')?.textContent==='71 ranked resources loaded'&&document.activeElement?.closest('article')?.id===id,{id:targetId,path:departurePath});
@@ -355,6 +355,9 @@ try{
   await page.waitForFunction(()=>document.getElementById('composer-status')?.textContent.startsWith('Questions are not configured yet.'));
   await helperFree(page,'unconfigured-status');assert.equal(providerCalls,beforeFailureCalls);assert.equal(await page.locator('#grid > article.card').count(),24);
   await page.screenshot({path:resolve(output,name+'-composer-unconfigured.png')});assert.deepEqual(errors,[]);
+  const previouslyLoaded=await page.locator('#grid > article.card').first().getAttribute('id'),heldId=previouslyLoaded.slice(5),held=JSON.parse(db.prepare('SELECT content_json FROM content_cards WHERE id=?').get(heldId).content_json);held.hold=true;db.prepare('UPDATE content_cards SET content_json=? WHERE id=?').run(JSON.stringify(held),heldId);
+  const prunePosts=intentPosts;await page.locator('#intent-more').click();await page.waitForFunction(()=>document.querySelector('#count')?.textContent==='47 ranked resources loaded');assert.equal(await page.locator('#'+previouslyLoaded).count(),0);assert.equal(intentPosts,prunePosts);assert.equal(providerCalls,beforeFailureCalls);assert.equal(new Set(await page.locator('#grid > article.card').evaluateAll(cards=>cards.map(c=>c.id))).size,47);await page.screenshot({path:resolve(output,name+'-ranked-pruned.png')});console.log(JSON.stringify({viewport:name,continuationPrunesHeld:true,remainingLoaded:47,posts:intentPosts-prunePosts,providerCalls:providerCalls-beforeFailureCalls}));
+
   await context.close();db.close();
  }
 }finally{await browser.close();}
