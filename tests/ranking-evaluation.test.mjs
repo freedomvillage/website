@@ -149,7 +149,9 @@ test('transport, HTTP and bounded-body failures retain fixed stages without mess
 test('a future malformed-body receipt retains safe classification and stays immutable while blocking more spend',async()=>{
  const {db,env}=setup();try{
   let calls=0;const options={now:()=>instant,fetchUpstream:async()=>{calls++;return new Response('{PRIVATE_RESPONSE');}};
-  const html=await(await handleRankingEvaluation(request('sample-one'),env,options)).text();
+  const failure=await evaluateSyntheticFixture(fixtures.cases[0],diagnosticCards,env,options);
+  db.prepare('INSERT INTO content_checks VALUES(?,?,?)').run('ranking-eval-v1:sample-one',JSON.stringify(failure),new Date(instant).toISOString());
+  const html=await(await handleRankingEvaluation(request(),env,options)).text();
   const original=db.prepare('SELECT result_json FROM content_checks WHERE id=?').get('ranking-eval-v1:sample-one').result_json,saved=JSON.parse(original);
   assert.deepEqual(saved.failure,{version:1,stage:'body',code:'body-json'});assert.equal(saved.estimatedCostUsd,null);assert(!original.includes('PRIVATE_RESPONSE'));assert(!html.includes('PRIVATE_RESPONSE'));
   assert.equal((await handleRankingEvaluation(request('sample-two'),env,options)).status,409);await handleRankingEvaluation(request(),env,options);

@@ -127,3 +127,11 @@ test('successful new intent releases stalled restoration before departure writes
  const controller=h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>active,intentState:()=>newHint,restoreIntent:async()=>{await wait;return false;},measure(){}}),oldRestore=controller.restore();
  active=true;controller.write(true);h.click(h.link());h.emit('pagehide');assert.equal(h.context.history.state.fvcFeedRestore.intent.receipt,newHint.receipt);assert.equal(h.context.history.state.fvcFeedRestore.focus.cardId,'card-village-youth');release();await oldRestore;assert.equal(h.context.history.state.fvcFeedRestore.intent.receipt,newHint.receipt);
 });
+
+test('searches started on core or generic detail routes restore intent hints without enabling ordinary reader replay',async()=>{
+ for(const path of ['/connect','/give','/prayer','/resources','/cards/sample-reader','/events/sample-event']){
+ const ordinary=harness({path,state:saved(path,1),navigation:'back_forward'}).context.createFeedHistory({});assert(ordinary);assert(!ordinary.willRestore());
+ const h=harness({path}),hint={receipt:'jev-intent-request:11111111-1111-4111-8111-111111111111',pages:2};h.context.createFeedHistory({pageCount:()=>1,isIntent:()=>true,intentState:()=>hint});h.click(h.link());h.emit('pagehide');assert.equal(h.context.history.state.fvcFeedRestore.path,path);
+ const back=harness({path,state:h.context.history.state,navigation:'back_forward'});back.link();let reads=0;await back.context.createFeedHistory({restoreIntent:async actual=>{reads++;assert.equal(actual.receipt,hint.receipt);return true;},measure(){}}).restore();assert.equal(reads,1);assert.deepEqual(back.focused,['card-village-youth']);
+ }
+});
